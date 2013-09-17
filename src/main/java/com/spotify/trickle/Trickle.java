@@ -169,6 +169,5 @@ public final class Trickle {
   }
 
   // TODO: optional paths
-  // TODO: specifying fallbacks for nodes
 
 }

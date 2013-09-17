@@ -8,7 +8,7 @@ import com.spotify.trickle.Trickle;
 
 import com.google.common.collect.ImmutableList;
 
-public class Transformers {
+public final class Transformers {
   private Transformers() {}
 
   public static <T> Transformer<T> newMethodTransformer(

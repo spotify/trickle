@@ -10,7 +10,7 @@ public final class Name {
   public final String name;
 
   Name(String name) {
-    this.name = checkNotNull(name);;
+    this.name = checkNotNull(name);
   }
 
   public static Name named(String name) {
