@@ -23,12 +23,12 @@ public class Heartbeats {
 
     graph = PTrickle
         .graph(Long.class)
-        .in(ENDPOINT)
+        .inputs(ENDPOINT)
         .call(fetchCurrentState).with(ENDPOINT)
         .call(updateState).with(ENDPOINT).after(fetchCurrentState)
         .call(updateSerial).with(fetchCurrentState).after(updateState)
         .call(returnResult).after(updateSerial)
-        .out(returnResult);
+        .output(returnResult);
   }
 
   public ListenableFuture<Long> heartbeat(Endpoint endpoint) {

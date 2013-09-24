@@ -25,12 +25,12 @@ public class PSearchView {
     PNode<AllData> allData = combineItAllNode();
 
     graph = PTrickle.graph(AllData.class)
-        .in(CONTEXT, REQUEST, QUERY)
+        .inputs(CONTEXT, REQUEST, QUERY)
         .call(getSuggestions).with(CONTEXT, QUERY, REQUEST)
         .call(fetchTrackMetadata).with(CONTEXT, getSuggestions)
         .call(fetchPlaylistFollowers).with(CONTEXT, getSuggestions)
         .call(allData).with(getSuggestions, fetchTrackMetadata, fetchPlaylistFollowers)
-        .out(allData);
+        .output(allData);
   }
 
   public ListenableFuture<AllData> suggest(final RequestContext context,

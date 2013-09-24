@@ -39,7 +39,7 @@ public class PTrickleTest {
     Graph<String> graph = PTrickle
         .graph(String.class)
         .call(node1)
-        .out(node1);
+        .output(node1);
 
     ListenableFuture<String> actual = graph.run();
     future1.set("hello world!!");
@@ -52,7 +52,7 @@ public class PTrickleTest {
     Graph<String> graph = PTrickle
         .graph(String.class)
         .call(node1)
-        .out(node1);
+        .output(node1);
 
     ListenableFuture<String> actual = graph.run();
 
@@ -73,9 +73,9 @@ public class PTrickleTest {
     Name inputName = Name.named("theInnnput");
     Graph<String> graph = PTrickle
         .graph(String.class)
-        .in(inputName)
+        .inputs(inputName)
         .call(node).with(inputName)
-        .out(node);
+        .output(node);
 
     ListenableFuture<String> future = graph.bind(inputName, "petter").run();
     assertThat(future.get(), equalTo("hello petter!"));
@@ -114,7 +114,7 @@ public class PTrickleTest {
         .call(incr1)
         .call(incr2).after(incr1)
         .call(result).after(incr1, incr2)
-        .out(result);
+        .output(result);
 
     ListenableFuture<Integer> future = graph.run();
 

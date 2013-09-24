@@ -31,7 +31,7 @@ public class Graph<T> {
   public ListenableFuture<T> run() {
     ConnectedNode result = nodes.get(out);
 
-    // this case is safe, because the 'out' node returns type T.
+    // this case is safe, because the 'output' node returns type T.
     //noinspection unchecked
     return (ListenableFuture<T>) result.future(inputDependencies, nodes, Maps.<PNode<?>, ListenableFuture<?>>newHashMap());
   }

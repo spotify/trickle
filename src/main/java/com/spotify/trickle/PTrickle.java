@@ -17,7 +17,7 @@ public class PTrickle {
   }
 
   public static <R> GraphBuilder<R> in(Name input) {
-    return new GraphBuilder<R>().in(input);
+    return new GraphBuilder<R>().inputs(input);
   }
 
   public static class GraphBuilder<R> {
@@ -33,7 +33,7 @@ public class PTrickle {
       this (ImmutableSet.<Name>of(), ImmutableSet.<NodeBuilder<?, R>>of());
     }
 
-    public <T> GraphBuilder<R> in(Name... dependencies) {
+    public <T> GraphBuilder<R> inputs(Name... dependencies) {
       ImmutableSet.Builder<Name> builder = ImmutableSet.builder();
 
       builder.addAll(deps);
@@ -102,7 +102,7 @@ public class PTrickle {
       return this;
     }
 
-    public Graph<R> out(PNode<R> result1) {
+    public Graph<R> output(PNode<R> result1) {
       return graphBuilder.out(result1);
     }
 
