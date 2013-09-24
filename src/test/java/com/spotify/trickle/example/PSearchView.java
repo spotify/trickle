@@ -51,6 +51,27 @@ public class PSearchView {
     });
   }
 
+  public static ListenableFuture<Suggestions> getSuggestions(final RequestContext context,
+                                                             String query, String suggestType, String country) {
+    return Futures.transform(context.request(buildSuggestRequest(query, suggestType, country)), new Function<Message, Suggestions>() {
+      @Override
+      public Suggestions apply(Message reply) {
+        return null;
+      }
+    });
+  }
+
+  private static String buildSuggestRequest(String query,
+                                            String type, String country) {
+    String hermesURL = "hm://searchsuggest/suggest/";
+    hermesURL += query;
+    hermesURL += "?country=" + country;
+    if (type != null) {
+      hermesURL += "&search-type=" + type;
+    }
+
+    return hermesURL;
+  }
   private PNode<Object> trackMetaDataNode() {
     return PNode.of(new Object() {
       public ListenableFuture<List<MetadataReply<Track>>> _(RequestContext context, Suggestions suggestions) throws Exception {
@@ -124,27 +145,7 @@ public class PSearchView {
   }
 
 
-  public static ListenableFuture<Suggestions> getSuggestions(final RequestContext context,
-                                                                     String query, String suggestType, String country) {
-    return Futures.transform(context.request(buildSuggestRequest(query, suggestType, country)), new Function<Message, Suggestions>() {
-      @Override
-      public Suggestions apply(Message reply) {
-          return null;
-        }
-    });
-  }
 
-  private static String buildSuggestRequest(String query,
-                                            String type, String country) {
-    String hermesURL = "hm://searchsuggest/suggest/";
-    hermesURL += query;
-    hermesURL += "?country=" + country;
-    if (type != null) {
-      hermesURL += "&search-type=" + type;
-    }
-
-    return hermesURL;
-  }
 
   private static class RequestContext {
     public ListenableFuture<Message> request(String s) {

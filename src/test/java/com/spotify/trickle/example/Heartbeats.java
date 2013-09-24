@@ -9,13 +9,13 @@ import static com.spotify.trickle.Name.named;
 /**
  * TODO: document!
  */
-public class Petter {
+public class Heartbeats {
   public static final Name ENDPOINT = named("endpoint");
 
   final long heartbeatIntervalMillis = 132;
   final Graph<Long> graph;
 
-  public Petter() {
+  public Heartbeats() {
     PNode<RegistryEntry> fetchCurrentState = currentStateNode();
     PNode<Boolean> updateState = updateStateNode();
     PNode<Void> updateSerial = updateSerialNode();
