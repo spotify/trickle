@@ -106,7 +106,6 @@ final class Examples {
     public Node<String> root() { return helloWorld; }
   }
 
-
   public static void main(String[] args) {
     {
       Example example = new Example1();
@@ -161,6 +160,7 @@ final class Examples {
         Ok, I'm fine with 10
        */
     }
+
   }
 
 

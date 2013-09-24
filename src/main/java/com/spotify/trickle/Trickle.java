@@ -113,7 +113,7 @@ public final class Trickle {
   public static abstract class Dep<T> {
     public final Class<T> cls;
 
-    private Dep(final Class<T> cls) {
+    Dep(final Class<T> cls) {
       this.cls = cls;
     }
   }
@@ -123,6 +123,15 @@ public final class Trickle {
 
     private NodeDep(final Node<T> node, final Class<T> cls) {
       super(cls);
+      this.node = node;
+    }
+  }
+
+  public static class PNodeDep extends Dep<Object> {
+    public final PNode<?> node;
+
+    public PNodeDep(final PNode<?> node) {
+      super(Object.class);
       this.node = node;
     }
   }
