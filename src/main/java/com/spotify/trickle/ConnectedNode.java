@@ -14,26 +14,22 @@ import static com.google.common.util.concurrent.Futures.allAsList;
  * TODO: document!
  */
 class ConnectedNode {
-  private final Node<?> node;
+  private final TNode<?> node;
   private final ImmutableList<Dep<?>> inputs;
-  private final ImmutableList<Node<?>> predecessors;
+  private final ImmutableList<TNode<?>> predecessors;
   private final Transformer<?> transformer;
 
-  public ConnectedNode(Node<?> node, Iterable<Dep<?>> inputs, List<Node<?>> predecessors, Transformer<?> transformer) {
+  public ConnectedNode(TNode<?> node, Iterable<Dep<?>> inputs, List<TNode<?>> predecessors, Transformer<?> transformer) {
     this.node = node;
     this.predecessors = ImmutableList.copyOf(predecessors);
     this.inputs = ImmutableList.copyOf(inputs);
     this.transformer = transformer;
   }
 
-  public Node<?> getNode() {
-    return node;
-  }
-
   protected ListenableFuture<?> future(
       final Map<Name, Object> bindings,
-      final Map<Node<?>, ConnectedNode> nodes,
-      final Map<Node<?>, ListenableFuture<?>> visited) {
+      final Map<TNode<?>, ConnectedNode> nodes,
+      final Map<TNode<?>, ListenableFuture<?>> visited) {
 
     // filter out future and value dependencies
     final ImmutableList.Builder<ListenableFuture<?>> futuresListBuilder = builder();
@@ -42,7 +38,7 @@ class ConnectedNode {
     for (Dep<?> input : inputs) {
       // depends on other node
       if (input instanceof NodeDep) {
-        final Node<?> node = ((NodeDep) input).node;
+        final TNode<?> node = ((NodeDep) input).node;
 
         final ListenableFuture<?> future = futureForNode(bindings, nodes, visited, node);
 
@@ -70,7 +66,7 @@ class ConnectedNode {
     }
 
     // add predecessors, too
-    for (Node<?> predecessor : predecessors) {
+    for (TNode<?> predecessor : predecessors) {
       futuresListBuilder.add(futureForNode(bindings, nodes, visited, predecessor));
     }
 
@@ -85,7 +81,7 @@ class ConnectedNode {
     return transformer.createTransform(values, allFuture);
   }
 
-  private ListenableFuture<?> futureForNode(Map<Name, Object> bindings, Map<Node<?>, ConnectedNode> nodes, Map<Node<?>, ListenableFuture<?>> visited, Node<?> node) {
+  private ListenableFuture<?> futureForNode(Map<Name, Object> bindings, Map<TNode<?>, ConnectedNode> nodes, Map<TNode<?>, ListenableFuture<?>> visited, TNode<?> node) {
     final ListenableFuture<?> future;
     if (visited.containsKey(node)) {
       future = visited.get(node);

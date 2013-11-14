@@ -19,7 +19,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 // there are plenty of methods here that are only called via reflection
 @SuppressWarnings("UnusedDeclaration")
 public class TrickleTest {
-  Node<String> node1;
+  Node0<String> node1;
 
   SettableFuture<String> future1;
   private ListeningExecutorService executorService;
@@ -28,7 +28,7 @@ public class TrickleTest {
   public void setUp() throws Exception {
     future1 = SettableFuture.create();
 
-    node1 = Node.of(args -> future1);
+    node1 = () -> future1;
     executorService = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
   }
 
@@ -62,7 +62,7 @@ public class TrickleTest {
 
   @Test
   public void shouldUseInputs() throws Exception {
-    Node<String> node = Node.of(args -> Futures.immediateFuture("hello " + args[0] + "!"));
+    Node1<String, String> node = (name -> Futures.immediateFuture("hello " + name + "!"));
 
     Name inputName = Name.named("theInnnput");
     Graph<String> graph = Trickle
@@ -80,16 +80,16 @@ public class TrickleTest {
     final AtomicInteger counter = new AtomicInteger(0);
     final CountDownLatch latch = new CountDownLatch(1);
 
-    Node<Void> incr1 = Node.of(args -> {
+    Node0<Void> incr1 = () -> {
       counter.incrementAndGet();
       return Futures.immediateFuture(null);
-    });
-    Node<Void> incr2 = Node.of(args -> executorService.submit((Callable<Void>) () -> {
+    };
+    Node0<Void> incr2 = () -> executorService.submit((Callable<Void>) () -> {
       latch.await();
       counter.incrementAndGet();
       return null;
-    }));
-    Node<Integer> result = Node.of(args -> Futures.immediateFuture(counter.get()));
+    });
+    Node0<Integer> result = () -> Futures.immediateFuture(counter.get());
 
     Graph<Integer> graph = Trickle
         .graph(Integer.class)

@@ -16,10 +16,10 @@ public class Heartbeats {
   final Graph<Long> graph;
 
   public Heartbeats() {
-    Node<RegistryEntry> fetchCurrentState = Node.of(args -> queryEndpoints((Endpoint) args[0]));
-    Node<Boolean> updateState = Node.of(args -> putEntry((Endpoint) args[0]));
-    Node<Void> updateSerial = updateSerialNode();
-    Node<Long> returnResult = Node.of(args -> Futures.immediateFuture(heartbeatIntervalMillis));
+    Node1<Endpoint, RegistryEntry> fetchCurrentState = Heartbeats::queryEndpoints;
+    Node1<Endpoint, Boolean> updateState = Heartbeats::putEntry;
+    Node1<RegistryEntry, Void> updateSerial = this::updateSerialNode;
+    Node0<Long> returnResult = () -> Futures.immediateFuture(heartbeatIntervalMillis);
 
     graph = Trickle
         .graph(Long.class)
@@ -35,16 +35,12 @@ public class Heartbeats {
     return graph.bind(ENDPOINT, endpoint).run();
   }
 
-  private Node<Void> updateSerialNode() {
-    return Node.of(args -> {
-      RegistryEntry entry = (RegistryEntry) args[0];
-
-      if (entry == null || entry.getState() == State.DOWN) {
-        return updateSerialNumber();
-      } else {
-        return Futures.immediateFuture(null);
-      }
-    });
+  private ListenableFuture<Void> updateSerialNode(RegistryEntry entry) {
+    if (entry == null || entry.getState() == State.DOWN) {
+      return updateSerialNumber();
+    } else {
+      return Futures.immediateFuture(null);
+    }
   }
 
 

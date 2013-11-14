@@ -7,6 +7,9 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.spotify.trickle.Graph;
 import com.spotify.trickle.Name;
 import com.spotify.trickle.Node;
+import com.spotify.trickle.Node2;
+import com.spotify.trickle.Node3;
+import com.spotify.trickle.TNode;
 import com.spotify.trickle.Trickle;
 
 import java.util.List;
@@ -19,10 +22,10 @@ public class PSearchView {
   private final Graph<AllData> graph;
 
   public PSearchView() {
-    Node<Suggestions> getSuggestions = suggestionsNode();
-    Node<List<MetadataReply<Track>>> fetchTrackMetadata = trackMetaDataNode();
-    Node<List<Long>> fetchPlaylistFollowers = playlistFollowersNode();
-    Node<AllData> allData = combineItAllNode();
+    Node3<RequestContext, String, Message, Suggestions> getSuggestions = suggestionsNode();
+    Node2<RequestContext, Suggestions, List<MetadataReply<Track>>> fetchTrackMetadata = trackMetaDataNode();
+    Node2<RequestContext, Suggestions, List<Long>> fetchPlaylistFollowers = playlistFollowersNode();
+    Node3<Suggestions, List<MetadataReply<Track>>, List<Long>, AllData> allData = combineItAllNode();
 
     graph = Trickle.graph(AllData.class)
         .inputs(CONTEXT, REQUEST, QUERY)
@@ -43,14 +46,8 @@ public class PSearchView {
         .run();
   }
 
-  private Node<Suggestions> suggestionsNode() {
-    return Node.of(args -> {
-      RequestContext context = (RequestContext) args[0];
-      String query = (String) args[1];
-      Message request = (Message) args[2];
-
-      return getSuggestions(context, query, "track,album,artist,playlist", request.getParameter("country"));
-    });
+  private Node3<RequestContext, String, Message, Suggestions> suggestionsNode() {
+    return (context, query, request) -> getSuggestions(context, query, "track,album,artist,playlist", request.getParameter("country"));
   }
 
   public static ListenableFuture<Suggestions> getSuggestions(final RequestContext context,
@@ -69,32 +66,22 @@ public class PSearchView {
 
     return hermesURL;
   }
-  private Node<List<MetadataReply<Track>>> trackMetaDataNode() {
-    return Node.of(args -> {
-      RequestContext context = (RequestContext) args[0];
-      Suggestions suggestions = (Suggestions) args[1];
-
+  private Node2<RequestContext, Suggestions, List<MetadataReply<Track>>> trackMetaDataNode() {
+    return (context, suggestions) -> {
       List<String> gids = Lists.transform(suggestions.getTrackList(), track -> Util.hex(track.getGid()));
       return MetadataClient.getMetadata(context, MetadataType.TRACK, gids);
-    });
+    };
   }
 
-  private Node<List<Long>> playlistFollowersNode() {
-    return Node.of(args -> {
-      RequestContext context = (RequestContext) args[0];
-      Suggestions suggestions = (Suggestions) args[1];
-
+  private Node2<RequestContext, Suggestions, List<Long>> playlistFollowersNode() {
+    return (context, suggestions) -> {
       List<String> uris = Lists.transform(suggestions.getPlaylistList(), Playlist::getUri);
       return PopcountClient.getFollowerCount(context, uris);
-    });
+    };
   }
 
-  private Node<AllData> combineItAllNode() {
-    return Node.of(args -> {
-      Suggestions suggestions = (Suggestions) args[0];
-      List<MetadataReply<Track>> metadataReplies = (List<MetadataReply<Track>>) args[1];
-      List<Long> followers = (List<Long>) args[2];
-
+  private Node3<Suggestions, List<MetadataReply<Track>>, List<Long>, AllData> combineItAllNode() {
+    return (suggestions, metadataReplies, followers) -> {
       EntityData.Builder<Album> albumDataBuilder = new EntityData.Builder<>();
       albumDataBuilder.withTotal(suggestions.getAlbumCount());
       for (Album album : suggestions.getAlbumList()) {
@@ -132,7 +119,7 @@ public class PSearchView {
       allDataBuilder.withPlaylists(playlists);
       allDataBuilder.withTracks(tracks);
       return Futures.immediateFuture(allDataBuilder.build());
-    });
+    };
   }
 
 

@@ -11,7 +11,7 @@ final class Transformers {
 
   public static Transformer<?> newNoChecksTransformer(
       final List<Dep<?>> inputs,
-      final Object obj) {
+      final TNode<?> obj) {
     return new Java8Transformer<>(inputs, obj);
   }
 }
