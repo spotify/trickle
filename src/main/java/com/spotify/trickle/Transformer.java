@@ -2,12 +2,12 @@
  * Copyright (c) 2013 Spotify AB
  */
 
-package com.spotify.trickle.transform;
+package com.spotify.trickle;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
 
-public interface Transformer<T> {
+interface Transformer<T> {
   /**
    * Builds a transformation from a list of values.
    *

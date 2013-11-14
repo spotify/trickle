@@ -1,182 +1,134 @@
-/*
- * Copyright (c) 2013 Spotify AB
- */
-
 package com.spotify.trickle;
 
-import com.spotify.trickle.transform.Transformers;
+import com.google.common.base.Function;
+import com.google.common.collect.*;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-import com.google.common.util.concurrent.ListenableFuture;
+import java.util.*;
 
-import java.util.List;
+/**
+ * Keeping my trickle-suggestions separate for now, until we have finished discussing.
+ */
+public class Trickle {
+  static final Object DEPENDENCY_NOT_INITIALISED = new Object();
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.collect.Lists.newArrayList;
-import static com.spotify.trickle.Name.named;
+  public static <R> GraphBuilder<R> graph(Class<R> returnClass) {
+    return new GraphBuilder<>();
+  }
 
-public final class Trickle {
+  public static <R> GraphBuilder<R> in(Name input) {
+    return new GraphBuilder<R>().inputs(input);
+  }
 
-  private Trickle() {}
+  public static class GraphBuilder<R> {
+    private final Set<Name> deps;
+    private final Set<NodeBuilder<?, R>> nodes;
 
-  public static class NodeDependencies {
-    final List<Dep<?>> inputs = newArrayList();
-
-    public <T> NodeDependencies in(final Node<T> node) {
-      checkNotNull(node);
-      inputs.add(new NodeDep<>(node, node.returnCls));
-      return this;
+    private GraphBuilder(Set<Name> deps, Set<NodeBuilder<?, R>> nodes) {
+      this.deps = ImmutableSet.copyOf(deps);
+      this.nodes = Sets.newHashSet(nodes);
     }
 
-    public <T> NodeDependencies in(final T value, final Class<T> cls) {
-      checkNotNull(cls);
-      inputs.add(new ValueDep<>(value, cls));
-      return this;
+    public GraphBuilder() {
+      this (ImmutableSet.<Name>of(), ImmutableSet.<NodeBuilder<?, R>>of());
     }
 
-    public <T> NodeDependencies bind(final Name name, final Class<T> cls) {
-      checkNotNull(name);
-      checkNotNull(cls);
-      inputs.add(new BindingDep<>(name, cls));
-      return this;
+    public <T> GraphBuilder<R> inputs(Name... dependencies) {
+      ImmutableSet.Builder<Name> builder = ImmutableSet.builder();
+
+      builder.addAll(deps);
+      builder.addAll(Arrays.asList(dependencies));
+
+      return new GraphBuilder<>(builder.build(), nodes);
     }
 
-    public <T> NodeDependencies bind(final Dep<T> dep) {
-      checkNotNull(dep);
-      inputs.add(dep);
-      return this;
+    public <N> NodeBuilder<N, R> call(Node<N> node) {
+      NodeBuilder<N, R> nodeBuilder = new NodeBuilder<>(this, node);
+      nodes.add(nodeBuilder);
+
+      return nodeBuilder;
     }
 
-    public <T> NodeBuilder<T> fallback(final Node<T> node) {
-      checkNotNull(node);
-      return new NodeBuilder<T>(this, node);
+    public TrickleGraph<R> out(Node<R> result) {
+      Map<Name,Object> inputDependencies =
+          Maps.asMap(deps, new Function<Name, Object>() {
+            @Override
+            public Object apply(Name input) {
+              return DEPENDENCY_NOT_INITIALISED;
+            }
+          });
+
+      return new TrickleGraph<>(inputDependencies, result, buildNodes(nodes));
     }
 
-    public <T> NodeBuilder<T> fallback(final T value, final Class<T> cls) {
-      checkNotNull(cls);
-      return fallback(G().in(value, cls).<T>direct());
-    }
+    private Map<Node<?>, ConnectedNode> buildNodes(Iterable<NodeBuilder<?, R>> nodeBuilders) {
+      ImmutableMap.Builder<Node<?>, ConnectedNode> builder = ImmutableMap.builder();
 
-    public <T> Node<T> apply(final Class<T> returnCls, final Object obj) {
-      return new NodeBuilder<T>(this).apply(returnCls, obj);
-    }
+      for (NodeBuilder<?, R> nodeBuilder : nodeBuilders) {
+        builder.put(nodeBuilder.node, nodeBuilder.connect());
+      }
 
-    public <T> Node<T> direct() {
-      return new NodeBuilder<T>(this).direct();
+      return builder.build();
     }
   }
 
-  public static class NodeBuilder<T> {
-    final NodeDependencies nodeDependencies;
-    final Optional<Node<T>> fallback;
 
-    public NodeBuilder(NodeDependencies nodeDependencies, Node<T> fallback) {
-      this.nodeDependencies = nodeDependencies;
-      this.fallback = Optional.fromNullable(fallback);
+  public static class NodeBuilder<N, R> {
+    private final GraphBuilder<R> graphBuilder;
+    private final Node<N> node;
+    private final List<Object> inputs;
+    private final List<Node<?>> predecessors;
+
+    private NodeBuilder(GraphBuilder<R> graphBuilder, Node<N> node) {
+      this.graphBuilder = graphBuilder;
+      this.node = node;
+      inputs = new ArrayList<>();
+      predecessors = new ArrayList<>();
     }
 
-    public NodeBuilder(NodeDependencies nodeDependencies) {
-      this.nodeDependencies = nodeDependencies;
-      this.fallback = Optional.absent();
+    public NodeBuilder<N, R> with(Object... inputs) {
+      this.inputs.addAll(Arrays.asList(inputs));
+      return this;
     }
 
-    public Node<T> apply(final Class<T> returnCls, final Object obj) {
-      checkNotNull(returnCls);
-      final ImmutableList<Dep<?>> deps = ImmutableList.copyOf(nodeDependencies.inputs);
+    public <N1> NodeBuilder<N1, R> call(Node<N1> put1) {
+      return graphBuilder.call(put1);
+    }
 
+    public NodeBuilder<N, R> after(Node<?>... predecessors) {
+      this.predecessors.addAll(Arrays.asList(predecessors));
+      return this;
+    }
 
-      return new AwaitingInputNode<>(
+    public TrickleGraph<R> output(Node<R> result1) {
+      return graphBuilder.out(result1);
+    }
+
+    private ConnectedNode connect() {
+      List<Dep<?>> deps = asDeps(inputs);
+      return new ConnectedNode(
+          node,
           deps,
-          Transformers.newMethodTransformer(deps, returnCls, obj),
-          returnCls,
-          fallback
+          predecessors,
+          Transformers.newNoChecksTransformer(deps, node.getNodeObject())
       );
     }
 
-    public Node<T> direct() {
-      final ImmutableList<Dep<?>> deps = ImmutableList.copyOf(nodeDependencies.inputs);
+    private List<Dep<?>> asDeps(List<Object> inputs) {
+      List<Dep<?>> result = Lists.newArrayList();
 
-      checkArgument(deps.size() == 1, "Direct nodes can only be created from one input");
-      final Class<T> returnCls = (Class<T>) deps.get(0).cls;
+      for (Object input : inputs) {
+        if (input instanceof Name) {
+          result.add(new BindingDep<>((Name) input, Object.class));
+        }
+        else if (input instanceof Node<?>) {
+          result.add(new NodeDep((Node<?>) input));
+        }
+        else {
+          throw new RuntimeException("illegal input object: " + input);
+        }
+      }
 
-      return new AwaitingInputNode<>(
-          deps,
-          Transformers.<T>newDirectTransformer(),
-          returnCls,
-          fallback
-      );
+      return result;
     }
   }
-
-  public static abstract class Dep<T> {
-    public final Class<T> cls;
-
-    Dep(final Class<T> cls) {
-      this.cls = cls;
-    }
-  }
-
-  public static class NodeDep<T> extends Dep<T> {
-    public final Node<T> node;
-
-    private NodeDep(final Node<T> node, final Class<T> cls) {
-      super(cls);
-      this.node = node;
-    }
-  }
-
-  public static class PNodeDep extends Dep<Object> {
-    public final PNode<?> node;
-
-    public PNodeDep(final PNode<?> node) {
-      super(Object.class);
-      this.node = node;
-    }
-  }
-
-  public static class BindingDep<T> extends Dep<T> {
-    public final Name name;
-
-    public BindingDep(Name name, Class<T> cls) {
-      super(cls);
-      this.name = name;
-    }
-  }
-
-  public static class ValueDep<T> extends Dep<T> {
-    public final T value;
-
-    private ValueDep(final T value, final Class<T> cls) {
-      super(cls);
-      this.value = value;
-    }
-  }
-
-  public static NodeDependencies G() {
-    return new NodeDependencies();
-  }
-
-  public static <T> Node<T> N(
-      final ListenableFuture<T> future,
-      final Class<T> cls) {
-
-    return new FutureWrapperNode<T>(cls, future);
-  }
-
-  public static <T> Dep<T> binding(String name, Class<T> cls) {
-    return new BindingDep<T>(named(name), cls);
-  }
-
-  public static <T,V> Node<V> chain(
-      final Node<T> node,
-      final Class<V> cls,
-      final Object obj) {
-
-    return Trickle.<V>G().in(node).apply(cls, obj);
-  }
-
-  // TODO: optional paths
-
 }

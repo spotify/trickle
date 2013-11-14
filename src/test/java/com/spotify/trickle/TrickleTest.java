@@ -14,10 +14,12 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
- * Integration-level PTrickle tests.
+ * Integration-level Trickle tests.
  */
-public class PTrickleTest {
-  PNode<String> node1;
+// there are plenty of methods here that are only called via reflection
+@SuppressWarnings("UnusedDeclaration")
+public class TrickleTest {
+  Node<String> node1;
 
   SettableFuture<String> future1;
   private ListeningExecutorService executorService;
@@ -26,17 +28,13 @@ public class PTrickleTest {
   public void setUp() throws Exception {
     future1 = SettableFuture.create();
 
-    node1 = PNode.of(new Object() {
-      public ListenableFuture<String> _() {
-        return future1;
-      }
-    });
+    node1 = Node.of(args -> future1);
     executorService = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
   }
 
   @Test
   public void shouldConstructSingleNodeGraph() throws Exception {
-    Graph<String> graph = PTrickle
+    Graph<String> graph = Trickle
         .graph(String.class)
         .call(node1)
         .output(node1);
@@ -49,7 +47,7 @@ public class PTrickleTest {
 
   @Test
   public void shouldExecuteSingleNodeAsynchronously() throws Exception {
-    Graph<String> graph = PTrickle
+    Graph<String> graph = Trickle
         .graph(String.class)
         .call(node1)
         .output(node1);
@@ -64,14 +62,10 @@ public class PTrickleTest {
 
   @Test
   public void shouldUseInputs() throws Exception {
-    PNode<String> node = PNode.of(new Object() {
-      public ListenableFuture<String> _(String input) {
-        return Futures.immediateFuture("hello " + input + "!");
-      }
-    });
+    Node<String> node = Node.of(args -> Futures.immediateFuture("hello " + args[0] + "!"));
 
     Name inputName = Name.named("theInnnput");
-    Graph<String> graph = PTrickle
+    Graph<String> graph = Trickle
         .graph(String.class)
         .inputs(inputName)
         .call(node).with(inputName)
@@ -86,30 +80,18 @@ public class PTrickleTest {
     final AtomicInteger counter = new AtomicInteger(0);
     final CountDownLatch latch = new CountDownLatch(1);
 
-    PNode<Void> incr1 = PNode.of(new Object() {
-      public void _() {
-        counter.incrementAndGet();
-      }
+    Node<Void> incr1 = Node.of(args -> {
+      counter.incrementAndGet();
+      return Futures.immediateFuture(null);
     });
-    PNode<Void> incr2 = PNode.of(new Object() {
-      public ListenableFuture<Void> _() throws InterruptedException {
-        return executorService.submit(new Callable<Void>() {
-          @Override
-          public Void call() throws Exception {
-            latch.await();
-            counter.incrementAndGet();
-            return null;
-          }
-        });
-      }
-    });
-    PNode<Integer> result = PNode.of(new Object() {
-      public Integer _() {
-        return counter.get();
-      }
-    });
+    Node<Void> incr2 = Node.of(args -> executorService.submit((Callable<Void>) () -> {
+      latch.await();
+      counter.incrementAndGet();
+      return null;
+    }));
+    Node<Integer> result = Node.of(args -> Futures.immediateFuture(counter.get()));
 
-    Graph<Integer> graph = PTrickle
+    Graph<Integer> graph = Trickle
         .graph(Integer.class)
         .call(incr1)
         .call(incr2).after(incr1)

@@ -16,12 +16,12 @@ public class Heartbeats {
   final Graph<Long> graph;
 
   public Heartbeats() {
-    PNode<RegistryEntry> fetchCurrentState = currentStateNode();
-    PNode<Boolean> updateState = updateStateNode();
-    PNode<Void> updateSerial = updateSerialNode();
-    PNode<Long> returnResult = resultNode();
+    Node<RegistryEntry> fetchCurrentState = Node.of(args -> queryEndpoints((Endpoint) args[0]));
+    Node<Boolean> updateState = Node.of(args -> putEntry((Endpoint) args[0]));
+    Node<Void> updateSerial = updateSerialNode();
+    Node<Long> returnResult = Node.of(args -> Futures.immediateFuture(heartbeatIntervalMillis));
 
-    graph = PTrickle
+    graph = Trickle
         .graph(Long.class)
         .inputs(ENDPOINT)
         .call(fetchCurrentState).with(ENDPOINT)
@@ -35,38 +35,14 @@ public class Heartbeats {
     return graph.bind(ENDPOINT, endpoint).run();
   }
 
-  private PNode<RegistryEntry> currentStateNode() {
-    return PNode.of(new Object() {
-      public ListenableFuture<RegistryEntry> _(Endpoint endpoint) {
-        return queryEndpoints(endpoint);
-      }
-    });
-  }
+  private Node<Void> updateSerialNode() {
+    return Node.of(args -> {
+      RegistryEntry entry = (RegistryEntry) args[0];
 
-  private PNode<Boolean> updateStateNode() {
-    return PNode.of(new Object() {
-      public ListenableFuture<Boolean> _(Endpoint endpoint) {
-        return putEntry(endpoint);
-      }
-    });
-  }
-
-  private PNode<Void> updateSerialNode() {
-    return PNode.of(new Object() {
-      public ListenableFuture<Void> _(RegistryEntry entry) {
-        if (entry == null || entry.getState() == State.DOWN) {
-          return updateSerialNumber();
-        } else {
-          return Futures.immediateFuture(null);
-        }
-      }
-    });
-  }
-
-  private PNode<Long> resultNode() {
-    return PNode.of(new Object() {
-      public Long _() {
-        return heartbeatIntervalMillis;
+      if (entry == null || entry.getState() == State.DOWN) {
+        return updateSerialNumber();
+      } else {
+        return Futures.immediateFuture(null);
       }
     });
   }

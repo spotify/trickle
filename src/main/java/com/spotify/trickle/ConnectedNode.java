@@ -2,7 +2,6 @@ package com.spotify.trickle;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.spotify.trickle.transform.Transformer;
 
 import java.util.List;
 import java.util.Map;
@@ -14,36 +13,36 @@ import static com.google.common.util.concurrent.Futures.allAsList;
 /**
  * TODO: document!
  */
-public class ConnectedNode {
-  private final PNode<?> node;
-  private final ImmutableList<Trickle.Dep<?>> inputs;
-  private final ImmutableList<PNode<?>> predecessors;
+class ConnectedNode {
+  private final Node<?> node;
+  private final ImmutableList<Dep<?>> inputs;
+  private final ImmutableList<Node<?>> predecessors;
   private final Transformer<?> transformer;
 
-  public ConnectedNode(PNode<?> node, Iterable<Trickle.Dep<?>> inputs, List<PNode<?>> predecessors, Transformer<?> transformer) {
+  public ConnectedNode(Node<?> node, Iterable<Dep<?>> inputs, List<Node<?>> predecessors, Transformer<?> transformer) {
     this.node = node;
     this.predecessors = ImmutableList.copyOf(predecessors);
     this.inputs = ImmutableList.copyOf(inputs);
     this.transformer = transformer;
   }
 
-  public PNode<?> getNode() {
+  public Node<?> getNode() {
     return node;
   }
 
   protected ListenableFuture<?> future(
       final Map<Name, Object> bindings,
-      final Map<PNode<?>, ConnectedNode> nodes,
-      final Map<PNode<?>, ListenableFuture<?>> visited) {
+      final Map<Node<?>, ConnectedNode> nodes,
+      final Map<Node<?>, ListenableFuture<?>> visited) {
 
     // filter out future and value dependencies
     final ImmutableList.Builder<ListenableFuture<?>> futuresListBuilder = builder();
     final ImmutableList.Builder<Object> valuesListBuilder = builder();
 
-    for (Trickle.Dep<?> input : inputs) {
+    for (Dep<?> input : inputs) {
       // depends on other node
-      if (input instanceof Trickle.PNodeDep) {
-        final PNode<?> node = ((Trickle.PNodeDep) input).node;
+      if (input instanceof NodeDep) {
+        final Node<?> node = ((NodeDep) input).node;
 
         final ListenableFuture<?> future = futureForNode(bindings, nodes, visited, node);
 
@@ -51,8 +50,8 @@ public class ConnectedNode {
         valuesListBuilder.add(future);
 
         // depends on bind
-      } else if (input instanceof Trickle.BindingDep) {
-        final Trickle.BindingDep<?> bindingDep = (Trickle.BindingDep<?>) input;
+      } else if (input instanceof BindingDep) {
+        final BindingDep<?> bindingDep = (BindingDep<?>) input;
         checkArgument(bindings.containsKey(bindingDep.name),
             "Missing bind for name %s, of type %s",
             bindingDep.name, bindingDep.cls);
@@ -65,13 +64,13 @@ public class ConnectedNode {
         valuesListBuilder.add(bindingValue);
 
         // depends on static value
-      } else if (input instanceof Trickle.ValueDep) {
-        valuesListBuilder.add(((Trickle.ValueDep<?>) input).value);
+      } else if (input instanceof ValueDep) {
+        valuesListBuilder.add(((ValueDep<?>) input).value);
       }
     }
 
     // add predecessors, too
-    for (PNode<?> predecessor : predecessors) {
+    for (Node<?> predecessor : predecessors) {
       futuresListBuilder.add(futureForNode(bindings, nodes, visited, predecessor));
     }
 
@@ -86,7 +85,7 @@ public class ConnectedNode {
     return transformer.createTransform(values, allFuture);
   }
 
-  private ListenableFuture<?> futureForNode(Map<Name, Object> bindings, Map<PNode<?>, ConnectedNode> nodes, Map<PNode<?>, ListenableFuture<?>> visited, PNode<?> node) {
+  private ListenableFuture<?> futureForNode(Map<Name, Object> bindings, Map<Node<?>, ConnectedNode> nodes, Map<Node<?>, ListenableFuture<?>> visited, Node<?> node) {
     final ListenableFuture<?> future;
     if (visited.containsKey(node)) {
       future = visited.get(node);

@@ -2,12 +2,11 @@
  * Copyright (c) 2013 Spotify AB
  */
 
-package com.spotify.trickle.transform;
+package com.spotify.trickle;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.spotify.trickle.Trickle;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -17,13 +16,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.util.concurrent.Futures.*;
 
 class NoChecksMethodTransformer<T> implements Transformer<T> {
-  final ImmutableList<Trickle.Dep<?>> inputs;
+  final ImmutableList<Dep<?>> inputs;
   final Object obj;
 
   final Method method;
 
   NoChecksMethodTransformer(
-      final List<Trickle.Dep<?>> inputs,
+      final List<Dep<?>> inputs,
       final Object obj) {
     this.inputs = ImmutableList.copyOf(inputs);
     this.obj = obj;
@@ -73,12 +72,12 @@ class NoChecksMethodTransformer<T> implements Transformer<T> {
 
     final Object[] args = new Object[values.size()];
     for (int i = 0; i < values.size(); i++) {
-      final Trickle.Dep<?> dep = inputs.get(i);
+      final Dep<?> dep = inputs.get(i);
       final Object valueObject = values.get(i);
 
       Object arg;
       if (valueObject instanceof ListenableFuture &&
-                !(dep instanceof Trickle.BindingDep)) {
+                !(dep instanceof BindingDep)) {
         arg = getUnchecked((ListenableFuture) valueObject);
       } else {
         arg = valueObject;

@@ -1,13 +1,13 @@
 package com.spotify.trickle.example;
 
-import com.google.common.base.Function;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.spotify.trickle.Graph;
 import com.spotify.trickle.Name;
-import com.spotify.trickle.PNode;
-import com.spotify.trickle.PTrickle;
+import com.spotify.trickle.Node;
+import com.spotify.trickle.Trickle;
 
 import java.util.List;
 
@@ -19,12 +19,12 @@ public class PSearchView {
   private final Graph<AllData> graph;
 
   public PSearchView() {
-    PNode<Object> getSuggestions = suggestionsNode();
-    PNode<Object> fetchTrackMetadata = trackMetaDataNode();
-    PNode<Object> fetchPlaylistFollowers = playlistFollowersNode();
-    PNode<AllData> allData = combineItAllNode();
+    Node<Suggestions> getSuggestions = suggestionsNode();
+    Node<List<MetadataReply<Track>>> fetchTrackMetadata = trackMetaDataNode();
+    Node<List<Long>> fetchPlaylistFollowers = playlistFollowersNode();
+    Node<AllData> allData = combineItAllNode();
 
-    graph = PTrickle.graph(AllData.class)
+    graph = Trickle.graph(AllData.class)
         .inputs(CONTEXT, REQUEST, QUERY)
         .call(getSuggestions).with(CONTEXT, QUERY, REQUEST)
         .call(fetchTrackMetadata).with(CONTEXT, getSuggestions)
@@ -43,22 +43,19 @@ public class PSearchView {
         .run();
   }
 
-  private PNode<Object> suggestionsNode() {
-    return PNode.of(new Object() {
-      public ListenableFuture<Suggestions> _(RequestContext context, String query, Message request) {
-        return getSuggestions(context, query, "track,album,artist,playlist", request.getParameter("country"));
-      }
+  private Node<Suggestions> suggestionsNode() {
+    return Node.of(args -> {
+      RequestContext context = (RequestContext) args[0];
+      String query = (String) args[1];
+      Message request = (Message) args[2];
+
+      return getSuggestions(context, query, "track,album,artist,playlist", request.getParameter("country"));
     });
   }
 
   public static ListenableFuture<Suggestions> getSuggestions(final RequestContext context,
                                                              String query, String suggestType, String country) {
-    return Futures.transform(context.request(buildSuggestRequest(query, suggestType, country)), new Function<Message, Suggestions>() {
-      @Override
-      public Suggestions apply(Message reply) {
-        return null;
-      }
-    });
+    return Futures.transform(context.request(buildSuggestRequest(query, suggestType, country)), (AsyncFunction<? super Message,? extends Suggestions>) reply -> null);
   }
 
   private static String buildSuggestRequest(String query,
@@ -72,75 +69,69 @@ public class PSearchView {
 
     return hermesURL;
   }
-  private PNode<Object> trackMetaDataNode() {
-    return PNode.of(new Object() {
-      public ListenableFuture<List<MetadataReply<Track>>> _(RequestContext context, Suggestions suggestions) throws Exception {
-        List<String> gids = Lists.transform(suggestions.getTrackList(), new Function<Track, String>() {
-          @Override
-          public String apply(Track track) {
-            return Util.hex(track.getGid());
-          }
-        });
-        return MetadataClient.getMetadata(context, MetadataType.TRACK, gids);
-      }
+  private Node<List<MetadataReply<Track>>> trackMetaDataNode() {
+    return Node.of(args -> {
+      RequestContext context = (RequestContext) args[0];
+      Suggestions suggestions = (Suggestions) args[1];
+
+      List<String> gids = Lists.transform(suggestions.getTrackList(), track -> Util.hex(track.getGid()));
+      return MetadataClient.getMetadata(context, MetadataType.TRACK, gids);
     });
   }
 
-  private PNode<Object> playlistFollowersNode() {
-    return PNode.of(new Object() {
-      public ListenableFuture<List<Long>> _(RequestContext context, Suggestions suggestions) {
-        List<String> uris = Lists.transform(suggestions.getPlaylistList(), new Function<Playlist, String>() {
-          @Override
-          public String apply(Playlist playlist) {
-            return playlist.getUri();
-          }
-        });
-        return PopcountClient.getFollowerCount(context, uris);
-      }
+  private Node<List<Long>> playlistFollowersNode() {
+    return Node.of(args -> {
+      RequestContext context = (RequestContext) args[0];
+      Suggestions suggestions = (Suggestions) args[1];
+
+      List<String> uris = Lists.transform(suggestions.getPlaylistList(), Playlist::getUri);
+      return PopcountClient.getFollowerCount(context, uris);
     });
   }
 
-  private PNode<AllData> combineItAllNode() {
-    return PNode.of(new Object() {
-      public AllData _(Suggestions suggestions, List<MetadataReply<Track>> metadataReplies, List<Long> followers) {
-        EntityData.Builder<Album> albumDataBuilder = new EntityData.Builder<>();
-        albumDataBuilder.withTotal(suggestions.getAlbumCount());
-        for (Album album : suggestions.getAlbumList()) {
-          albumDataBuilder.withHit(Album.fromSuggestAlbum(album));
-        }
-        final EntityData<Album> albums = albumDataBuilder.build();
+  private Node<AllData> combineItAllNode() {
+    return Node.of(args -> {
+      Suggestions suggestions = (Suggestions) args[0];
+      List<MetadataReply<Track>> metadataReplies = (List<MetadataReply<Track>>) args[1];
+      List<Long> followers = (List<Long>) args[2];
 
-        EntityData.Builder<Artist> artistDataBuilder = new EntityData.Builder<>();
-        artistDataBuilder.withTotal(suggestions.getArtistCount());
-        for (Artist artist : suggestions.getArtistList()) {
-          artistDataBuilder.withHit(Artist.fromSuggestArtist(artist));
-        }
-        final EntityData<Artist> artists = artistDataBuilder.build();
-
-        EntityData.Builder<Track> trackDataBuilder = new EntityData.Builder<>();
-        trackDataBuilder.withTotal(suggestions.getTrackCount());
-        for (ListZip.Pair<MetadataReply<Track>, Track> pair : ListZip.zip(metadataReplies, suggestions.getTrackList())) {
-          if (pair.first != null) {
-            trackDataBuilder.withHit(Track.fromDecoratedSuggestTrack(pair.first.getData(), pair.second));
-          }
-        }
-        final EntityData<Track> tracks = trackDataBuilder.build();
-
-        EntityData.Builder<Playlist> playlistDataBuilder = new EntityData.Builder<>();
-        playlistDataBuilder.withTotal(suggestions.getPlaylistCount());
-        for (ListZip.Pair<Playlist, Long> pair : ListZip.zip(suggestions.getPlaylistList(), followers)) {
-          playlistDataBuilder.withHit(Playlist.fromSuggestPlaylist(pair.first, pair.second));
-
-        }
-        final EntityData<Playlist> playlists = playlistDataBuilder.build();
-
-        AllData.Builder allDataBuilder = new AllData.Builder();
-        allDataBuilder.withAlbums(albums);
-        allDataBuilder.withArtists(artists);
-        allDataBuilder.withPlaylists(playlists);
-        allDataBuilder.withTracks(tracks);
-        return allDataBuilder.build();
+      EntityData.Builder<Album> albumDataBuilder = new EntityData.Builder<>();
+      albumDataBuilder.withTotal(suggestions.getAlbumCount());
+      for (Album album : suggestions.getAlbumList()) {
+        albumDataBuilder.withHit(Album.fromSuggestAlbum(album));
       }
+      final EntityData<Album> albums = albumDataBuilder.build();
+
+      EntityData.Builder<Artist> artistDataBuilder = new EntityData.Builder<>();
+      artistDataBuilder.withTotal(suggestions.getArtistCount());
+      for (Artist artist : suggestions.getArtistList()) {
+        artistDataBuilder.withHit(Artist.fromSuggestArtist(artist));
+      }
+      final EntityData<Artist> artists = artistDataBuilder.build();
+
+      EntityData.Builder<Track> trackDataBuilder = new EntityData.Builder<>();
+      trackDataBuilder.withTotal(suggestions.getTrackCount());
+      for (ListZip.Pair<MetadataReply<Track>, Track> pair : ListZip.zip(metadataReplies, suggestions.getTrackList())) {
+        if (pair.first != null) {
+          trackDataBuilder.withHit(Track.fromDecoratedSuggestTrack(pair.first.getData(), pair.second));
+        }
+      }
+      final EntityData<Track> tracks = trackDataBuilder.build();
+
+      EntityData.Builder<Playlist> playlistDataBuilder = new EntityData.Builder<>();
+      playlistDataBuilder.withTotal(suggestions.getPlaylistCount());
+      for (ListZip.Pair<Playlist, Long> pair : ListZip.zip(suggestions.getPlaylistList(), followers)) {
+        playlistDataBuilder.withHit(Playlist.fromSuggestPlaylist(pair.first, pair.second));
+
+      }
+      final EntityData<Playlist> playlists = playlistDataBuilder.build();
+
+      AllData.Builder allDataBuilder = new AllData.Builder();
+      allDataBuilder.withAlbums(albums);
+      allDataBuilder.withArtists(artists);
+      allDataBuilder.withPlaylists(playlists);
+      allDataBuilder.withTracks(tracks);
+      return Futures.immediateFuture(allDataBuilder.build());
     });
   }
 
