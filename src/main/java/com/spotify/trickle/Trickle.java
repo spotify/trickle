@@ -48,22 +48,22 @@ public class Trickle {
       return nodeBuilder;
     }
 
-    public <A1, N> NodeBuilder<N, R> call(Node1<A1, N> node) {
-      NodeBuilder<N, R> nodeBuilder = new NodeBuilder<>(this, node);
+    public <A1, N> NodeBuilder1<A1,N, R> call(Node1<A1, N> node) {
+      NodeBuilder1<A1, N, R> nodeBuilder = new NodeBuilder1<>(this, node);
       nodes.add(nodeBuilder);
 
       return nodeBuilder;
     }
 
-    public <A1,A2,N> NodeBuilder<N, R> call(Node2<A1, A2, N> node) {
-      NodeBuilder<N, R> nodeBuilder = new NodeBuilder<>(this, node);
+    public <A1,A2,N> NodeBuilder2<A1,A2,N, R> call(Node2<A1, A2, N> node) {
+      NodeBuilder2<A1,A2,N, R> nodeBuilder = new NodeBuilder2<>(this, node);
       nodes.add(nodeBuilder);
 
       return nodeBuilder;
     }
 
-    public <A1,A2,A3,N> NodeBuilder<N, R> call(Node3<A1, A2, A3, N> node) {
-      NodeBuilder<N, R> nodeBuilder = new NodeBuilder<>(this, node);
+    public <A1,A2,A3,N> NodeBuilder3<A1, A2, A3, N, R> call(Node3<A1, A2, A3, N> node) {
+      NodeBuilder3<A1, A2, A3, N, R> nodeBuilder = new NodeBuilder3<>(this, node);
       nodes.add(nodeBuilder);
 
       return nodeBuilder;
@@ -92,6 +92,36 @@ public class Trickle {
     }
   }
 
+  public static class NodeBuilder1<A1,N, R> extends NodeBuilder<N, R> {
+    private NodeBuilder1(GraphBuilder<R> graphBuilder, TNode<N> node) {
+      super(graphBuilder, node);
+    }
+
+    public NodeBuilder1<A1, N, R> with(Value<A1> arg1) {
+      return (NodeBuilder1<A1, N, R>) super.with(arg1);
+    }
+  }
+
+  public static class NodeBuilder2<A1,A2,N, R> extends NodeBuilder<N, R> {
+    private NodeBuilder2(GraphBuilder<R> graphBuilder, TNode<N> node) {
+      super(graphBuilder, node);
+    }
+
+    public NodeBuilder2<A1,A2,N, R> with(Value<A1> arg1, Value<A2> arg2) {
+      return (NodeBuilder2<A1, A2, N, R>) super.with(arg1, arg2);
+    }
+  }
+
+  public static class NodeBuilder3<A1,A2,A3,N, R> extends NodeBuilder<N, R> {
+    private NodeBuilder3(GraphBuilder<R> graphBuilder, TNode<N> node) {
+      super(graphBuilder, node);
+    }
+
+    public NodeBuilder3<A1,A2,A3,N, R> with(Value<A1> arg1, Value<A2> arg2, Value<A3> arg3) {
+      return (NodeBuilder3<A1, A2, A3, N, R>) super.with(arg1, arg2, arg3);
+    }
+  }
+
 
   public static class NodeBuilder<N, R> {
     private final GraphBuilder<R> graphBuilder;
@@ -106,7 +136,7 @@ public class Trickle {
       predecessors = new ArrayList<>();
     }
 
-    public NodeBuilder<N, R> with(Object... inputs) {
+    protected NodeBuilder<N, R> with(Object... inputs) {
       this.inputs.addAll(Arrays.asList(inputs));
       return this;
     }
@@ -115,15 +145,15 @@ public class Trickle {
       return graphBuilder.call(put1);
     }
 
-    public <A1, N1> NodeBuilder<N1, R> call(Node1<A1, N1> put1) {
+    public <A1, N1> NodeBuilder1<A1, N1, R> call(Node1<A1, N1> put1) {
       return graphBuilder.call(put1);
     }
 
-    public <A1, A2, N1> NodeBuilder<N1, R> call(Node2<A1, A2, N1> put1) {
+    public <A1, A2, N1> NodeBuilder2<A1, A2, N1, R> call(Node2<A1, A2, N1> put1) {
       return graphBuilder.call(put1);
     }
 
-    public <A1, A2, A3, N1> NodeBuilder<N1, R> call(Node3<A1, A2, A3, N1> put1) {
+    public <A1, A2, A3, N1> NodeBuilder3<A1, A2, A3, N1, R> call(Node3<A1, A2, A3, N1> put1) {
       return graphBuilder.call(put1);
     }
 

@@ -10,7 +10,7 @@ import static com.spotify.trickle.Name.named;
  * TODO: document!
  */
 public class Heartbeats {
-  public static final Name ENDPOINT = named("endpoint");
+  public static final Name<Endpoint> ENDPOINT = named("endpoint", Endpoint.class);
 
   final long heartbeatIntervalMillis = 132;
   final Graph<Long> graph;

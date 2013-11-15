@@ -6,18 +6,16 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.spotify.trickle.Graph;
 import com.spotify.trickle.Name;
-import com.spotify.trickle.Node;
 import com.spotify.trickle.Node2;
 import com.spotify.trickle.Node3;
-import com.spotify.trickle.TNode;
 import com.spotify.trickle.Trickle;
 
 import java.util.List;
 
 public class PSearchView {
-  private static final Name CONTEXT = Name.named("context");
-  private static final Name REQUEST = Name.named("request");
-  private static final Name QUERY = Name.named("query");
+  private static final Name<RequestContext> CONTEXT = Name.named("context", RequestContext.class);
+  private static final Name<Message> REQUEST = Name.named("request", Message.class);
+  private static final Name<String> QUERY = Name.named("query", String.class);
 
   private final Graph<AllData> graph;
 

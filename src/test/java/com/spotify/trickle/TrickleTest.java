@@ -64,7 +64,7 @@ public class TrickleTest {
   public void shouldUseInputs() throws Exception {
     Node1<String, String> node = (name -> Futures.immediateFuture("hello " + name + "!"));
 
-    Name inputName = Name.named("theInnnput");
+    Name<String> inputName = Name.named("theInnnput", String.class);
     Graph<String> graph = Trickle
         .graph(String.class)
         .inputs(inputName)
