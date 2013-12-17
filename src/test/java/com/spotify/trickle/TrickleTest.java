@@ -16,19 +16,22 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * Integration-level Trickle tests.
  */
-// there are plenty of methods here that are only called via reflection
-@SuppressWarnings("UnusedDeclaration")
 public class TrickleTest {
   Node0<String> node1;
 
   SettableFuture<String> future1;
-  private ListeningExecutorService executorService;
+  ListeningExecutorService executorService;
 
   @Before
   public void setUp() throws Exception {
     future1 = SettableFuture.create();
 
-    node1 = () -> future1;
+    node1 = new Node0<String>() {
+      @Override
+      public ListenableFuture<String> run() {
+        return future1;
+      }
+    };
     executorService = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
   }
 
@@ -62,7 +65,12 @@ public class TrickleTest {
 
   @Test
   public void shouldUseInputs() throws Exception {
-    Node1<String, String> node = (name -> Futures.immediateFuture("hello " + name + "!"));
+    Node1<String, String> node = new Node1<String, String>() {
+      @Override
+      public ListenableFuture<String> run(String name) {
+        return Futures.immediateFuture("hello " + name + "!");
+      }
+    };
 
     Name<String> inputName = Name.named("theInnnput", String.class);
     Graph<String> graph = Trickle
@@ -80,16 +88,32 @@ public class TrickleTest {
     final AtomicInteger counter = new AtomicInteger(0);
     final CountDownLatch latch = new CountDownLatch(1);
 
-    Node0<Void> incr1 = () -> {
-      counter.incrementAndGet();
-      return Futures.immediateFuture(null);
+    Node0<Void> incr1 = new Node0<Void>() {
+      @Override
+      public ListenableFuture<Void> run() {
+        counter.incrementAndGet();
+        return Futures.immediateFuture(null);
+      }
     };
-    Node0<Void> incr2 = () -> executorService.submit((Callable<Void>) () -> {
-      latch.await();
-      counter.incrementAndGet();
-      return null;
-    });
-    Node0<Integer> result = () -> Futures.immediateFuture(counter.get());
+    Node0<Void> incr2 = new Node0<Void>() {
+      @Override
+      public ListenableFuture<Void> run() {
+        return executorService.submit(new Callable<Void>() {
+          @Override
+          public Void call() throws Exception {
+            latch.await();
+            counter.incrementAndGet();
+            return null;
+          }
+        });
+      }
+    };
+    Node0<Integer> result = new Node0<Integer>() {
+      @Override
+      public ListenableFuture<Integer> run() {
+        return Futures.immediateFuture(counter.get());
+      }
+    };
 
     Graph<Integer> graph = Trickle
         .graph(Integer.class)

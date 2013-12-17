@@ -1,6 +1,8 @@
 package com.spotify.trickle;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.AsyncFunction;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.List;
@@ -17,16 +19,14 @@ class ConnectedNode {
   private final Node<?> node;
   private final ImmutableList<Dep<?>> inputs;
   private final ImmutableList<Node<?>> predecessors;
-  private final Transformer<?> transformer;
 
-  public ConnectedNode(Node<?> node, Iterable<Dep<?>> inputs, List<Node<?>> predecessors, Transformer<?> transformer) {
+  public ConnectedNode(Node<?> node, Iterable<Dep<?>> inputs, List<Node<?>> predecessors) {
     this.node = node;
     this.predecessors = ImmutableList.copyOf(predecessors);
     this.inputs = ImmutableList.copyOf(inputs);
-    this.transformer = transformer;
   }
 
-  protected ListenableFuture<?> future(
+  ListenableFuture<?> future(
       final Map<Name, Object> bindings,
       final Map<Node<?>, ConnectedNode> nodes,
       final Map<Node<?>, ListenableFuture<?>> visited) {
@@ -78,7 +78,43 @@ class ConnectedNode {
 
     checkArgument(inputs.size() == values.size(), "sanity check result: insane");
 
-    return transformer.createTransform(values, allFuture);
+    return nodeFuture(values, allFuture);
+  }
+
+  private ListenableFuture<?> nodeFuture(final ImmutableList<Object> values, ListenableFuture<List<Object>> doneSignal) {
+    switch (values.size()) {
+      case 0:
+        return Futures.transform(doneSignal, new AsyncFunction<Object, Object>() {
+          @Override
+          public ListenableFuture<Object> apply(Object input) throws Exception {
+            return ((Node0<Object>) node).run();
+          }
+        });
+      case 1:
+        return Futures.transform(doneSignal, new AsyncFunction<Object, Object>() {
+          @Override
+          public ListenableFuture<Object> apply(Object input) throws Exception {
+            return ((Node1<Object, Object>) node).run(values.get(0));
+          }
+        });
+      case 2:
+        return Futures.transform(doneSignal, new AsyncFunction<Object, Object>() {
+          @Override
+          public ListenableFuture<Object> apply(Object input) throws Exception {
+            return ((Node2<Object, Object, Object>) node).run(values.get(0), values.get(1));
+          }
+        });
+      case 3:
+        return Futures.transform(doneSignal, new AsyncFunction<Object, Object>() {
+          @Override
+          public ListenableFuture<Object> apply(Object input) throws Exception {
+            return ((Node3<Object, Object, Object, Object>) node).run(values.get(0), values.get(1), values.get(2));
+          }
+        });
+      default:
+        throw new UnsupportedOperationException("bleh");
+    }
+
   }
 
   private ListenableFuture<?> futureForNode(Map<Name, Object> bindings, Map<Node<?>, ConnectedNode> nodes, Map<Node<?>, ListenableFuture<?>> visited, Node<?> node) {

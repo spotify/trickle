@@ -6,7 +6,7 @@ import com.google.common.collect.*;
 import java.util.*;
 
 /**
- * Keeping my trickle-suggestions separate for now, until we have finished discussing.
+ * TODO: document!
  */
 public class Trickle {
   static final Object DEPENDENCY_NOT_INITIALISED = new Object();
@@ -167,13 +167,7 @@ public class Trickle {
     }
 
     private ConnectedNode connect() {
-      List<Dep<?>> deps = asDeps(inputs);
-      return new ConnectedNode(
-          node,
-          deps,
-          predecessors,
-          Transformers.newNoChecksTransformer(deps, node)
-      );
+      return new ConnectedNode(node, asDeps(inputs), predecessors);
     }
 
     private List<Dep<?>> asDeps(List<Object> inputs) {
