@@ -3,5 +3,5 @@ package com.spotify.trickle;
 /**
  * TODO: document!
  */
-public interface TNode<R> extends Value<R> {
+public interface Node<R> extends Value<R> {
 }

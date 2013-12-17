@@ -69,7 +69,7 @@ public class Trickle {
       return nodeBuilder;
     }
 
-    public TrickleGraph<R> out(TNode<R> result) {
+    public TrickleGraph<R> out(Node<R> result) {
       Map<Name,Object> inputDependencies =
           Maps.asMap(deps, new Function<Name, Object>() {
             @Override
@@ -81,8 +81,8 @@ public class Trickle {
       return new TrickleGraph<>(inputDependencies, result, buildNodes(nodes));
     }
 
-    private Map<TNode<?>, ConnectedNode> buildNodes(Iterable<NodeBuilder<?, R>> nodeBuilders) {
-      ImmutableMap.Builder<TNode<?>, ConnectedNode> builder = ImmutableMap.builder();
+    private Map<Node<?>, ConnectedNode> buildNodes(Iterable<NodeBuilder<?, R>> nodeBuilders) {
+      ImmutableMap.Builder<Node<?>, ConnectedNode> builder = ImmutableMap.builder();
 
       for (NodeBuilder<?, R> nodeBuilder : nodeBuilders) {
         builder.put(nodeBuilder.node, nodeBuilder.connect());
@@ -93,7 +93,7 @@ public class Trickle {
   }
 
   public static class NodeBuilder1<A1,N, R> extends NodeBuilder<N, R> {
-    private NodeBuilder1(GraphBuilder<R> graphBuilder, TNode<N> node) {
+    private NodeBuilder1(GraphBuilder<R> graphBuilder, Node<N> node) {
       super(graphBuilder, node);
     }
 
@@ -103,7 +103,7 @@ public class Trickle {
   }
 
   public static class NodeBuilder2<A1,A2,N, R> extends NodeBuilder<N, R> {
-    private NodeBuilder2(GraphBuilder<R> graphBuilder, TNode<N> node) {
+    private NodeBuilder2(GraphBuilder<R> graphBuilder, Node<N> node) {
       super(graphBuilder, node);
     }
 
@@ -113,7 +113,7 @@ public class Trickle {
   }
 
   public static class NodeBuilder3<A1,A2,A3,N, R> extends NodeBuilder<N, R> {
-    private NodeBuilder3(GraphBuilder<R> graphBuilder, TNode<N> node) {
+    private NodeBuilder3(GraphBuilder<R> graphBuilder, Node<N> node) {
       super(graphBuilder, node);
     }
 
@@ -125,11 +125,11 @@ public class Trickle {
 
   public static class NodeBuilder<N, R> {
     private final GraphBuilder<R> graphBuilder;
-    private final TNode<N> node;
+    private final Node<N> node;
     private final List<Object> inputs;
-    private final List<TNode<?>> predecessors;
+    private final List<Node<?>> predecessors;
 
-    private NodeBuilder(GraphBuilder<R> graphBuilder, TNode<N> node) {
+    private NodeBuilder(GraphBuilder<R> graphBuilder, Node<N> node) {
       this.graphBuilder = graphBuilder;
       this.node = node;
       inputs = new ArrayList<>();
@@ -157,12 +157,12 @@ public class Trickle {
       return graphBuilder.call(put1);
     }
 
-    public NodeBuilder<N, R> after(TNode<?>... predecessors) {
+    public NodeBuilder<N, R> after(Node<?>... predecessors) {
       this.predecessors.addAll(Arrays.asList(predecessors));
       return this;
     }
 
-    public TrickleGraph<R> output(TNode<R> result1) {
+    public TrickleGraph<R> output(Node<R> result1) {
       return graphBuilder.out(result1);
     }
 
@@ -183,8 +183,8 @@ public class Trickle {
         if (input instanceof Name) {
           result.add(new BindingDep<>((Name) input, Object.class));
         }
-        else if (input instanceof TNode<?>) {
-          result.add(new NodeDep((TNode<?>) input));
+        else if (input instanceof Node<?>) {
+          result.add(new NodeDep((Node<?>) input, Object.class));
         }
         else {
           throw new RuntimeException("illegal input object: " + input);

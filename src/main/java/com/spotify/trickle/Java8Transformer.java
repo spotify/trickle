@@ -12,9 +12,9 @@ import java.util.List;
  */
 public class Java8Transformer<T> implements Transformer<T> {
   private final List<Dep<?>> inputs;
-  private final TNode<?> method;
+  private final Node<?> method;
 
-  public Java8Transformer(List<Dep<?>> inputs, TNode<?> obj) {
+  public Java8Transformer(List<Dep<?>> inputs, Node<?> obj) {
     this.inputs = inputs;
     this.method = obj;
   }

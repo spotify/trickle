@@ -16,7 +16,7 @@ public class Heartbeats {
   final Graph<Long> graph;
 
   public Heartbeats() {
-    Node1<Endpoint, RegistryEntry> fetchCurrentState = Heartbeats::queryEndpoints;
+    final Node1<Endpoint, RegistryEntry> fetchCurrent = arg -> queryEndpoints(arg);
     Node1<Endpoint, Boolean> updateState = Heartbeats::putEntry;
     Node1<RegistryEntry, Void> updateSerial = this::updateSerialNode;
     Node0<Long> returnResult = () -> Futures.immediateFuture(heartbeatIntervalMillis);
@@ -24,9 +24,9 @@ public class Heartbeats {
     graph = Trickle
         .graph(Long.class)
         .inputs(ENDPOINT)
-        .call(fetchCurrentState).with(ENDPOINT)
-        .call(updateState).with(ENDPOINT).after(fetchCurrentState)
-        .call(updateSerial).with(fetchCurrentState).after(updateState)
+        .call(fetchCurrent).with(ENDPOINT)
+        .call(updateState).with(ENDPOINT).after(fetchCurrent)
+        .call(updateSerial).with(fetchCurrent).after(updateState)
         .call(returnResult).after(updateSerial)
         .output(returnResult);
   }
