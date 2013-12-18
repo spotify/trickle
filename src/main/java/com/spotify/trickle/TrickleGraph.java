@@ -5,6 +5,7 @@ import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.Map;
+import java.util.concurrent.Executor;
 
 /**
  * TODO: document!
@@ -29,11 +30,11 @@ class TrickleGraph<T> implements Graph<T> {
   }
 
   @Override
-  public ListenableFuture<T> run() {
+  public ListenableFuture<T> run(Executor executor) {
     ConnectedNode result = nodes.get(out);
 
     // this case is safe, because the 'output' node returns type T.
     //noinspection unchecked
-    return (ListenableFuture<T>) result.future(inputDependencies, nodes, Maps.<Node<?>, ListenableFuture<?>>newHashMap());
+    return (ListenableFuture<T>) result.future(inputDependencies, nodes, Maps.<Node<?>, ListenableFuture<?>>newHashMap(), executor);
   }
 }

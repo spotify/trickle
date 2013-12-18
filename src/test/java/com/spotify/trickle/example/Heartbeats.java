@@ -2,6 +2,7 @@ package com.spotify.trickle.example;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.spotify.trickle.*;
 
 import static com.spotify.trickle.Name.named;
@@ -72,7 +73,7 @@ public class Heartbeats {
   }
 
   public ListenableFuture<Long> heartbeat(Endpoint endpoint) {
-    return graph.bind(ENDPOINT, endpoint).run();
+    return graph.bind(ENDPOINT, endpoint).run(MoreExecutors.sameThreadExecutor());
   }
 
 

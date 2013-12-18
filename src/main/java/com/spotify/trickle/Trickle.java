@@ -1,9 +1,15 @@
 package com.spotify.trickle;
 
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.collect.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 
 /**
  * TODO: document!
@@ -128,6 +134,7 @@ public class Trickle {
     private final Node<N> node;
     private final List<Object> inputs;
     private final List<Node<?>> predecessors;
+    private N defaultValue = null;
 
     private NodeBuilder(GraphBuilder<R> graphBuilder, Node<N> node) {
       this.graphBuilder = graphBuilder;
@@ -138,6 +145,11 @@ public class Trickle {
 
     protected NodeBuilder<N, R> with(Object... inputs) {
       this.inputs.addAll(Arrays.asList(inputs));
+      return this;
+    }
+
+    public NodeBuilder<N, R> fallback(N value) {
+      defaultValue = value;
       return this;
     }
 
@@ -167,7 +179,7 @@ public class Trickle {
     }
 
     private ConnectedNode connect() {
-      return new ConnectedNode(node, asDeps(inputs), predecessors);
+      return new ConnectedNode(node, asDeps(inputs), predecessors, Optional.fromNullable(defaultValue));
     }
 
     private List<Dep<?>> asDeps(List<Object> inputs) {

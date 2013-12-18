@@ -9,6 +9,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.google.common.util.concurrent.Futures.immediateFailedFuture;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -43,7 +44,7 @@ public class TrickleTest {
         .call(node1)
         .output(node1);
 
-    ListenableFuture<String> actual = graph.run();
+    ListenableFuture<String> actual = graph.run(MoreExecutors.sameThreadExecutor());
     future1.set("hello world!!");
 
     assertThat(actual.get(), equalTo("hello world!!"));
@@ -56,7 +57,7 @@ public class TrickleTest {
         .call(node1)
         .output(node1);
 
-    ListenableFuture<String> actual = graph.run();
+    ListenableFuture<String> actual = graph.run(MoreExecutors.sameThreadExecutor());
 
     assertThat(actual.isDone(), is(false));
 
@@ -80,7 +81,7 @@ public class TrickleTest {
         .call(node).with(inputName)
         .output(node);
 
-    ListenableFuture<String> future = graph.bind(inputName, "petter").run();
+    ListenableFuture<String> future = graph.bind(inputName, "petter").run(MoreExecutors.sameThreadExecutor());
     assertThat(future.get(), equalTo("hello petter!"));
   }
 
@@ -123,7 +124,7 @@ public class TrickleTest {
         .call(result).after(incr1, incr2)
         .output(result);
 
-    ListenableFuture<Integer> future = graph.run();
+    ListenableFuture<Integer> future = graph.run(MoreExecutors.sameThreadExecutor());
 
     assertThat(future.isDone(), is(false));
     assertThat(counter.get(), equalTo(1));
@@ -153,6 +154,40 @@ public class TrickleTest {
         .call(second).with(first)
         .output(second);
 
-    assertThat(graph.run().get(), equalTo("hi there!".length()));
+    assertThat(graph.run(MoreExecutors.sameThreadExecutor()).get(), equalTo("hi there!".length()));
   }
+
+  @Test
+  public void shouldReturnDefaultForFailedCallWithDefault() throws Exception {
+    Node0<String> node = new Node0<String>() {
+      @Override
+      public ListenableFuture<String> run() {
+        throw new RuntimeException("expected");
+      }
+    };
+
+    Graph<String> graph = Trickle.graph(String.class)
+        .call(node).fallback("fallback response")
+        .output(node);
+
+    assertThat(graph.run(executorService).get(), equalTo("fallback response"));
+  }
+
+  @Test
+  public void shouldReturnDefaultForFailedResponseWithDefault() throws Exception {
+    Node0<String> node = new Node0<String>() {
+      @Override
+      public ListenableFuture<String> run() {
+        return immediateFailedFuture(new RuntimeException("expected"));
+      }
+    };
+
+    Graph<String> graph = Trickle.graph(String.class)
+        .call(node).fallback("fallback response")
+        .output(node);
+
+    assertThat(graph.run(executorService).get(), equalTo("fallback response"));
+  }
+
+  // TODO: test that verifies blocking behaviour!
 }

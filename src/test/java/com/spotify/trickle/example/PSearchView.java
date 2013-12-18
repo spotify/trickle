@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.spotify.trickle.Graph;
 import com.spotify.trickle.Name;
 import com.spotify.trickle.Node2;
@@ -42,7 +43,7 @@ public class PSearchView {
         .bind(CONTEXT, context)
         .bind(REQUEST, request)
         .bind(QUERY, query)
-        .run();
+        .run(MoreExecutors.sameThreadExecutor());
   }
 
   private Node3<RequestContext, String, Message, Suggestions> suggestionsNode() {
