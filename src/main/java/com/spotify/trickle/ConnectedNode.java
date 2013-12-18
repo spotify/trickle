@@ -86,35 +86,44 @@ class ConnectedNode {
       case 0:
         return Futures.transform(doneSignal, new AsyncFunction<Object, Object>() {
           @Override
-          public ListenableFuture<Object> apply(Object input) throws Exception {
+          public ListenableFuture<Object> apply(Object input) {
             return ((Node0<Object>) node).run();
           }
         });
       case 1:
         return Futures.transform(doneSignal, new AsyncFunction<Object, Object>() {
           @Override
-          public ListenableFuture<Object> apply(Object input) throws Exception {
-            return ((Node1<Object, Object>) node).run(values.get(0));
+          public ListenableFuture<Object> apply(Object input) {
+            return ((Node1<Object, Object>) node).run(valueAt(values, 0));
           }
         });
       case 2:
         return Futures.transform(doneSignal, new AsyncFunction<Object, Object>() {
           @Override
-          public ListenableFuture<Object> apply(Object input) throws Exception {
-            return ((Node2<Object, Object, Object>) node).run(values.get(0), values.get(1));
+          public ListenableFuture<Object> apply(Object input)  {
+            return ((Node2<Object, Object, Object>) node).run(valueAt(values, 0), valueAt(values, 1));
           }
         });
       case 3:
         return Futures.transform(doneSignal, new AsyncFunction<Object, Object>() {
           @Override
-          public ListenableFuture<Object> apply(Object input) throws Exception {
-            return ((Node3<Object, Object, Object, Object>) node).run(values.get(0), values.get(1), values.get(2));
+          public ListenableFuture<Object> apply(Object input) {
+            return ((Node3<Object, Object, Object, Object>) node).run(valueAt(values, 0), valueAt(values, 1), valueAt(values, 2));
           }
         });
       default:
         throw new UnsupportedOperationException("bleh");
     }
+  }
 
+  private Object valueAt(ImmutableList<Object> values, int index) {
+    Object value = values.get(index);
+
+    if (value instanceof ListenableFuture) {
+      return Futures.getUnchecked((ListenableFuture) value);
+    }
+
+    return value;
   }
 
   private ListenableFuture<?> futureForNode(Map<Name, Object> bindings, Map<Node<?>, ConnectedNode> nodes, Map<Node<?>, ListenableFuture<?>> visited, Node<?> node) {

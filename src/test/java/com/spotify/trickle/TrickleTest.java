@@ -9,6 +9,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -68,7 +69,7 @@ public class TrickleTest {
     Node1<String, String> node = new Node1<String, String>() {
       @Override
       public ListenableFuture<String> run(String name) {
-        return Futures.immediateFuture("hello " + name + "!");
+        return immediateFuture("hello " + name + "!");
       }
     };
 
@@ -92,7 +93,7 @@ public class TrickleTest {
       @Override
       public ListenableFuture<Void> run() {
         counter.incrementAndGet();
-        return Futures.immediateFuture(null);
+        return immediateFuture(null);
       }
     };
     Node0<Void> incr2 = new Node0<Void>() {
@@ -111,7 +112,7 @@ public class TrickleTest {
     Node0<Integer> result = new Node0<Integer>() {
       @Override
       public ListenableFuture<Integer> run() {
-        return Futures.immediateFuture(counter.get());
+        return immediateFuture(counter.get());
       }
     };
 
@@ -130,5 +131,28 @@ public class TrickleTest {
     latch.countDown();
 
     assertThat(future.get(), equalTo(2));
+  }
+
+  @Test
+  public void shouldForwardValues() throws Exception {
+    Node0<String> first = new Node0<String>() {
+      @Override
+      public ListenableFuture<String> run() {
+        return immediateFuture("hi there!");
+      }
+    };
+    Node1<String, Integer> second = new Node1<String, Integer>() {
+      @Override
+      public ListenableFuture<Integer> run(String arg) {
+        return immediateFuture(arg.length());
+      }
+    };
+
+    Graph<Integer> graph = Trickle.graph(Integer.class)
+        .call(first)
+        .call(second).with(first)
+        .output(second);
+
+    assertThat(graph.run().get(), equalTo("hi there!".length()));
   }
 }
