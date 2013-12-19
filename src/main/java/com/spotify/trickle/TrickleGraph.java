@@ -3,6 +3,7 @@ package com.spotify.trickle;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import java.util.Map;
 import java.util.concurrent.Executor;
@@ -27,6 +28,11 @@ class TrickleGraph<T> implements Graph<T> {
     newInputs.put(input, value);
 
     return new TrickleGraph<>(newInputs, out, nodes);
+  }
+
+  @Override
+  public ListenableFuture<T> run() {
+    return run(MoreExecutors.sameThreadExecutor());
   }
 
   @Override

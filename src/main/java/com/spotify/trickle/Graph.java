@@ -10,5 +10,6 @@ import java.util.concurrent.Executor;
 public interface Graph<T> {
   <P> Graph<T> bind(Name input, P value);
 
+  ListenableFuture<T> run();
   ListenableFuture<T> run(Executor executor);
 }
