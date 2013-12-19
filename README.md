@@ -1,14 +1,14 @@
 trickle
 =======
 
-A simple library for composing asynchronous code
-
+A simple library for composing asynchronous code. The main reason for it to exist is to make it
+easier to create graphs of interconnected asynchronous calls, pushing the 'worrying about
+concurrency' aspects into the framework rather than mixing it in with the business logic.
 
 See [Examples.java](src/test/java/com/spotify/trickle/example/Examples.java)
 
-
-TODO:
-- ensure there is a single sink, and get rid of the 'output' thing. Otherwise, there's no
-  guarantee that all nodes will actually get executed..
-- add default return values in case of exceptions
-- make sure it's all tested nicely
+Caveats:
+- The current implementation is mostly focused on getting the API right; feel free to check out the
+internal implementation, but be aware of the fact that it's quite hacky.
+- I want to get rid of the need to define the 'output' node by adding a requirement that there
+should be a single sink node in the graph; this sink node would have to return the correct type.

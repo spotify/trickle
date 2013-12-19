@@ -23,9 +23,9 @@ class TrickleGraph<T> implements Graph<T> {
   }
 
   @Override
-  public <P> TrickleGraph<T> bind(Name input, P value) {
+  public <P> TrickleGraph<T> bind(Name<P> name, P value) {
     Map<Name, Object> newInputs = Maps.newHashMap(inputDependencies);
-    newInputs.put(input, value);
+    newInputs.put(name, value);
 
     return new TrickleGraph<>(newInputs, out, nodes);
   }
