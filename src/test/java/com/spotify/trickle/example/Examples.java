@@ -4,11 +4,13 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.spotify.trickle.Graph;
 import com.spotify.trickle.Name;
+import com.spotify.trickle.Node0;
 import com.spotify.trickle.Node1;
 import com.spotify.trickle.Node2;
 import com.spotify.trickle.Trickle;
 
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static com.google.common.util.concurrent.Futures.immediateFuture;
@@ -36,8 +38,9 @@ public class Examples {
     };
     Node2<String, String, String> combine = new Node2<String, String, String>() {
       @Override
-      public ListenableFuture<String> run(String transformedGreet, String transformedName) {
-        return Futures.immediateFuture(String.format("%s %s!", transformedGreet.replaceAll("$", ""), transformedName.replaceAll("$", "")));
+      public ListenableFuture<String> run(String greet, String name) {
+        String result = String.format("%s %s!", greet.replaceAll("$", ""), name.replaceAll("$", ""));
+        return immediateFuture(result);
       }
     };
 
@@ -47,7 +50,6 @@ public class Examples {
         .call(transformGreeting).with(GREETING)
         .call(combine).with(GREETING, NAME)
         .output(combine);
-
 
     System.out.println(graph.bind(NAME, "world").bind(GREETING, "Hello").run().get());
   }
@@ -59,21 +61,30 @@ public class Examples {
       Node2<String, String, String> combineInputs = new Node2<String, String, String>() {
         @Override
         public ListenableFuture<String> run(String arg1, String arg2) {
+          System.out.println(" - combining inputs");
           return immediateFuture(arg1 + " " + arg2);
         }
       };
       Node1<String, Integer> length = new Node1<String, Integer>() {
         @Override
         public ListenableFuture<Integer> run(String arg) {
+          System.out.println(" - calculating lengths");
           return immediateFuture(arg.length());
         }
       };
-
+      Node0<Void> sideTrack = new Node0<Void>() {
+        @Override
+        public ListenableFuture<Void> run() {
+          System.out.println(" - getting sidetracked!");
+          return immediateFuture(null);
+        }
+      };
 
       graph = Trickle.graph(Integer.class)
           .inputs(NAME, GREETING)
           .call(combineInputs).with(NAME, GREETING)
-          .call(length).with(combineInputs)
+          .call(sideTrack)
+          .call(length).with(combineInputs).after(sideTrack)
           .output(length);
     }
 
@@ -116,11 +127,15 @@ public class Examples {
     System.out.println("Hello world:\n-------");
     helloWorld();
 
-    System.out.println("Count length:\n-------");
-    System.out.println(new SeparateInstantiationAndExecution().combinedLength("hi", "rouz").get());
+    System.out.println("\nCount length:\n-------");
+    System.out.println(" length is: " + new SeparateInstantiationAndExecution().combinedLength("hi", "rouz").get());
 
-    System.out.println("Fallback:\n-------");
-    System.out.println(new FallbackAndExecutor(Executors.newSingleThreadExecutor()).greet("gof").get());
-    System.out.println(new FallbackAndExecutor(Executors.newSingleThreadExecutor()).greet("igor").get());
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+
+    System.out.println("\nFallback:\n-------");
+    System.out.println(new FallbackAndExecutor(executor).greet("gof").get());
+    System.out.println(new FallbackAndExecutor(executor).greet("igor").get());
+
+    executor.shutdown();
   }
 }
