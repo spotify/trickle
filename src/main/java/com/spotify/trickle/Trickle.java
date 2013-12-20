@@ -1,14 +1,19 @@
 package com.spotify.trickle;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.*;
+import com.spotify.trickle.graph.DagNode;
+import com.spotify.trickle.graph.SimpleDagChecker;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static com.spotify.trickle.DagBuilder.buildDag;
 
 
 /**
@@ -26,11 +31,14 @@ public class Trickle {
   }
 
   public static class GraphBuilder<R> {
-    private final Set<Name> deps;
-    private final Set<NodeBuilder<?, R>> nodes;
+    private final Set<Name> inputs;
+    @VisibleForTesting
+    final Set<NodeBuilder<?, R>> nodes;
+    private final SimpleDagChecker checker = new SimpleDagChecker();
 
-    private GraphBuilder(Set<Name> deps, Set<NodeBuilder<?, R>> nodes) {
-      this.deps = ImmutableSet.copyOf(deps);
+
+    private GraphBuilder(Set<Name> inputs, Set<NodeBuilder<?, R>> nodes) {
+      this.inputs = ImmutableSet.copyOf(inputs);
       this.nodes = Sets.newHashSet(nodes);
     }
 
@@ -41,7 +49,7 @@ public class Trickle {
     public <T> GraphBuilder<R> inputs(Name... dependencies) {
       ImmutableSet.Builder<Name> builder = ImmutableSet.builder();
 
-      builder.addAll(deps);
+      builder.addAll(inputs);
       builder.addAll(Arrays.asList(dependencies));
 
       return new GraphBuilder<>(builder.build(), nodes);
@@ -75,17 +83,33 @@ public class Trickle {
       return nodeBuilder;
     }
 
-    public TrickleGraph<R> out(Node<R> result) {
+    public TrickleGraph<R> build() {
       Map<Name,Object> inputDependencies =
-          Maps.asMap(deps, new Function<Name, Object>() {
+          Maps.asMap(inputs, new Function<Name, Object>() {
             @Override
             public Object apply(Name input) {
               return DEPENDENCY_NOT_INITIALISED;
             }
           });
 
-      return new TrickleGraph<>(inputDependencies, result, buildNodes(nodes));
+      Node<R> result1 = findSink(nodes);
+
+      return new TrickleGraph<>(inputDependencies, result1, buildNodes(nodes));
     }
+
+    private Node<R> findSink(Set<NodeBuilder<?, R>> nodes) {
+      Set<DagNode<NodeBuilder<?, R>>> dag = buildDag(nodes);
+
+      Set<DagNode<NodeBuilder<?, R>>> sinks = checker.findSinks(dag);
+
+      if (sinks.size() != 1) {
+        throw new TrickleException("There must be only a single sink node which is the one that returns the result, found: " + sinks);
+      }
+
+      // TODO: check type safety, somehow...
+      return (Node<R>) sinks.iterator().next().getData().node;
+    }
+
 
     private Map<Node<?>, ConnectedNode> buildNodes(Iterable<NodeBuilder<?, R>> nodeBuilders) {
       ImmutableMap.Builder<Node<?>, ConnectedNode> builder = ImmutableMap.builder();
@@ -130,7 +154,7 @@ public class Trickle {
 
 
   public static class NodeBuilder<N, R> {
-    private final GraphBuilder<R> graphBuilder;
+    final GraphBuilder<R> graphBuilder;
     private final Node<N> node;
     private final List<Object> inputs;
     private final List<Node<?>> predecessors;
@@ -175,7 +199,7 @@ public class Trickle {
     }
 
     public TrickleGraph<R> output(Node<R> result1) {
-      return graphBuilder.out(result1);
+      return graphBuilder.build();
     }
 
     private ConnectedNode connect() {
