@@ -34,7 +34,7 @@ class ConnectedNode {
   }
 
   ListenableFuture<?> future(
-      final Map<Name, Object> bindings,
+      final Map<Name<?>, Object> bindings,
       final Map<Node<?>, ConnectedNode> nodes,
       final Map<Node<?>, ListenableFuture<?>> visited,
       Executor executor) {
@@ -143,7 +143,7 @@ class ConnectedNode {
     return value;
   }
 
-  private ListenableFuture<?> futureForNode(Map<Name, Object> bindings, Map<Node<?>, ConnectedNode> nodes, Map<Node<?>, ListenableFuture<?>> visited, Node<?> node, Executor executor) {
+  private ListenableFuture<?> futureForNode(Map<Name<?>, Object> bindings, Map<Node<?>, ConnectedNode> nodes, Map<Node<?>, ListenableFuture<?>> visited, Node<?> node, Executor executor) {
     final ListenableFuture<?> future;
     if (visited.containsKey(node)) {
       future = visited.get(node);

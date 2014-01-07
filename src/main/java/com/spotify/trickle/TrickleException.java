@@ -5,5 +5,6 @@ package com.spotify.trickle;
  */
 public class TrickleException extends RuntimeException {
   public TrickleException(String message) {
+    super(message);
   }
 }

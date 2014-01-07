@@ -1,6 +1,5 @@
 package com.spotify.trickle.example;
 
-import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.spotify.trickle.Graph;
 import com.spotify.trickle.Name;
@@ -49,7 +48,7 @@ public class Examples {
         .call(transformName).with(NAME)
         .call(transformGreeting).with(GREETING)
         .call(combine).with(GREETING, NAME)
-        .output(combine);
+        .build();
 
     System.out.println(graph.bind(NAME, "world").bind(GREETING, "Hello").run().get());
   }
@@ -85,7 +84,7 @@ public class Examples {
           .call(combineInputs).with(NAME, GREETING)
           .call(sideTrack)
           .call(length).with(combineInputs).after(sideTrack)
-          .output(length);
+          .build();
     }
 
     public ListenableFuture<Integer> combinedLength(String name, String greeting) {
@@ -114,7 +113,7 @@ public class Examples {
       graph = Trickle.graph(String.class)
           .inputs(NAME)
           .call(node).with(NAME).fallback("Illegal name")
-          .output(node);
+          .build();
     }
 
     public ListenableFuture<String> greet(String name) {

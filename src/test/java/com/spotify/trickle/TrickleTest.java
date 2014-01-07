@@ -2,7 +2,9 @@ package com.spotify.trickle;
 
 import com.google.common.util.concurrent.*;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
@@ -24,6 +26,9 @@ public class TrickleTest {
   SettableFuture<String> future1;
   ListeningExecutorService executorService;
 
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
+
   @Before
   public void setUp() throws Exception {
     future1 = SettableFuture.create();
@@ -42,7 +47,7 @@ public class TrickleTest {
     Graph<String> graph = Trickle
         .graph(String.class)
         .call(node1)
-        .output(node1);
+        .build();
 
     ListenableFuture<String> actual = graph.run(MoreExecutors.sameThreadExecutor());
     future1.set("hello world!!");
@@ -55,7 +60,7 @@ public class TrickleTest {
     Graph<String> graph = Trickle
         .graph(String.class)
         .call(node1)
-        .output(node1);
+        .build();
 
     ListenableFuture<String> actual = graph.run(MoreExecutors.sameThreadExecutor());
 
@@ -79,7 +84,7 @@ public class TrickleTest {
         .graph(String.class)
         .inputs(inputName)
         .call(node).with(inputName)
-        .output(node);
+        .build();
 
     ListenableFuture<String> future = graph.bind(inputName, "petter").run(MoreExecutors.sameThreadExecutor());
     assertThat(future.get(), equalTo("hello petter!"));
@@ -122,7 +127,7 @@ public class TrickleTest {
         .call(incr1)
         .call(incr2).after(incr1)
         .call(result).after(incr1, incr2)
-        .output(result);
+        .build();
 
     ListenableFuture<Integer> future = graph.run(MoreExecutors.sameThreadExecutor());
 
@@ -152,7 +157,7 @@ public class TrickleTest {
     Graph<Integer> graph = Trickle.graph(Integer.class)
         .call(first)
         .call(second).with(first)
-        .output(second);
+        .build();
 
     assertThat(graph.run(MoreExecutors.sameThreadExecutor()).get(), equalTo("hi there!".length()));
   }
@@ -168,7 +173,7 @@ public class TrickleTest {
 
     Graph<String> graph = Trickle.graph(String.class)
         .call(node).fallback("fallback response")
-        .output(node);
+        .build();
 
     assertThat(graph.run(executorService).get(), equalTo("fallback response"));
   }
@@ -184,9 +189,77 @@ public class TrickleTest {
 
     Graph<String> graph = Trickle.graph(String.class)
         .call(node).fallback("fallback response")
-        .output(node);
+        .build();
 
     assertThat(graph.run(executorService).get(), equalTo("fallback response"));
+  }
+
+  @Test
+  public void shouldThrowForMultipleSinks() throws Exception {
+    Node0<String> node1 = new Node0<String>() {
+      @Override
+      public ListenableFuture<String> run() {
+        return immediateFuture("one");
+      }
+    };
+    Node0<String> node2 = new Node0<String>() {
+      @Override
+      public ListenableFuture<String> run() {
+        return immediateFuture("two");
+      }
+    };
+
+    thrown.expect(TrickleException.class);
+    thrown.expectMessage("ultiple sinks");
+    thrown.expectMessage("the first sink");
+    thrown.expectMessage("unnamed");
+
+    Graph<String> graph = Trickle.graph(String.class)
+        .call(node1).named("the first sink")
+        .call(node2)
+        .build();
+  }
+
+  @Test
+  public void shouldThrowForSinkNotMatchingGraphOutput() throws Exception {
+    Node0<String> node1 = new Node0<String>() {
+      @Override
+      public ListenableFuture<String> run() {
+        return immediateFuture("one");
+      }
+    };
+    Node1<String, Integer> node2 = new Node1<String, Integer>() {
+      @Override
+      public ListenableFuture<Integer> run(String arg) {
+        return immediateFuture(199);
+      }
+    };
+
+    thrown.expect(TrickleException.class);
+    thrown.expectMessage("invalid sink return class");
+
+    Graph<String> graph = Trickle.graph(String.class)
+        .call(node1)
+        .call(node2).with(node1)
+        .build();
+  }
+
+  @Test
+  public void shouldThrowForNonMatchingArgumentList() throws Exception {
+    Node2<String, Boolean, Integer> node2 = new Node2<String, Boolean, Integer>() {
+      @Override
+      public ListenableFuture<Integer> run(String arg1, Boolean arg2) {
+        return immediateFuture(199);
+      }
+    };
+
+    thrown.expect(TrickleException.class);
+    thrown.expectMessage("Incorrect argument count");
+    thrown.expectMessage("teh second node");
+
+    Graph<String> graph = Trickle.graph(String.class)
+        .call(node2).named("teh second node")
+        .build();
   }
 
   // TODO: test that verifies blocking behaviour!

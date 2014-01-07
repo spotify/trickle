@@ -29,7 +29,7 @@ public class Heartbeats {
         .call(updateState).with(ENDPOINT).after(fetchCurrent)
         .call(updateSerial).with(fetchCurrent).after(updateState)
         .call(returnResult).after(updateSerial)
-        .output(returnResult);
+        .build();
   }
 
   private Node1<Endpoint, RegistryEntry> fetchCurrent() {

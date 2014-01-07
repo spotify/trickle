@@ -33,7 +33,7 @@ public class PSearchView {
         .call(fetchTrackMetadata).with(CONTEXT, getSuggestions)
         .call(fetchPlaylistFollowers).with(CONTEXT, getSuggestions)
         .call(allData).with(getSuggestions, fetchTrackMetadata, fetchPlaylistFollowers)
-        .output(allData);
+        .build();
   }
 
   public ListenableFuture<AllData> suggest(final RequestContext context,

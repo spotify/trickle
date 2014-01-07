@@ -12,11 +12,11 @@ import java.util.concurrent.Executor;
  * TODO: document!
  */
 class TrickleGraph<T> implements Graph<T> {
-  private final Map<Name, Object> inputDependencies;
+  private final Map<Name<?>, Object> inputDependencies;
   private final Map<Node<?>, ConnectedNode> nodes;
   private final Node<T> out;
 
-  TrickleGraph(Map<Name, Object> inputDependencies, Node<T> out, Map<Node<?>, ConnectedNode> nodeMap) {
+  TrickleGraph(Map<Name<?>, Object> inputDependencies, Node<T> out, Map<Node<?>, ConnectedNode> nodeMap) {
     this.out = out;
     this.nodes = nodeMap;
     this.inputDependencies = ImmutableMap.copyOf(inputDependencies);
@@ -24,7 +24,7 @@ class TrickleGraph<T> implements Graph<T> {
 
   @Override
   public <P> TrickleGraph<T> bind(Name<P> name, P value) {
-    Map<Name, Object> newInputs = Maps.newHashMap(inputDependencies);
+    Map<Name<?>, Object> newInputs = Maps.newHashMap(inputDependencies);
     newInputs.put(name, value);
 
     return new TrickleGraph<>(newInputs, out, nodes);
