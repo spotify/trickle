@@ -15,7 +15,6 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
@@ -39,9 +38,7 @@ public class Trickle {
 
   public static class GraphBuilder<R> {
     private final Set<Name<?>> inputs;
-    @VisibleForTesting
-    final Set<NodeBuilder<?, R>> nodes;
-
+    private final Set<NodeBuilder<?, R>> nodes;
 
     private GraphBuilder(Set<Name<?>> inputs, Set<NodeBuilder<?, R>> nodes) {
       this.inputs = ImmutableSet.copyOf(inputs);
@@ -108,15 +105,16 @@ public class Trickle {
     private Node<R> findSink(Set<NodeBuilder<?, R>> nodes) {
       final Multimap<NodeBuilder<?, R>, NodeBuilder<?, R>> edges = findEdges(nodes);
 
-      Set<NodeBuilder<?, R>> sinks = Sets.filter(nodes, new NoNodeDependsOn<>(edges));
+      Optional<Deque<NodeBuilder<?, R>>> cycle = findOneCycle(edges);
 
-      if (sinks.isEmpty()) {
-        throw new TrickleException("cycle detected: " + formatOneCycle(edges));
+      if (cycle.isPresent()) {
+        throw new TrickleException("cycle detected: " + Joiner.on(" -> ").join(cycle.get()));
       }
+
+      Set<NodeBuilder<?, R>> sinks = Sets.filter(nodes, new NoNodeDependsOn<>(edges));
       if (sinks.size() != 1) {
         throw new TrickleException("Multiple sinks found: " + sinks);
       }
-
 
       NodeBuilder<?, R> sinkBuilder = sinks.iterator().next();
 
@@ -125,17 +123,17 @@ public class Trickle {
       return (Node<R>) sinkBuilder.node;
     }
 
-    private String formatOneCycle(Multimap<NodeBuilder<?, R>, NodeBuilder<?, R>> edges) {
+    private Optional<Deque<NodeBuilder<?, R>>> findOneCycle(Multimap<NodeBuilder<?, R>, NodeBuilder<?, R>> edges) {
 
       for (NodeBuilder<?, R> nodeBuilder : edges.keySet()) {
         Optional<Deque<NodeBuilder<?, R>>> cycle = findCycle(nodeBuilder, edges, new LinkedList<NodeBuilder<?, R>>());
 
         if (cycle.isPresent()) {
-          return Joiner.on(" -> ").join(cycle.get());
+          return cycle;
         }
       }
 
-      throw new IllegalStateException("no cycle found!");
+      return Optional.absent();
     }
 
     private Optional<Deque<NodeBuilder<?, R>>> findCycle(NodeBuilder<?, R> current, Multimap<NodeBuilder<?, R>, NodeBuilder<?, R>> edges, Deque<NodeBuilder<?, R>> visited) {

@@ -8,6 +8,7 @@ import org.junit.rules.ExpectedException;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -197,6 +198,95 @@ public class TrickleTest {
   }
 
   @Test
+  public void shouldHandleTwoInputParameters() throws Exception {
+    Node1<String, String> node1 = new Node1<String, String>() {
+      @Override
+      public ListenableFuture<String> run(String arg) {
+        return immediateFuture(arg + ", 1");
+      }
+    };
+    Node2<String, String, String> node2 = new Node2<String, String, String>() {
+      @Override
+      public ListenableFuture<String> run(String arg1, String arg2) {
+        return immediateFuture(arg1 + ", " + arg2 + ", 2");
+      }
+    };
+
+    Name<String> input = Name.named("in", String.class);
+
+    Graph<String> g = Trickle.graph(String.class)
+        .call(node1).with(input)
+        .call(node2).with(node1, input)
+        .build();
+
+    String result = g.bind(input, "hey").run().get();
+
+    assertThat(result, equalTo("hey, 1, hey, 2"));
+  }
+
+  @Test
+  public void shouldHandleThreeInputParameters() throws Exception {
+    Node1<String, String> node1 = new Node1<String, String>() {
+      @Override
+      public ListenableFuture<String> run(String arg) {
+        return immediateFuture(arg + ", 1");
+      }
+    };
+    Node3<String, String, String, String> node2 = new Node3<String, String, String, String>() {
+      @Override
+      public ListenableFuture<String> run(String arg1, String arg2, String arg3) {
+        return immediateFuture(arg1 + ", " + arg2 + ", " + arg3 + ", 2");
+      }
+    };
+
+    Name<String> input = Name.named("in", String.class);
+    Name<String> input1 = Name.named("innn", String.class);
+
+    Graph<String> g = Trickle.graph(String.class)
+        .inputs(input, input1)
+        .call(node1).with(input)
+        .call(node2).with(node1, input, input1)
+        .build();
+
+    String result = g
+        .bind(input, "hey")
+        .bind(input1, "ho")
+        .run().get();
+
+    assertThat(result, equalTo("hey, 1, hey, ho, 2"));
+  }
+
+  @Test
+  public void shouldPropagateExceptionsToResultFuture() throws Exception {
+    final RuntimeException expected = new RuntimeException("expected");
+    Node1<String, String> node1 = new Node1<String, String>() {
+      @Override
+      public ListenableFuture<String> run(String arg) {
+        return immediateFailedFuture(expected);
+      }
+    };
+    Node2<String, String, String> node2 = new Node2<String, String, String>() {
+      @Override
+      public ListenableFuture<String> run(String arg1, String arg2) {
+        return immediateFuture(arg1 + ", " + arg2 + ", 2");
+      }
+    };
+
+    Name<String> input = Name.named("in", String.class);
+
+    Graph<String> g = Trickle.graph(String.class)
+        .call(node1).with(input)
+        .call(node2).with(node1, input)
+        .build();
+
+    thrown.expect(ExecutionException.class);
+    thrown.expectCause(equalTo(expected));
+
+    g.bind(input, "hey").run().get();
+
+  }
+
+  @Test
   public void shouldThrowForMultipleSinks() throws Exception {
     Node0<String> node1 = new Node0<String>() {
       @Override
@@ -248,6 +338,44 @@ public class TrickleTest {
   }
 
   @Test
+  public void shouldThrowForComplexCycle() throws Exception {
+    Node0<String> node1 = new Node0<String>() {
+      @Override
+      public ListenableFuture<String> run() {
+        return immediateFuture("1");
+      }
+    };
+    Node1<String, String> node2 = new Node1<String, String>() {
+      @Override
+      public ListenableFuture<String> run(String input) {
+        return immediateFuture(input + "2");
+      }
+    };
+    Node1<String, String> node3 = new Node1<String, String>() {
+      @Override
+      public ListenableFuture<String> run(String input) {
+        return immediateFuture(input + "3");
+      }
+    };
+    Node1<String, String> node4 = new Node1<String, String>() {
+      @Override
+      public ListenableFuture<String> run(String input) {
+        return immediateFuture(input + "4");
+      }
+    };
+
+    thrown.expect(TrickleException.class);
+    thrown.expectMessage("cycle detected");
+
+    Trickle.graph(String.class)
+        .call(node1).after(node3).named("node1")
+        .call(node2).with(node1).named("node2")
+        .call(node3).with(node2).named("node3")
+        .call(node4).with(node2).named("node4")
+        .build();
+  }
+
+  @Test
   public void shouldThrowForNonMatchingArgumentList() throws Exception {
     Node2<String, Boolean, Integer> node2 = new Node2<String, Boolean, Integer>() {
       @Override
@@ -272,6 +400,28 @@ public class TrickleTest {
 
     Trickle.graph(String.class)
         .build();
+  }
+
+  @Test
+  public void shouldThrowForMissingInput() throws Exception {
+    Node1<String, String> node1 = new Node1<String, String>() {
+      @Override
+      public ListenableFuture<String> run(String arg) {
+        return immediateFuture(arg + ", 1");
+      }
+    };
+
+    Name<String> input = Name.named("somethingWeirdd", String.class);
+
+    Graph<String> g = Trickle.graph(String.class)
+        .call(node1).with(input)
+        .build();
+
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("Missing bind");
+    thrown.expectMessage("somethingWeirdd");
+
+    g.run();
   }
 
   // TODO: test that verifies blocking behaviour!
