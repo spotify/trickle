@@ -4,6 +4,7 @@
 
 package com.spotify.trickle;
 
+import javax.annotation.Nullable;
 import java.util.Objects;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -14,7 +15,7 @@ public final class Name<T> implements Value<T> {
 
   Name(String name, Class<T> klazz) {
     this.name = checkNotNull(name);
-    this.klazz = klazz;
+    this.klazz = checkNotNull(klazz, "class");
   }
 
   public static <T1> Name<T1> named(String name, Class<T1> klazz) {
@@ -27,7 +28,7 @@ public final class Name<T> implements Value<T> {
   }
 
   @Override
-  public boolean equals(Object obj) {
+  public boolean equals(@Nullable Object obj) {
     if (this == obj) {
       return true;
     }

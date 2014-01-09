@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Arrays.asList;
 
 
@@ -32,6 +33,7 @@ public class Trickle {
   static final Object DEPENDENCY_NOT_INITIALISED = new Object();
 
   public static <R> GraphBuilder<R> graph(Class<R> returnClass) {
+    checkNotNull(returnClass, "returnClass");
     return new GraphBuilder<>();
   }
 

@@ -1,10 +1,12 @@
 package com.spotify.trickle;
 
+import javax.annotation.Nullable;
+
 /**
  * TODO: document!
  */
 public class TrickleException extends RuntimeException {
-  public TrickleException(String message) {
+  public TrickleException(@Nullable String message) {
     super(message);
   }
 }

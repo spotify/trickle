@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.ImmutableList.builder;
 import static com.google.common.util.concurrent.Futures.allAsList;
 import static com.google.common.util.concurrent.Futures.immediateFailedFuture;
@@ -27,8 +28,8 @@ class ConnectedNode {
   private final Optional<?> defaultValue;
 
   public ConnectedNode(Node<?> node, Iterable<Dep<?>> inputs, List<Node<?>> predecessors, Optional<?> defaultValue) {
-    this.node = node;
-    this.defaultValue = defaultValue;
+    this.node = checkNotNull(node, "node");
+    this.defaultValue = checkNotNull(defaultValue, "defaultValue");
     this.predecessors = ImmutableList.copyOf(predecessors);
     this.inputs = ImmutableList.copyOf(inputs);
   }
@@ -38,6 +39,10 @@ class ConnectedNode {
       final Map<Node<?>, ConnectedNode> nodes,
       final Map<Node<?>, ListenableFuture<?>> visited,
       Executor executor) {
+    checkNotNull(bindings, "bindings");
+    checkNotNull(nodes, "nodes");
+    checkNotNull(visited, "visited");
+    checkNotNull(executor, "executor");
 
     // filter out future and value dependencies
     final ImmutableList.Builder<ListenableFuture<?>> futuresListBuilder = builder();

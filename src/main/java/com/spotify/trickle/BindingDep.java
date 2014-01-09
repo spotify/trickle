@@ -1,5 +1,7 @@
 package com.spotify.trickle;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
 * TODO: document!
 */
@@ -8,6 +10,6 @@ class BindingDep<T> extends Dep<T> {
 
   public BindingDep(Name<?> name, Class<T> cls) {
     super(cls);
-    this.name = name;
+    this.name = checkNotNull(name, "name");
   }
 }

@@ -1,5 +1,7 @@
 package com.spotify.trickle;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
 * TODO: document!
 */
@@ -8,6 +10,6 @@ class ValueDep<T> extends Dep<T> {
 
   ValueDep(final T value, final Class<T> cls) {
     super(cls);
-    this.value = value;
+    this.value = checkNotNull(value, "value");
   }
 }

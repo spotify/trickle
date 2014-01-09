@@ -8,6 +8,8 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
  * TODO: document!
  */
@@ -17,9 +19,9 @@ class TrickleGraph<T> implements Graph<T> {
   private final Node<T> out;
 
   TrickleGraph(Map<Name<?>, Object> inputDependencies, Node<T> out, Map<Node<?>, ConnectedNode> nodeMap) {
-    this.out = out;
-    this.nodes = nodeMap;
     this.inputDependencies = ImmutableMap.copyOf(inputDependencies);
+    this.out = checkNotNull(out, "out");
+    this.nodes = ImmutableMap.copyOf(nodeMap);
   }
 
   @Override
