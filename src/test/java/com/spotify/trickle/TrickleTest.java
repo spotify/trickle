@@ -13,6 +13,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.google.common.util.concurrent.Futures.immediateFailedFuture;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.either;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -214,33 +216,34 @@ public class TrickleTest {
     thrown.expectMessage("the first sink");
     thrown.expectMessage("unnamed");
 
-    Graph<String> graph = Trickle.graph(String.class)
+    Trickle.graph(String.class)
         .call(node1).named("the first sink")
         .call(node2)
         .build();
   }
 
   @Test
-  public void shouldThrowForSinkNotMatchingGraphOutput() throws Exception {
+  public void shouldThrowForCycle() throws Exception {
     Node0<String> node1 = new Node0<String>() {
       @Override
       public ListenableFuture<String> run() {
-        return immediateFuture("one");
+        return immediateFuture("1");
       }
     };
-    Node1<String, Integer> node2 = new Node1<String, Integer>() {
+    Node1<String, String> node2 = new Node1<String, String>() {
       @Override
-      public ListenableFuture<Integer> run(String arg) {
-        return immediateFuture(199);
+      public ListenableFuture<String> run(String input) {
+        return immediateFuture(input + "2");
       }
     };
 
     thrown.expect(TrickleException.class);
-    thrown.expectMessage("invalid sink return class");
+    thrown.expectMessage("cycle detected");
+    thrown.expectMessage(either(containsString("node1 -> node2 -> node1")).or(containsString("node2 -> node1 -> node2")));
 
-    Graph<String> graph = Trickle.graph(String.class)
-        .call(node1)
-        .call(node2).with(node1)
+    Trickle.graph(String.class)
+        .call(node1).after(node2).named("node1")
+        .call(node2).with(node1).named("node2")
         .build();
   }
 
@@ -257,8 +260,17 @@ public class TrickleTest {
     thrown.expectMessage("Incorrect argument count");
     thrown.expectMessage("teh second node");
 
-    Graph<String> graph = Trickle.graph(String.class)
+    Trickle.graph(String.class)
         .call(node2).named("teh second node")
+        .build();
+  }
+
+  @Test
+  public void shouldThrowForEmptyGraph() throws Exception {
+    thrown.expect(IllegalStateException.class);
+    thrown.expectMessage("Empty graph");
+
+    Trickle.graph(String.class)
         .build();
   }
 

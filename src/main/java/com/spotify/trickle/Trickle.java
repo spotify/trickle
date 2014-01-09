@@ -2,7 +2,9 @@ package com.spotify.trickle;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
@@ -13,6 +15,9 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Deque;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -83,6 +88,8 @@ public class Trickle {
     }
 
     public TrickleGraph<R> build() {
+      Preconditions.checkState(!nodes.isEmpty(), "Empty graph");
+
       Map<Name<?>,Object> inputDependencies =
           Maps.asMap(inputs, new Function<Name<?>, Object>() {
             @Override
@@ -101,12 +108,52 @@ public class Trickle {
 
       Set<NodeBuilder<?, R>> sinks = Sets.filter(nodes, new NoNodeDependsOn<>(edges));
 
+      if (sinks.isEmpty()) {
+        throw new TrickleException("cycle detected: " + formatOneCycle(edges));
+      }
       if (sinks.size() != 1) {
         throw new TrickleException("Multiple sinks found: " + sinks);
       }
 
-      // TODO: check type safety, somehow...
-      return (Node<R>) sinks.iterator().next().node;
+
+      NodeBuilder<?, R> sinkBuilder = sinks.iterator().next();
+
+      // note that there is no guarantee that this cast is safe. That's bad, but I'm not sure what
+      // to do about it. TODO: think about this
+      return (Node<R>) sinkBuilder.node;
+    }
+
+    private String formatOneCycle(Multimap<NodeBuilder<?, R>, NodeBuilder<?, R>> edges) {
+
+      for (NodeBuilder<?, R> nodeBuilder : edges.keySet()) {
+        Optional<Deque<NodeBuilder<?, R>>> cycle = findCycle(nodeBuilder, edges, new LinkedList<NodeBuilder<?, R>>());
+
+        if (cycle.isPresent()) {
+          return Joiner.on(" -> ").join(cycle.get());
+        }
+      }
+
+      throw new IllegalStateException("no cycle found!");
+    }
+
+    private Optional<Deque<NodeBuilder<?, R>>> findCycle(NodeBuilder<?, R> current, Multimap<NodeBuilder<?, R>, NodeBuilder<?, R>> edges, Deque<NodeBuilder<?, R>> visited) {
+      if (visited.contains(current)) {
+        // add the current node again to close the cycle in the report
+        visited.push(current);
+        return Optional.of(visited);
+      }
+
+      visited.push(current);
+      for (NodeBuilder<?, R> nodeBuilder : edges.get(current)) {
+        Optional<Deque<NodeBuilder<?, R>>> cycle = findCycle(nodeBuilder, edges, visited);
+
+        if (cycle.isPresent()) {
+          return cycle;
+        }
+      }
+      visited.pop();
+
+      return Optional.absent();
     }
 
     private Multimap<NodeBuilder<?, R>, NodeBuilder<?, R>> findEdges(Set<NodeBuilder<?, R>> nodes) {
