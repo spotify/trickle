@@ -2,6 +2,7 @@ package com.spotify.trickle;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.FutureFallback;
 import com.google.common.util.concurrent.Futures;
@@ -46,7 +47,6 @@ class ConnectedNode {
 
     // filter out future and value dependencies
     final ImmutableList.Builder<ListenableFuture<?>> futuresListBuilder = builder();
-    final ImmutableList.Builder<Object> valuesListBuilder = builder();
 
     for (Dep<?> input : inputs) {
       // TODO: convert to using polymorphism?!
@@ -57,13 +57,12 @@ class ConnectedNode {
         final ListenableFuture<?> future = futureForNode(bindings, nodes, visited, node, executor);
 
         futuresListBuilder.add(future);
-        valuesListBuilder.add(future);
 
         // depends on bind
       } else if (input instanceof BindingDep) {
         final BindingDep<?> bindingDep = (BindingDep<?>) input;
-        checkArgument(bindings.containsKey(bindingDep.name),
-            "Missing bind for name %s, of type %s",
+        checkArgument(!Trickle.DEPENDENCY_NOT_INITIALISED.equals(bindings.get(bindingDep.name)),
+            "Name not bound to a value for name %s, of type %s",
             bindingDep.name, bindingDep.cls);
 
         final Object bindingValue = bindings.get(bindingDep.name);
@@ -71,26 +70,30 @@ class ConnectedNode {
             "Binding type mismatch, expected %s, found %s",
             bindingDep.cls, bindingValue.getClass());
 
-        valuesListBuilder.add(bindingValue);
+        if (bindingValue instanceof ListenableFuture) {
+          futuresListBuilder.add((ListenableFuture<?>) bindingValue);
+        }
+        else {
+          futuresListBuilder.add(immediateFuture(bindingValue));
+        }
       } else {
         throw new IllegalStateException("PROGRAMMER ERROR: unsupported Dep: " + input);
       }
     }
 
-    // add predecessors, too
+    final ImmutableList<ListenableFuture<?>> futures = futuresListBuilder.build();
+
+    // future for signaling propagation - needs to include predecessors, too
+    List<ListenableFuture<?>> mustHappenBefore = Lists.newArrayList(futures);
     for (Node<?> predecessor : predecessors) {
-      futuresListBuilder.add(futureForNode(bindings, nodes, visited, predecessor, executor));
+      mustHappenBefore.add(futureForNode(bindings, nodes, visited, predecessor, executor));
     }
 
-    final ImmutableList<ListenableFuture<?>> futures = futuresListBuilder.build();
-    final ImmutableList<Object> values = valuesListBuilder.build();
+    final ListenableFuture<List<Object>> allFuture = allAsList(mustHappenBefore);
 
-    // future for signaling propagation
-    final ListenableFuture<List<Object>> allFuture = allAsList(futures);
+    checkArgument(inputs.size() == futures.size(), "sanity check result: insane");
 
-    checkArgument(inputs.size() == values.size(), "sanity check result: insane");
-
-    return Futures.withFallback(nodeFuture(values, allFuture, executor), new FutureFallback<Object>() {
+    return Futures.withFallback(nodeFuture(futures, allFuture, executor), new FutureFallback<Object>() {
       @Override
       public ListenableFuture<Object> create(Throwable t) throws Exception {
         if (defaultValue.isPresent()) {
@@ -102,7 +105,7 @@ class ConnectedNode {
     });
   }
 
-  private ListenableFuture<?> nodeFuture(final ImmutableList<Object> values, ListenableFuture<List<Object>> doneSignal, Executor executor) {
+  private ListenableFuture<?> nodeFuture(final ImmutableList<ListenableFuture<?>> values, ListenableFuture<List<Object>> doneSignal, Executor executor) {
     switch (values.size()) {
       case 0:
         return Futures.transform(doneSignal, new AsyncFunction<Object, Object>() {
@@ -137,14 +140,10 @@ class ConnectedNode {
     }
   }
 
-  private Object valueAt(ImmutableList<Object> values, int index) {
+  private Object valueAt(ImmutableList<ListenableFuture<?>> values, int index) {
     Object value = values.get(index);
 
-    if (value instanceof ListenableFuture) {
-      return Futures.getUnchecked((ListenableFuture) value);
-    }
-
-    return value;
+    return Futures.getUnchecked((ListenableFuture) value);
   }
 
   private ListenableFuture<?> futureForNode(Map<Name<?>, Object> bindings, Map<Node<?>, ConnectedNode> nodes, Map<Node<?>, ListenableFuture<?>> visited, Node<?> node, Executor executor) {

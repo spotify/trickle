@@ -1,6 +1,7 @@
 package com.spotify.trickle;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 
 import java.util.concurrent.Executor;
 
@@ -17,6 +18,8 @@ public interface Graph<T> {
    * @return a new graph instance that has the value bound.
    */
   <P> Graph<T> bind(Name<P> name, P value);
+
+  <P> Graph<T> bind(Name<P> name, ListenableFuture<P> inputFuture);
 
   /**
    * Run the graph, executing all callbacks on the current thread. This is equivalent to
@@ -35,4 +38,5 @@ public interface Graph<T> {
    * @return a future for the value returned by the graph execution.
    */
   ListenableFuture<T> run(Executor executor);
+
 }

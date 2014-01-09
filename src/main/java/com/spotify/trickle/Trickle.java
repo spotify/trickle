@@ -6,21 +6,26 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Arrays.asList;
 
@@ -99,7 +104,7 @@ public class Trickle {
 
       Node<R> result1 = findSink(nodes);
 
-      return new TrickleGraph<>(inputDependencies, result1, buildNodes(nodes));
+      return new TrickleGraph<>(inputDependencies, result1, buildNodes(nodes, inputDependencies));
     }
 
     private Node<R> findSink(Set<NodeBuilder<?, R>> nodes) {
@@ -187,11 +192,11 @@ public class Trickle {
     }
 
 
-    private Map<Node<?>, ConnectedNode> buildNodes(Iterable<NodeBuilder<?, R>> nodeBuilders) {
+    private Map<Node<?>, ConnectedNode> buildNodes(Iterable<NodeBuilder<?, R>> nodeBuilders, Map<Name<?>, Object> inputDependencies) {
       ImmutableMap.Builder<Node<?>, ConnectedNode> builder = ImmutableMap.builder();
 
       for (NodeBuilder<?, R> nodeBuilder : nodeBuilders) {
-        builder.put(nodeBuilder.node, nodeBuilder.connect());
+        builder.put(nodeBuilder.node, nodeBuilder.connect(inputDependencies));
       }
 
       return builder.build();
@@ -317,10 +322,14 @@ public class Trickle {
       return graphBuilder.build();
     }
 
-    private ConnectedNode connect() {
+    private ConnectedNode connect(Map<Name<?>, Object> inputDependencies) {
       if (inputs.size() != argumentCount()) {
         throw new TrickleException(String.format("Incorrect argument count for node '%s' - expected %d, got %d", toString(), argumentCount(), inputs.size()));
       }
+
+      Collection<Value<?>> names = Collections2.filter(inputs, Predicates.instanceOf(Name.class));
+
+      checkArgument(inputDependencies.keySet().containsAll(names), "Name not listed in inputs: '" + names + "'");
 
       return new ConnectedNode(node, asDeps(inputs), predecessors, Optional.fromNullable(defaultValue));
     }

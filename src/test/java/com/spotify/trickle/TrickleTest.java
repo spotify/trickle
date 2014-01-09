@@ -132,7 +132,7 @@ public class TrickleTest {
         .call(result).after(incr1, incr2)
         .build();
 
-    ListenableFuture<Integer> future = graph.run(MoreExecutors.sameThreadExecutor());
+    ListenableFuture<Integer> future = graph.run();
 
     assertThat(future.isDone(), is(false));
     assertThat(counter.get(), equalTo(1));
@@ -215,6 +215,7 @@ public class TrickleTest {
     Name<String> input = Name.named("in", String.class);
 
     Graph<String> g = Trickle.graph(String.class)
+        .inputs(input)
         .call(node1).with(input)
         .call(node2).with(node1, input)
         .build();
@@ -275,6 +276,7 @@ public class TrickleTest {
     Name<String> input = Name.named("in", String.class);
 
     Graph<String> g = Trickle.graph(String.class)
+        .inputs(input)
         .call(node1).with(input)
         .call(node2).with(node1, input)
         .build();
@@ -283,7 +285,55 @@ public class TrickleTest {
     thrown.expectCause(equalTo(expected));
 
     g.bind(input, "hey").run().get();
+  }
 
+  @Test
+  public void shouldAllowPassingFuturesAsParameters() throws Exception {
+    SettableFuture<String> inputFuture = SettableFuture.create();
+
+    Node1<String, Integer> node = new Node1<String, Integer>() {
+      @Override
+      public ListenableFuture<Integer> run(String arg) {
+        return immediateFuture(arg.length());
+      }
+    };
+    Name<String> inputName = Name.named("input", String.class);
+
+    Graph<Integer> g = Trickle.graph(Integer.class)
+        .inputs(inputName)
+        .call(node).with(inputName)
+        .build();
+
+    inputFuture.set("hello");
+
+    assertThat(g.bind(inputName, inputFuture).run().get(), equalTo(5));
+  }
+
+  @Test
+  public void shouldNotBlockOnInputFutures() throws Exception {
+    SettableFuture<String> inputFuture = SettableFuture.create();
+
+    Node1<String, Integer> node = new Node1<String, Integer>() {
+      @Override
+      public ListenableFuture<Integer> run(String arg) {
+        return immediateFuture(arg.length());
+      }
+    };
+    Name<String> inputName = Name.named("input", String.class);
+
+    Graph<Integer> g = Trickle.graph(Integer.class)
+        .inputs(inputName)
+        .call(node).with(inputName)
+        .build();
+
+
+    ListenableFuture<Integer> future = g.bind(inputName, inputFuture).run();
+
+    assertThat(future.isDone(), is(false));
+
+    inputFuture.set("hey there");
+
+    assertThat(future.get(), equalTo(9));
   }
 
   @Test
@@ -414,14 +464,35 @@ public class TrickleTest {
     Name<String> input = Name.named("somethingWeirdd", String.class);
 
     Graph<String> g = Trickle.graph(String.class)
+        .inputs(input)
         .call(node1).with(input)
         .build();
 
     thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("Missing bind");
+    thrown.expectMessage("Name not bound to a value");
     thrown.expectMessage("somethingWeirdd");
 
-    g.run();
+    g.run().get();
+  }
+
+  @Test
+  public void shouldThrowForNonListedInputs() throws Exception {
+    Node1<String, String> node1 = new Node1<String, String>() {
+      @Override
+      public ListenableFuture<String> run(String arg) {
+        return immediateFuture(arg + ", 1");
+      }
+    };
+
+    Name<String> input = Name.named("a name that's not used", String.class);
+
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("Name not listed in inputs");
+    thrown.expectMessage("a name that's not used");
+
+    Graph<String> g = Trickle.graph(String.class)
+        .call(node1).with(input)
+        .build();
   }
 
   // TODO: test that verifies blocking behaviour!
