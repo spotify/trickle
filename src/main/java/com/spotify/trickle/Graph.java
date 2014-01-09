@@ -11,9 +11,9 @@ public interface Graph<T> {
   /**
    * Bind a parameter name to a concrete value.
    *
-   * @param name name to bind
+   * @param name  name to bind
    * @param value value to assign to name
-   * @param <P> type of the parameter
+   * @param <P>   type of the parameter
    * @return a new graph instance that has the value bound.
    */
   <P> Graph<T> bind(Name<P> name, P value);

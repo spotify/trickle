@@ -3,8 +3,8 @@ package com.spotify.trickle;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
-* TODO: document!
-*/
+ * TODO: document!
+ */
 class NodeDep<T> extends Dep<T> {
   public final Node<T> node;
 

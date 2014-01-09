@@ -46,7 +46,7 @@ public class Trickle {
     }
 
     public GraphBuilder() {
-      this (ImmutableSet.<Name<?>>of(), ImmutableSet.<NodeBuilder<?, R>>of());
+      this(ImmutableSet.<Name<?>>of(), ImmutableSet.<NodeBuilder<?, R>>of());
     }
 
     public GraphBuilder<R> inputs(Name<?>... dependencies) {
@@ -65,21 +65,21 @@ public class Trickle {
       return nodeBuilder;
     }
 
-    public <A1, N> NodeBuilder1<A1,N, R> call(Node1<A1, N> node) {
+    public <A1, N> NodeBuilder1<A1, N, R> call(Node1<A1, N> node) {
       NodeBuilder1<A1, N, R> nodeBuilder = new NodeBuilder1<>(this, node);
       nodes.add(nodeBuilder);
 
       return nodeBuilder;
     }
 
-    public <A1,A2,N> NodeBuilder2<A1,A2,N, R> call(Node2<A1, A2, N> node) {
-      NodeBuilder2<A1,A2,N, R> nodeBuilder = new NodeBuilder2<>(this, node);
+    public <A1, A2, N> NodeBuilder2<A1, A2, N, R> call(Node2<A1, A2, N> node) {
+      NodeBuilder2<A1, A2, N, R> nodeBuilder = new NodeBuilder2<>(this, node);
       nodes.add(nodeBuilder);
 
       return nodeBuilder;
     }
 
-    public <A1,A2,A3,N> NodeBuilder3<A1, A2, A3, N, R> call(Node3<A1, A2, A3, N> node) {
+    public <A1, A2, A3, N> NodeBuilder3<A1, A2, A3, N, R> call(Node3<A1, A2, A3, N> node) {
       NodeBuilder3<A1, A2, A3, N, R> nodeBuilder = new NodeBuilder3<>(this, node);
       nodes.add(nodeBuilder);
 
@@ -89,7 +89,7 @@ public class Trickle {
     public TrickleGraph<R> build() {
       Preconditions.checkState(!nodes.isEmpty(), "Empty graph");
 
-      Map<Name<?>,Object> inputDependencies =
+      Map<Name<?>, Object> inputDependencies =
           Maps.asMap(inputs, new Function<Name<?>, Object>() {
             @Override
             public Object apply(Name<?> input) {
@@ -108,7 +108,7 @@ public class Trickle {
       Optional<Deque<NodeBuilder<?, R>>> cycle = findOneCycle(edges);
 
       if (cycle.isPresent()) {
-        throw new TrickleException("cycle detected: " + Joiner.on(" -> ").join(cycle.get()));
+        throw new TrickleException("cycle detected (there may be more): " + Joiner.on(" -> ").join(cycle.get()));
       }
 
       Set<NodeBuilder<?, R>> sinks = Sets.filter(nodes, new NoNodeDependsOn<>(edges));
@@ -138,7 +138,8 @@ public class Trickle {
 
     private Optional<Deque<NodeBuilder<?, R>>> findCycle(NodeBuilder<?, R> current, Multimap<NodeBuilder<?, R>, NodeBuilder<?, R>> edges, Deque<NodeBuilder<?, R>> visited) {
       if (visited.contains(current)) {
-        // add the current node again to close the cycle in the report
+        // add the current node again to close the cycle - this is not perfect, since it can lead
+        // to 'cycles' like A -> B -> C -> B, but that's not really a big deal.
         visited.push(current);
         return Optional.of(visited);
       }
@@ -162,7 +163,7 @@ public class Trickle {
       Multimap<NodeBuilder<?, R>, NodeBuilder<?, R>> result = HashMultimap.create();
 
       for (NodeBuilder<?, R> node : nodes) {
-        for (Value<?> input: node.inputs) {
+        for (Value<?> input : node.inputs) {
           if (input instanceof Node) {
             result.put(node, buildersForNode.get(input));
           }
@@ -225,7 +226,7 @@ public class Trickle {
     }
   }
 
-  public static class NodeBuilder2<A1,A2,N, R> extends NodeBuilder<N, R> {
+  public static class NodeBuilder2<A1, A2, N, R> extends NodeBuilder<N, R> {
     private NodeBuilder2(GraphBuilder<R> graphBuilder, Node<N> node) {
       super(graphBuilder, node);
     }
@@ -235,12 +236,12 @@ public class Trickle {
       return 2;
     }
 
-    public NodeBuilder2<A1,A2,N, R> with(Value<A1> arg1, Value<A2> arg2) {
+    public NodeBuilder2<A1, A2, N, R> with(Value<A1> arg1, Value<A2> arg2) {
       return (NodeBuilder2<A1, A2, N, R>) super.with(arg1, arg2);
     }
   }
 
-  public static class NodeBuilder3<A1,A2,A3,N, R> extends NodeBuilder<N, R> {
+  public static class NodeBuilder3<A1, A2, A3, N, R> extends NodeBuilder<N, R> {
     private NodeBuilder3(GraphBuilder<R> graphBuilder, Node<N> node) {
       super(graphBuilder, node);
     }
@@ -250,7 +251,7 @@ public class Trickle {
       return 3;
     }
 
-    public NodeBuilder3<A1,A2,A3,N, R> with(Value<A1> arg1, Value<A2> arg2, Value<A3> arg3) {
+    public NodeBuilder3<A1, A2, A3, N, R> with(Value<A1> arg1, Value<A2> arg2, Value<A3> arg3) {
       return (NodeBuilder3<A1, A2, A3, N, R>) super.with(arg1, arg2, arg3);
     }
   }
@@ -334,13 +335,11 @@ public class Trickle {
       for (Object input : inputs) {
         if (input instanceof Name) {
           result.add(new BindingDep<>((Name<?>) input, Object.class));
-        }
-        else if (input instanceof Node) {
+        } else if (input instanceof Node) {
           // TODO: work out this
           result.add(new NodeDep<>((Node<Object>) input, Object.class));
-        }
-        else {
-          throw new RuntimeException("illegal input object: " + input);
+        } else {
+          throw new IllegalStateException("PROGRAMMER ERROR: illegal input object: " + input);
         }
       }
 

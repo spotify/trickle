@@ -49,6 +49,7 @@ class ConnectedNode {
     final ImmutableList.Builder<Object> valuesListBuilder = builder();
 
     for (Dep<?> input : inputs) {
+      // TODO: convert to using polymorphism?!
       // depends on other node
       if (input instanceof NodeDep) {
         final Node<?> node = ((NodeDep) input).node;
@@ -71,10 +72,8 @@ class ConnectedNode {
             bindingDep.cls, bindingValue.getClass());
 
         valuesListBuilder.add(bindingValue);
-
-        // depends on static value
-      } else if (input instanceof ValueDep) {
-        valuesListBuilder.add(((ValueDep<?>) input).value);
+      } else {
+        throw new IllegalStateException("PROGRAMMER ERROR: unsupported Dep: " + input);
       }
     }
 
@@ -122,7 +121,7 @@ class ConnectedNode {
       case 2:
         return Futures.transform(doneSignal, new AsyncFunction<Object, Object>() {
           @Override
-          public ListenableFuture<Object> apply(Object input)  {
+          public ListenableFuture<Object> apply(Object input) {
             return ((Node2<Object, Object, Object>) node).run(valueAt(values, 0), valueAt(values, 1));
           }
         }, executor);
