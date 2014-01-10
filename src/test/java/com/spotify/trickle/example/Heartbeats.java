@@ -24,7 +24,6 @@ public class Heartbeats {
 
     graph = Trickle
         .graph(Long.class)
-        .inputs(ENDPOINT)
         .call(fetchCurrent).with(ENDPOINT)
         .call(updateState).with(ENDPOINT).after(fetchCurrent)
         .call(updateSerial).with(fetchCurrent).after(updateState)

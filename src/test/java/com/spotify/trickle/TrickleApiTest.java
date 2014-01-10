@@ -144,7 +144,6 @@ public class TrickleApiTest {
     Name<String> input = Name.named("somethingWeirdd", String.class);
 
     Graph<String> g = Trickle.graph(String.class)
-        .inputs(input)
         .call(node1).with(input)
         .build();
 
@@ -154,26 +153,4 @@ public class TrickleApiTest {
 
     g.run().get();
   }
-
-  @Test
-  public void shouldThrowForNonListedInputs() throws Exception {
-    Node1<String, String> node1 = new Node1<String, String>() {
-      @Override
-      public ListenableFuture<String> run(String arg) {
-        return immediateFuture(arg + ", 1");
-      }
-    };
-
-    Name<String> input = Name.named("a name that's not used", String.class);
-
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("Name not listed in inputs");
-    thrown.expectMessage("a name that's not used");
-
-    Graph<String> g = Trickle.graph(String.class)
-        .call(node1).with(input)
-        .build();
-  }
-
-  // TODO: test that verifies blocking behaviour!
 }

@@ -62,11 +62,12 @@ class ConnectedNode {
         // depends on bind
       } else if (input instanceof BindingDep) {
         final BindingDep<?> bindingDep = (BindingDep<?>) input;
-        checkArgument(!Trickle.DEPENDENCY_NOT_INITIALISED.equals(bindings.get(bindingDep.getName())),
+        final Object bindingValue = bindings.get(bindingDep.getName());
+
+        checkArgument(bindingValue != null,
             "Name not bound to a value for name %s, of type %s",
             bindingDep.getName(), bindingDep.getCls());
 
-        final Object bindingValue = bindings.get(bindingDep.getName());
         checkArgument(bindingDep.getCls().isAssignableFrom(bindingValue.getClass()),
             "Binding type mismatch, expected %s, found %s",
             bindingDep.getCls(), bindingValue.getClass());

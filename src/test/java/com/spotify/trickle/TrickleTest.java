@@ -86,7 +86,6 @@ public class TrickleTest {
     Name<String> inputName = Name.named("theInnnput", String.class);
     Graph<String> graph = Trickle
         .graph(String.class)
-        .inputs(inputName)
         .call(node).with(inputName)
         .build();
 
@@ -216,7 +215,6 @@ public class TrickleTest {
     Name<String> input = Name.named("in", String.class);
 
     Graph<String> g = Trickle.graph(String.class)
-        .inputs(input)
         .call(node1).with(input)
         .call(node2).with(node1, input)
         .build();
@@ -245,7 +243,6 @@ public class TrickleTest {
     Name<String> input1 = Name.named("innn", String.class);
 
     Graph<String> g = Trickle.graph(String.class)
-        .inputs(input, input1)
         .call(node1).with(input)
         .call(node2).with(node1, input, input1)
         .build();
@@ -277,7 +274,6 @@ public class TrickleTest {
     Name<String> input = Name.named("in", String.class);
 
     Graph<String> g = Trickle.graph(String.class)
-        .inputs(input)
         .call(node1).with(input)
         .call(node2).with(node1, input)
         .build();
@@ -301,7 +297,6 @@ public class TrickleTest {
     Name<String> inputName = Name.named("input", String.class);
 
     Graph<Integer> g = Trickle.graph(Integer.class)
-        .inputs(inputName)
         .call(node).with(inputName)
         .build();
 
@@ -323,7 +318,6 @@ public class TrickleTest {
     Name<String> inputName = Name.named("input", String.class);
 
     Graph<Integer> g = Trickle.graph(Integer.class)
-        .inputs(inputName)
         .call(node).with(inputName)
         .build();
 

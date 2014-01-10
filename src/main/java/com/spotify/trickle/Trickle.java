@@ -1,13 +1,10 @@
 package com.spotify.trickle;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.collect.Collections2;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -17,14 +14,13 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Arrays.asList;
 
@@ -33,8 +29,6 @@ import static java.util.Arrays.asList;
  * TODO: document!
  */
 public final class Trickle {
-  static final Object DEPENDENCY_NOT_INITIALISED = new Object();
-
   private Trickle() {
     // prevent instantiation
   }
@@ -45,25 +39,14 @@ public final class Trickle {
   }
 
   public static final class GraphBuilder<R> {
-    private final Set<Name<?>> inputs;
     private final Set<NodeBuilder<?, R>> nodes;
 
-    private GraphBuilder(Set<Name<?>> inputs, Set<NodeBuilder<?, R>> nodes) {
-      this.inputs = ImmutableSet.copyOf(inputs);
+    private GraphBuilder(Set<NodeBuilder<?, R>> nodes) {
       this.nodes = Sets.newHashSet(nodes);
     }
 
     public GraphBuilder() {
-      this(ImmutableSet.<Name<?>>of(), ImmutableSet.<NodeBuilder<?, R>>of());
-    }
-
-    public GraphBuilder<R> inputs(Name<?>... dependencies) {
-      ImmutableSet.Builder<Name<?>> builder = ImmutableSet.builder();
-
-      builder.addAll(inputs);
-      builder.addAll(asList(dependencies));
-
-      return new GraphBuilder<>(builder.build(), nodes);
+      this(ImmutableSet.<NodeBuilder<?, R>>of());
     }
 
     public <N> NodeBuilder<N, R> call(Node0<N> node) {
@@ -97,17 +80,9 @@ public final class Trickle {
     public TrickleGraph<R> build() {
       Preconditions.checkState(!nodes.isEmpty(), "Empty graph");
 
-      Map<Name<?>, Object> inputDependencies =
-          Maps.asMap(inputs, new Function<Name<?>, Object>() {
-            @Override
-            public Object apply(Name<?> input) {
-              return DEPENDENCY_NOT_INITIALISED;
-            }
-          });
-
       Node<R> result1 = findSink(nodes);
 
-      return new TrickleGraph<>(inputDependencies, result1, buildNodes(nodes, inputDependencies));
+      return new TrickleGraph<>(Collections.<Name<?>, Object>emptyMap(), result1, buildNodes(nodes));
     }
 
     private Node<R> findSink(Set<NodeBuilder<?, R>> nodes) {
@@ -195,11 +170,11 @@ public final class Trickle {
     }
 
 
-    private Map<Node<?>, ConnectedNode> buildNodes(Iterable<NodeBuilder<?, R>> nodeBuilders, Map<Name<?>, Object> inputDependencies) {
+    private Map<Node<?>, ConnectedNode> buildNodes(Iterable<NodeBuilder<?, R>> nodeBuilders) {
       ImmutableMap.Builder<Node<?>, ConnectedNode> builder = ImmutableMap.builder();
 
       for (NodeBuilder<?, R> nodeBuilder : nodeBuilders) {
-        builder.put(nodeBuilder.node, nodeBuilder.connect(inputDependencies));
+        builder.put(nodeBuilder.node, nodeBuilder.connect());
       }
 
       return builder.build();
@@ -325,14 +300,10 @@ public final class Trickle {
       return graphBuilder.build();
     }
 
-    private ConnectedNode connect(Map<Name<?>, Object> inputDependencies) {
+    private ConnectedNode connect() {
       if (inputs.size() != argumentCount()) {
         throw new TrickleException(String.format("Incorrect argument count for node '%s' - expected %d, got %d", toString(), argumentCount(), inputs.size()));
       }
-
-      Collection<Value<?>> names = Collections2.filter(inputs, Predicates.instanceOf(Name.class));
-
-      checkArgument(inputDependencies.keySet().containsAll(names), "Name not listed in inputs: '" + names + "'");
 
       return new ConnectedNode(node, asDeps(inputs), predecessors, Optional.fromNullable(defaultValue));
     }

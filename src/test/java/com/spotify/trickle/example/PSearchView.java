@@ -28,7 +28,6 @@ public class PSearchView {
     Node3<Suggestions, List<MetadataReply<Track>>, List<Long>, AllData> allData = combineItAllNode();
 
     graph = Trickle.graph(AllData.class)
-        .inputs(CONTEXT, REQUEST, QUERY)
         .call(getSuggestions).with(CONTEXT, QUERY, REQUEST)
         .call(fetchTrackMetadata).with(CONTEXT, getSuggestions)
         .call(fetchPlaylistFollowers).with(CONTEXT, getSuggestions)

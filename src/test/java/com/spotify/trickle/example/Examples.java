@@ -44,10 +44,9 @@ public class Examples {
     };
 
     Graph<String> graph = Trickle.graph(String.class)
-        .inputs(GREETING, NAME)
-        .call(transformName).with(NAME)
+        .call(transformName).with(NAME).named("nameTransformer")
         .call(transformGreeting).with(GREETING)
-        .call(combine).with(GREETING, NAME)
+        .call(combine).with(transformGreeting, transformName).named("combiner")
         .build();
 
     System.out.println(graph.bind(NAME, "world").bind(GREETING, "Hello").run().get());
@@ -80,7 +79,6 @@ public class Examples {
       };
 
       graph = Trickle.graph(Integer.class)
-          .inputs(NAME, GREETING)
           .call(combineInputs).with(NAME, GREETING)
           .call(sideTrack)
           .call(length).with(combineInputs).after(sideTrack)
@@ -111,7 +109,6 @@ public class Examples {
       };
 
       graph = Trickle.graph(String.class)
-          .inputs(NAME)
           .call(node).with(NAME).fallback("Illegal name")
           .build();
     }
