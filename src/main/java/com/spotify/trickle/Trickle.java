@@ -305,7 +305,7 @@ public final class Trickle {
         throw new TrickleException(String.format("Incorrect argument count for node '%s' - expected %d, got %d", toString(), argumentCount(), inputs.size()));
       }
 
-      return new ConnectedNode(node, asDeps(inputs), predecessors, Optional.fromNullable(defaultValue));
+      return new ConnectedNode(nodeName, node, asDeps(inputs), predecessors, Optional.fromNullable(defaultValue));
     }
 
     int argumentCount() {

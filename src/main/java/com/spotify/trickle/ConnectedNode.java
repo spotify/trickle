@@ -1,6 +1,7 @@
 package com.spotify.trickle;
 
 import com.google.common.base.Function;
+import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -24,12 +25,14 @@ import static com.google.common.util.concurrent.Futures.immediateFuture;
  * Represents a node that has been connected to its input dependencies.
  */
 class ConnectedNode {
+  private final String name;
   private final TrickleNode node;
   private final ImmutableList<Dep<?>> inputs;
   private final ImmutableList<Node<?>> predecessors;
   private final Optional<?> defaultValue;
 
-  public ConnectedNode(Node<?> node, Iterable<Dep<?>> inputs, List<Node<?>> predecessors, Optional<?> defaultValue) {
+  ConnectedNode(String name, Node<?> node, Iterable<Dep<?>> inputs, List<Node<?>> predecessors, Optional<?> defaultValue) {
+    this.name = checkNotNull(name, "name");
     this.node = TrickleNode.create(node);
     this.defaultValue = checkNotNull(defaultValue, "defaultValue");
     this.predecessors = ImmutableList.copyOf(predecessors);
@@ -133,5 +136,22 @@ class ConnectedNode {
       visited.put(node, future);
     }
     return future;
+  }
+
+  String getName() {
+    return name;
+  }
+
+  ImmutableList<Dep<?>> getInputs() {
+    return inputs;
+  }
+
+  ImmutableList<Node<?>> getPredecessors() {
+    return predecessors;
+  }
+
+  @Override
+  public String toString() {
+    return name;
   }
 }
