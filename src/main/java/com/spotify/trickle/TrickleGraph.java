@@ -16,10 +16,11 @@ import static com.google.common.base.Preconditions.checkState;
  */
 class TrickleGraph<T> implements Graph<T> {
   private final Map<Name<?>, Object> inputDependencies;
-  private final Map<Node<?>, ConnectedNode> nodes;
+  private final Map<Node<?>, ConnectedNode<?>> nodes;
   private final Node<T> out;
 
-  TrickleGraph(Map<Name<?>, Object> inputDependencies, Node<T> out, Map<Node<?>, ConnectedNode> nodeMap) {
+  TrickleGraph(Map<Name<?>, Object> inputDependencies, Node<T> out,
+               Map<Node<?>, ConnectedNode<?>> nodeMap) {
     this.inputDependencies = ImmutableMap.copyOf(inputDependencies);
     this.out = checkNotNull(out, "out");
     this.nodes = ImmutableMap.copyOf(nodeMap);
@@ -50,15 +51,19 @@ class TrickleGraph<T> implements Graph<T> {
 
   @Override
   public ListenableFuture<T> run(Executor executor) {
-    ConnectedNode result = nodes.get(out);
+    ConnectedNode<?> result = nodes.get(out);
+
+    final TraverseState state = new TraverseState(inputDependencies, nodes,
+                                                  Maps.<Node<?>, ListenableFuture<?>>newHashMap(),
+                                                  executor);
 
     // this case is safe, because the 'output' node returns type T.
-    //noinspection unchecked
-    return (ListenableFuture<T>) result.future(inputDependencies, nodes, Maps.<Node<?>, ListenableFuture<?>>newHashMap(), executor);
+    // noinspection unchecked
+    return (ListenableFuture<T>) result.future(state);
   }
 
 
-  Map<Node<?>, ConnectedNode> getNodes() {
+  Map<Node<?>, ConnectedNode<?>> getNodes() {
     return nodes;
   }
 }

@@ -1,21 +1,10 @@
 package com.spotify.trickle;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import com.google.common.util.concurrent.ListenableFuture;
 
 /**
- * Abstract class for a dependency of an input of some class.
- *
- * TODO: do we really need the class parameter? Currently, the API guarantees type safety, so maybe
- * the internals should just ignore types entirely?
+ * Interface for a dependency of an input.
  */
-abstract class Dep<T> {
-  private final Class<T> cls;
-
-  Dep(final Class<T> cls) {
-    this.cls = checkNotNull(cls, "class");
-  }
-
-  public Class<T> getCls() {
-    return cls;
-  }
+interface Dep<T> {
+  ListenableFuture<T> getFuture(TraverseState state);
 }

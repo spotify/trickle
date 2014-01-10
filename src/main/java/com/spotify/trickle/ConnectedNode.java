@@ -10,7 +10,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Executor;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -42,55 +41,13 @@ class ConnectedNode<N> {
     this.inputs = ImmutableList.copyOf(inputs);
   }
 
-  ListenableFuture<N> future(
-      final Map<Name<?>, Object> bindings,
-      final Map<Node<?>, ConnectedNode> nodes,
-      final Map<Node<?>, ListenableFuture<?>> visited,
-      Executor executor) {
-    checkNotNull(bindings, "bindings");
-    checkNotNull(nodes, "nodes");
-    checkNotNull(visited, "visited");
-    checkNotNull(executor, "executor");
-
-    // filter out future and value dependencies
+  ListenableFuture<N> future(final TraverseState state) {
     final ImmutableList.Builder<ListenableFuture<?>> futuresListBuilder = builder();
 
+    // get node and value dependencies
     for (Dep<?> input : inputs) {
-      // TODO: convert to using polymorphism?!
-      // depends on other node
-      if (input instanceof NodeDep) {
-        final Node<?> inputNode = ((NodeDep) input).getNode();
-
-        final ListenableFuture<?> future = futureForNode(bindings, nodes, visited, inputNode, executor);
-
-        futuresListBuilder.add(future);
-
-        // depends on bind
-      } else if (input instanceof BindingDep) {
-        final BindingDep<?> bindingDep = (BindingDep<?>) input;
-        final Object bindingValue = bindings.get(bindingDep.getName());
-
-        checkArgument(bindingValue != null,
-            "Name not bound to a value for name %s, of type %s",
-            bindingDep.getName(), bindingDep.getCls());
-
-
-        // the below statement is safe, it's just IntelliJ that doesn't understand that the
-        // checkArgument above will bail if bindingValue == null.
-        //noinspection ConstantConditions
-        checkArgument(bindingDep.getCls().isAssignableFrom(bindingValue.getClass()),
-            "Binding type mismatch, expected %s, found %s",
-            bindingDep.getCls(), bindingValue.getClass());
-
-        if (bindingValue instanceof ListenableFuture) {
-          futuresListBuilder.add((ListenableFuture<?>) bindingValue);
-        }
-        else {
-          futuresListBuilder.add(immediateFuture(bindingValue));
-        }
-      } else {
-        throw new IllegalStateException("PROGRAMMER ERROR: unsupported Dep: " + input);
-      }
+      final ListenableFuture<?> inputFuture = input.getFuture(state);
+      futuresListBuilder.add(inputFuture);
     }
 
     final ImmutableList<ListenableFuture<?>> futures = futuresListBuilder.build();
@@ -98,14 +55,15 @@ class ConnectedNode<N> {
     // future for signaling propagation - needs to include predecessors, too
     List<ListenableFuture<?>> mustHappenBefore = Lists.newArrayList(futures);
     for (Node<?> predecessor : predecessors) {
-      mustHappenBefore.add(futureForNode(bindings, nodes, visited, predecessor, executor));
+      mustHappenBefore.add(state.futureForNode(predecessor));
     }
 
     final ListenableFuture<List<Object>> allFuture = allAsList(mustHappenBefore);
 
     checkArgument(inputs.size() == futures.size(), "sanity check result: insane");
 
-    return Futures.withFallback(nodeFuture(futures, allFuture, executor), new FutureFallback<N>() {
+    return Futures.withFallback(
+        nodeFuture(futures, allFuture, state.executor), new FutureFallback<N>() {
       @Override
       public ListenableFuture<N> create(Throwable t) {
         if (fallback.isPresent()) {
@@ -118,8 +76,8 @@ class ConnectedNode<N> {
   }
 
   private ListenableFuture<N> nodeFuture(final ImmutableList<ListenableFuture<?>> values,
-                                         ListenableFuture<List<Object>> doneSignal,
-                                         Executor executor) {
+                                         final ListenableFuture<List<Object>> doneSignal,
+                                         final Executor executor) {
     return Futures.transform(
         doneSignal,
         new AsyncFunction<List<Object>, N>() {
@@ -134,23 +92,6 @@ class ConnectedNode<N> {
           }
         },
         executor);
-  }
-
-  private ListenableFuture<?> futureForNode(Map<Name<?>, Object> bindings,
-                                            Map<Node<?>, ConnectedNode> nodes,
-                                            Map<Node<?>, ListenableFuture<?>> visited,
-                                            Node<?> node,
-                                            Executor executor) {
-    final ListenableFuture<?> future;
-    if (visited.containsKey(node)) {
-      future = visited.get(node);
-    } else {
-      // losing type information here, this is fine because the API enforces it
-      //noinspection unchecked
-      future = nodes.get(node).future(bindings, nodes, visited, executor);
-      visited.put(node, future);
-    }
-    return future;
   }
 
   String getName() {

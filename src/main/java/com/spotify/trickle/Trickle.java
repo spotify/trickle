@@ -173,8 +173,8 @@ public final class Trickle {
     }
 
 
-    private Map<Node<?>, ConnectedNode> buildNodes(Iterable<NodeBuilder<?, R>> nodeBuilders) {
-      ImmutableMap.Builder<Node<?>, ConnectedNode> builder = ImmutableMap.builder();
+    private Map<Node<?>, ConnectedNode<?>> buildNodes(Iterable<NodeBuilder<?, R>> nodeBuilders) {
+      ImmutableMap.Builder<Node<?>, ConnectedNode<?>> builder = ImmutableMap.builder();
 
       for (NodeBuilder<?, R> nodeBuilder : nodeBuilders) {
         builder.put(nodeBuilder.node, nodeBuilder.connect());
@@ -314,14 +314,14 @@ public final class Trickle {
       return 0;
     }
 
-    private List<Dep<?>> asDeps(List<Value<?>> inputs) {
+    private static List<Dep<?>> asDeps(List<Value<?>> inputs) {
       List<Dep<?>> result = Lists.newArrayList();
 
       for (Object input : inputs) {
         if (input instanceof Name) {
-          result.add(new BindingDep<>((Name<?>) input, Object.class));
+          result.add(new BindingDep<>((Name<?>) input));
         } else if (input instanceof Node) {
-          result.add(new NodeDep<>((Node<?>) input, Object.class));
+          result.add(new NodeDep<>((Node<?>) input));
         } else {
           throw new IllegalStateException("PROGRAMMER ERROR: illegal input object: " + input);
         }

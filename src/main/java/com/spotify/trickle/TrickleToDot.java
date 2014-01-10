@@ -17,29 +17,31 @@ public final class TrickleToDot {
       return;
     }
 
-    Map<Node<?>, ConnectedNode> nodes = ((TrickleGraph<?>) graph).getNodes();
+    Map<Node<?>, ConnectedNode<?>> nodes = ((TrickleGraph<?>) graph).getNodes();
 
     writer.println("digraph TrickleGraph {");
-    for (ConnectedNode connectedNode : nodes.values()) {
+    for (ConnectedNode<?> connectedNode : nodes.values()) {
       writeDependenciesForNode(nodes, connectedNode, writer);
     }
     writer.println("}");
     writer.flush();
   }
 
-  private static void writeDependenciesForNode(Map<Node<?>, ConnectedNode> nodes, ConnectedNode connectedNode, PrintWriter writer) {
+  private static void writeDependenciesForNode(Map<Node<?>, ConnectedNode<?>> nodes,
+                                               ConnectedNode<?> connectedNode,
+                                               PrintWriter writer) {
     String safeNodeName = dotSafe(connectedNode.getName());
     writer.println(String.format("  %s [label=\"%s\"];", safeNodeName, connectedNode.getName()));
 
     int pos = 0;
     for (Object dep : connectedNode.getInputs()) {
       if (dep instanceof NodeDep) {
-        ConnectedNode from = nodes.get(((NodeDep) dep).getNode());
+        ConnectedNode<?> from = nodes.get(((NodeDep<?>) dep).getNode());
 
         writer.println(String.format("  %s -> %s [label=\"arg%d\"];", dotSafe(from.getName()), safeNodeName, pos));
       }
       else {
-        Name name = ((BindingDep) dep).getName();
+        Name<?> name = ((BindingDep<?>) dep).getName();
 
         writer.println(String.format("  %s [label=\"%s\" shape=box];", dotSafe(name.getName()), name.getName()));
         writer.println(String.format("  %s -> %s [label=\"arg%d\"];", dotSafe(name.getName()), safeNodeName, pos));
@@ -50,7 +52,7 @@ public final class TrickleToDot {
 
 
     for (Object node : connectedNode.getPredecessors()) {
-      ConnectedNode from = nodes.get(node);
+      ConnectedNode<?> from = nodes.get(node);
 
       writer.println(String.format("  %s -> %s [style=dotted];", dotSafe(from.getName()), safeNodeName));
     }
