@@ -151,6 +151,28 @@ public class TrickleApiTest {
     thrown.expectMessage("Name not bound to a value");
     thrown.expectMessage("somethingWeirdd");
 
-    g.run().get();
+    g.run();
+  }
+
+  @Test
+  public void shouldThrowForDuplicateBindOfName() throws Exception {
+    Node1<String, String> node1 = new Node1<String, String>() {
+      @Override
+      public ListenableFuture<String> run(String arg) {
+        return immediateFuture(arg + ", 1");
+      }
+    };
+
+    Name<String> input = Name.named("mein Name", String.class);
+
+    Graph<String> g = Trickle.graph(String.class)
+        .call(node1).with(input)
+        .build();
+
+    thrown.expect(IllegalStateException.class);
+    thrown.expectMessage("Duplicate binding for name");
+    thrown.expectMessage("mein Name");
+
+    g.bind(input, "erich").bind(input, "volker");
   }
 }

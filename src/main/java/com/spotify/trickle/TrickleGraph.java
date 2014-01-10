@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * Concrete, non-public implementation of Graph.
@@ -36,7 +37,8 @@ class TrickleGraph<T> implements Graph<T> {
 
   private TrickleGraph<T> addToInputs(Name<?> name, Object value) {
     Map<Name<?>, Object> newInputs = Maps.newHashMap(inputDependencies);
-    newInputs.put(name, value);
+
+    checkState(newInputs.put(name, value) == null, "Duplicate binding for name: " + name);
 
     return new TrickleGraph<>(newInputs, out, nodes);
   }
