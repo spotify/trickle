@@ -7,7 +7,7 @@ import java.util.List;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * TODO: document!
+ * Helper class that simplifies executing nodes with different numbers of parameters.
  */
 abstract class TrickleNode {
 

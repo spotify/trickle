@@ -3,7 +3,7 @@ package com.spotify.trickle;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * TODO: document!
+ * Defines a dependency on a value bound to a specific name.
  */
 class BindingDep<T> extends Dep<T> {
   private final Name<?> name;

@@ -348,8 +348,7 @@ public final class Trickle {
         if (input instanceof Name) {
           result.add(new BindingDep<>((Name<?>) input, Object.class));
         } else if (input instanceof Node) {
-          // TODO: work out this
-          result.add(new NodeDep<>((Node<Object>) input, Object.class));
+          result.add(new NodeDep<>((Node<?>) input, Object.class));
         } else {
           throw new IllegalStateException("PROGRAMMER ERROR: illegal input object: " + input);
         }

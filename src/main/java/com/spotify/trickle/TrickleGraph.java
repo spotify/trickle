@@ -11,7 +11,7 @@ import java.util.concurrent.Executor;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * TODO: document!
+ * Concrete, non-public implementation of Graph.
  */
 class TrickleGraph<T> implements Graph<T> {
   private final Map<Name<?>, Object> inputDependencies;

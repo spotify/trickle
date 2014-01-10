@@ -21,7 +21,7 @@ import static com.google.common.util.concurrent.Futures.immediateFailedFuture;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 
 /**
- * TODO: document!
+ * Represents a node that has been connected to its input dependencies.
  */
 class ConnectedNode {
   private final TrickleNode node;

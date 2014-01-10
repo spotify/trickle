@@ -3,17 +3,17 @@ package com.spotify.trickle;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * TODO: document!
+ * Defines a dependency of a parameter that is a node.
  */
 class NodeDep<T> extends Dep<T> {
-  private final Node<T> node;
+  private final Node<?> node;
 
-  public NodeDep(final Node<T> node, Class<T> klazz) {
+  public NodeDep(final Node<?> node, Class<T> klazz) {
     super(klazz);
     this.node = checkNotNull(node, "node");
   }
 
-  public Node<T> getNode() {
+  public Node<?> getNode() {
     return node;
   }
 }

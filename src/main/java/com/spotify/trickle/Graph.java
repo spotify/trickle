@@ -9,7 +9,8 @@ import java.util.concurrent.Executor;
  */
 public interface Graph<T> {
   /**
-   * Bind a parameter name to a concrete value.
+   * Bind a parameter name to a concrete value. This means that this input value will immediately
+   * be available for use.
    *
    * @param name  name to bind
    * @param value value to assign to name
@@ -18,10 +19,19 @@ public interface Graph<T> {
    */
   <P> Graph<T> bind(Name<P> name, P value);
 
+  /**
+   * Bind a parameter name to a future value. This means that nodes using this as inputs will not
+   * get invoked until the input future has completed.
+   *
+   * @param name  name to bind
+   * @param inputFuture future for value to use
+   * @param <P>   type of the parameter
+   * @return a new graph instance that has the value bound.
+   */
   <P> Graph<T> bind(Name<P> name, ListenableFuture<P> inputFuture);
 
   /**
-   * Run the graph, executing all callbacks on the current thread. This is equivalent to
+   * Run the graph, executing all node methods on the current thread. This is equivalent to
    * calling {@link #run(java.util.concurrent.Executor)} with
    * {@link com.google.common.util.concurrent.MoreExecutors#sameThreadExecutor()}.
    *
@@ -31,7 +41,7 @@ public interface Graph<T> {
 
 
   /**
-   * Run the graph, executing callbacks on the supplied executor.
+   * Run the graph, executing node methods on the supplied executor.
    *
    * @param executor to run callbacks on
    * @return a future for the value returned by the graph execution.
