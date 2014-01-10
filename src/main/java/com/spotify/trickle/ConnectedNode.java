@@ -1,5 +1,6 @@
 package com.spotify.trickle;
 
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -23,19 +24,19 @@ import static com.google.common.util.concurrent.Futures.immediateFuture;
  * TODO: document!
  */
 class ConnectedNode {
-  private final Node<?> node;
+  private final TrickleNode node;
   private final ImmutableList<Dep<?>> inputs;
   private final ImmutableList<Node<?>> predecessors;
   private final Optional<?> defaultValue;
 
   public ConnectedNode(Node<?> node, Iterable<Dep<?>> inputs, List<Node<?>> predecessors, Optional<?> defaultValue) {
-    this.node = checkNotNull(node, "node");
+    this.node = TrickleNode.create(node);
     this.defaultValue = checkNotNull(defaultValue, "defaultValue");
     this.predecessors = ImmutableList.copyOf(predecessors);
     this.inputs = ImmutableList.copyOf(inputs);
   }
 
-  ListenableFuture<?> future(
+  ListenableFuture<Object> future(
       final Map<Name<?>, Object> bindings,
       final Map<Node<?>, ConnectedNode> nodes,
       final Map<Node<?>, ListenableFuture<?>> visited,
@@ -105,45 +106,21 @@ class ConnectedNode {
     });
   }
 
-  private ListenableFuture<?> nodeFuture(final ImmutableList<ListenableFuture<?>> values, ListenableFuture<List<Object>> doneSignal, Executor executor) {
-    switch (values.size()) {
-      case 0:
-        return Futures.transform(doneSignal, new AsyncFunction<Object, Object>() {
+  private ListenableFuture<Object> nodeFuture(final ImmutableList<ListenableFuture<?>> values, ListenableFuture<List<Object>> doneSignal, Executor executor) {
+    return Futures.transform(
+        doneSignal,
+        new AsyncFunction<List<Object>, Object>() {
           @Override
-          public ListenableFuture<Object> apply(Object input) {
-            return ((Node0<Object>) node).run();
+          public ListenableFuture<Object> apply(List<Object> input) {
+            return node.run(Lists.transform(values, new Function<ListenableFuture<?>, Object>() {
+              @Override
+              public Object apply(ListenableFuture<?> input) {
+                return Futures.getUnchecked(input);
+              }
+            }));
           }
-        }, executor);
-      case 1:
-        return Futures.transform(doneSignal, new AsyncFunction<Object, Object>() {
-          @Override
-          public ListenableFuture<Object> apply(Object input) {
-            return ((Node1<Object, Object>) node).run(valueAt(values, 0));
-          }
-        }, executor);
-      case 2:
-        return Futures.transform(doneSignal, new AsyncFunction<Object, Object>() {
-          @Override
-          public ListenableFuture<Object> apply(Object input) {
-            return ((Node2<Object, Object, Object>) node).run(valueAt(values, 0), valueAt(values, 1));
-          }
-        }, executor);
-      case 3:
-        return Futures.transform(doneSignal, new AsyncFunction<Object, Object>() {
-          @Override
-          public ListenableFuture<Object> apply(Object input) {
-            return ((Node3<Object, Object, Object, Object>) node).run(valueAt(values, 0), valueAt(values, 1), valueAt(values, 2));
-          }
-        }, executor);
-      default:
-        throw new UnsupportedOperationException("bleh");
-    }
-  }
-
-  private Object valueAt(ImmutableList<ListenableFuture<?>> values, int index) {
-    Object value = values.get(index);
-
-    return Futures.getUnchecked((ListenableFuture) value);
+        },
+        executor);
   }
 
   private ListenableFuture<?> futureForNode(Map<Name<?>, Object> bindings, Map<Node<?>, ConnectedNode> nodes, Map<Node<?>, ListenableFuture<?>> visited, Node<?> node, Executor executor) {
