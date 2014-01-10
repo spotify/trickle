@@ -5,7 +5,7 @@ A simple library for composing asynchronous code. The main reason for it to exis
 easier to create graphs of interconnected asynchronous calls, pushing the 'worrying about
 concurrency' aspects into the framework rather than mixing it in with the business logic.
 
-See [Examples.java](src/test/java/com/spotify/trickle/example/Examples.java)
+See [Examples.java](src/examples/java/com/spotify/trickle/Examples.java)
 
 Caveats:
 - The current implementation is mostly focused on getting the API right; feel free to check out the
