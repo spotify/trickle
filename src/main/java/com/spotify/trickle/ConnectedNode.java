@@ -52,23 +52,23 @@ class ConnectedNode {
       // TODO: convert to using polymorphism?!
       // depends on other node
       if (input instanceof NodeDep) {
-        final Node<?> node = ((NodeDep) input).node;
+        final Node<?> inputNode = ((NodeDep) input).getNode();
 
-        final ListenableFuture<?> future = futureForNode(bindings, nodes, visited, node, executor);
+        final ListenableFuture<?> future = futureForNode(bindings, nodes, visited, inputNode, executor);
 
         futuresListBuilder.add(future);
 
         // depends on bind
       } else if (input instanceof BindingDep) {
         final BindingDep<?> bindingDep = (BindingDep<?>) input;
-        checkArgument(!Trickle.DEPENDENCY_NOT_INITIALISED.equals(bindings.get(bindingDep.name)),
+        checkArgument(!Trickle.DEPENDENCY_NOT_INITIALISED.equals(bindings.get(bindingDep.getName())),
             "Name not bound to a value for name %s, of type %s",
-            bindingDep.name, bindingDep.cls);
+            bindingDep.getName(), bindingDep.getCls());
 
-        final Object bindingValue = bindings.get(bindingDep.name);
-        checkArgument(bindingDep.cls.isAssignableFrom(bindingValue.getClass()),
+        final Object bindingValue = bindings.get(bindingDep.getName());
+        checkArgument(bindingDep.getCls().isAssignableFrom(bindingValue.getClass()),
             "Binding type mismatch, expected %s, found %s",
-            bindingDep.cls, bindingValue.getClass());
+            bindingDep.getCls(), bindingValue.getClass());
 
         if (bindingValue instanceof ListenableFuture) {
           futuresListBuilder.add((ListenableFuture<?>) bindingValue);
@@ -95,7 +95,7 @@ class ConnectedNode {
 
     return Futures.withFallback(nodeFuture(futures, allFuture, executor), new FutureFallback<Object>() {
       @Override
-      public ListenableFuture<Object> create(Throwable t) throws Exception {
+      public ListenableFuture<Object> create(Throwable t) {
         if (defaultValue.isPresent()) {
           return immediateFuture(defaultValue.get());
         }

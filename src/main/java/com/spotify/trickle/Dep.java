@@ -6,9 +6,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * TODO: document!
  */
 abstract class Dep<T> {
-  public final Class<T> cls;
+  private final Class<T> cls;
 
   Dep(final Class<T> cls) {
     this.cls = checkNotNull(cls, "class");
+  }
+
+  public Class<T> getCls() {
+    return cls;
   }
 }

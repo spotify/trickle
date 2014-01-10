@@ -11,7 +11,6 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -33,15 +32,19 @@ import static java.util.Arrays.asList;
 /**
  * TODO: document!
  */
-public class Trickle {
+public final class Trickle {
   static final Object DEPENDENCY_NOT_INITIALISED = new Object();
+
+  private Trickle() {
+    // prevent instantiation
+  }
 
   public static <R> GraphBuilder<R> graph(Class<R> returnClass) {
     checkNotNull(returnClass, "returnClass");
     return new GraphBuilder<>();
   }
 
-  public static class GraphBuilder<R> {
+  public static final class GraphBuilder<R> {
     private final Set<Name<?>> inputs;
     private final Set<NodeBuilder<?, R>> nodes;
 
@@ -70,22 +73,22 @@ public class Trickle {
       return nodeBuilder;
     }
 
-    public <A1, N> NodeBuilder1<A1, N, R> call(Node1<A1, N> node) {
-      NodeBuilder1<A1, N, R> nodeBuilder = new NodeBuilder1<>(this, node);
+    public <A, N> NodeBuilder1<A, N, R> call(Node1<A, N> node) {
+      NodeBuilder1<A, N, R> nodeBuilder = new NodeBuilder1<>(this, node);
       nodes.add(nodeBuilder);
 
       return nodeBuilder;
     }
 
-    public <A1, A2, N> NodeBuilder2<A1, A2, N, R> call(Node2<A1, A2, N> node) {
-      NodeBuilder2<A1, A2, N, R> nodeBuilder = new NodeBuilder2<>(this, node);
+    public <A, B, N> NodeBuilder2<A, B, N, R> call(Node2<A, B, N> node) {
+      NodeBuilder2<A, B, N, R> nodeBuilder = new NodeBuilder2<>(this, node);
       nodes.add(nodeBuilder);
 
       return nodeBuilder;
     }
 
-    public <A1, A2, A3, N> NodeBuilder3<A1, A2, A3, N, R> call(Node3<A1, A2, A3, N> node) {
-      NodeBuilder3<A1, A2, A3, N, R> nodeBuilder = new NodeBuilder3<>(this, node);
+    public <A, B, C, N> NodeBuilder3<A, B, C, N, R> call(Node3<A, B, C, N> node) {
+      NodeBuilder3<A, B, C, N, R> nodeBuilder = new NodeBuilder3<>(this, node);
       nodes.add(nodeBuilder);
 
       return nodeBuilder;
@@ -216,7 +219,7 @@ public class Trickle {
     }
   }
 
-  public static class NodeBuilder1<A1, N, R> extends NodeBuilder<N, R> {
+  public static final class NodeBuilder1<A, N, R> extends NodeBuilder<N, R> {
     private NodeBuilder1(GraphBuilder<R> graphBuilder, Node<N> node) {
       super(graphBuilder, node);
     }
@@ -226,12 +229,12 @@ public class Trickle {
       return 1;
     }
 
-    public NodeBuilder1<A1, N, R> with(Value<A1> arg1) {
-      return (NodeBuilder1<A1, N, R>) super.with(arg1);
+    public NodeBuilder1<A, N, R> with(Value<A> arg1) {
+      return (NodeBuilder1<A, N, R>) super.with(arg1);
     }
   }
 
-  public static class NodeBuilder2<A1, A2, N, R> extends NodeBuilder<N, R> {
+  public static final class NodeBuilder2<A, B, N, R> extends NodeBuilder<N, R> {
     private NodeBuilder2(GraphBuilder<R> graphBuilder, Node<N> node) {
       super(graphBuilder, node);
     }
@@ -241,12 +244,12 @@ public class Trickle {
       return 2;
     }
 
-    public NodeBuilder2<A1, A2, N, R> with(Value<A1> arg1, Value<A2> arg2) {
-      return (NodeBuilder2<A1, A2, N, R>) super.with(arg1, arg2);
+    public NodeBuilder2<A, B, N, R> with(Value<A> arg1, Value<B> arg2) {
+      return (NodeBuilder2<A, B, N, R>) super.with(arg1, arg2);
     }
   }
 
-  public static class NodeBuilder3<A1, A2, A3, N, R> extends NodeBuilder<N, R> {
+  public static final class NodeBuilder3<A, B, C, N, R> extends NodeBuilder<N, R> {
     private NodeBuilder3(GraphBuilder<R> graphBuilder, Node<N> node) {
       super(graphBuilder, node);
     }
@@ -256,21 +259,21 @@ public class Trickle {
       return 3;
     }
 
-    public NodeBuilder3<A1, A2, A3, N, R> with(Value<A1> arg1, Value<A2> arg2, Value<A3> arg3) {
-      return (NodeBuilder3<A1, A2, A3, N, R>) super.with(arg1, arg2, arg3);
+    public NodeBuilder3<A, B, C, N, R> with(Value<A> arg1, Value<B> arg2, Value<C> arg3) {
+      return (NodeBuilder3<A, B, C, N, R>) super.with(arg1, arg2, arg3);
     }
   }
 
 
   public static class NodeBuilder<N, R> {
-    final GraphBuilder<R> graphBuilder;
+    private final GraphBuilder<R> graphBuilder;
     private final Node<N> node;
     private final List<Value<?>> inputs;
-    final List<Node<?>> predecessors;
+    private final List<Node<?>> predecessors;
     private N defaultValue = null;
     private String nodeName = "unnamed";
 
-    private NodeBuilder(GraphBuilder<R> graphBuilder, Node<N> node) {
+    protected NodeBuilder(GraphBuilder<R> graphBuilder, Node<N> node) {
       this.graphBuilder = graphBuilder;
       this.node = node;
       inputs = new ArrayList<>();
@@ -292,19 +295,19 @@ public class Trickle {
       return this;
     }
 
-    public <N1> NodeBuilder<N1, R> call(Node0<N1> put1) {
+    public <O> NodeBuilder<O, R> call(Node0<O> put1) {
       return graphBuilder.call(put1);
     }
 
-    public <A1, N1> NodeBuilder1<A1, N1, R> call(Node1<A1, N1> put1) {
+    public <A, O> NodeBuilder1<A, O, R> call(Node1<A, O> put1) {
       return graphBuilder.call(put1);
     }
 
-    public <A1, A2, N1> NodeBuilder2<A1, A2, N1, R> call(Node2<A1, A2, N1> put1) {
+    public <A, B, O> NodeBuilder2<A, B, O, R> call(Node2<A, B, O> put1) {
       return graphBuilder.call(put1);
     }
 
-    public <A1, A2, A3, N1> NodeBuilder3<A1, A2, A3, N1, R> call(Node3<A1, A2, A3, N1> put1) {
+    public <A, B, C, O> NodeBuilder3<A, B, C, O, R> call(Node3<A, B, C, O> put1) {
       return graphBuilder.call(put1);
     }
 

@@ -10,7 +10,7 @@ import java.util.Objects;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class Name<T> implements Value<T> {
-  public final String name;
+  private final String name;
   private final Class<T> klazz;
 
   Name(String name, Class<T> klazz) {
@@ -18,13 +18,13 @@ public final class Name<T> implements Value<T> {
     this.klazz = checkNotNull(klazz, "class");
   }
 
-  public static <T1> Name<T1> named(String name, Class<T1> klazz) {
+  public static <U> Name<U> named(String name, Class<U> klazz) {
     return new Name<>(name, klazz);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, klazz);
+    return Objects.hash(getName(), klazz);
   }
 
   @Override
@@ -36,11 +36,15 @@ public final class Name<T> implements Value<T> {
       return false;
     }
     final Name other = (Name) obj;
-    return Objects.equals(this.name, other.name) && Objects.equals(this.klazz, other.klazz);
+    return Objects.equals(this.getName(), other.getName()) && Objects.equals(this.klazz, other.klazz);
   }
 
   @Override
   public String toString() {
-    return "Name{" + name + '}';
+    return "Name{" + getName() + '}';
+  }
+
+  public String getName() {
+    return name;
   }
 }
