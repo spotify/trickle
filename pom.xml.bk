@@ -17,6 +17,10 @@
 
   </properties>
 
+  <scm>
+    <developerConnection>scm:git:ssh://git@ghe.spotify.net/step/trickle</developerConnection>
+  </scm>
+
   <dependencies>
     <dependency>
       <groupId>com.google.guava</groupId>
