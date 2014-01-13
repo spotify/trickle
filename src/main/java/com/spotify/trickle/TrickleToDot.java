@@ -7,6 +7,10 @@ import java.util.Map;
  * TODO: document!
  */
 public final class TrickleToDot {
+  private TrickleToDot() {
+    // prevent instantiation
+  }
+
   public static void writeToDot(Graph<?> graph, PrintWriter writer) {
     if (!(graph instanceof TrickleGraph)) {
       writer.println("Unable to create dot from graph of type: " + graph.getClass());
@@ -50,7 +54,6 @@ public final class TrickleToDot {
 
       writer.println(String.format("  %s -> %s [style=dotted];", dotSafe(from.getName()), safeNodeName));
     }
-
   }
 
   private static String dotSafe(String name) {
