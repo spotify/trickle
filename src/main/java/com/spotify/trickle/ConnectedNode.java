@@ -30,7 +30,11 @@ class ConnectedNode<N> {
   private final ImmutableList<Node<?>> predecessors;
   private final Optional<Function<Throwable, N>> fallback;
 
-  ConnectedNode(String name, Node<N> node, Iterable<Dep<?>> inputs, List<Node<?>> predecessors, Optional<Function<Throwable, N>> fallback) {
+  ConnectedNode(String name,
+                Node<N> node,
+                Iterable<Dep<?>> inputs,
+                List<Node<?>> predecessors,
+                Optional<Function<Throwable, N>> fallback) {
     this.name = checkNotNull(name, "name");
     this.node = TrickleNode.create(node);
     this.fallback = checkNotNull(fallback, "fallback");
@@ -113,7 +117,9 @@ class ConnectedNode<N> {
     });
   }
 
-  private ListenableFuture<N> nodeFuture(final ImmutableList<ListenableFuture<?>> values, ListenableFuture<List<Object>> doneSignal, Executor executor) {
+  private ListenableFuture<N> nodeFuture(final ImmutableList<ListenableFuture<?>> values,
+                                         ListenableFuture<List<Object>> doneSignal,
+                                         Executor executor) {
     return Futures.transform(
         doneSignal,
         new AsyncFunction<List<Object>, N>() {
@@ -130,7 +136,11 @@ class ConnectedNode<N> {
         executor);
   }
 
-  private ListenableFuture<?> futureForNode(Map<Name<?>, Object> bindings, Map<Node<?>, ConnectedNode> nodes, Map<Node<?>, ListenableFuture<?>> visited, Node<?> node, Executor executor) {
+  private ListenableFuture<?> futureForNode(Map<Name<?>, Object> bindings,
+                                            Map<Node<?>, ConnectedNode> nodes,
+                                            Map<Node<?>, ListenableFuture<?>> visited,
+                                            Node<?> node,
+                                            Executor executor) {
     final ListenableFuture<?> future;
     if (visited.containsKey(node)) {
       future = visited.get(node);
