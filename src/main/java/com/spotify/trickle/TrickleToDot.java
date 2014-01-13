@@ -8,8 +8,12 @@ import java.util.Map;
  */
 public final class TrickleToDot {
   public static void writeToDot(Graph<?> graph, PrintWriter writer) {
-    Map<Node<?>, ConnectedNode> nodes = ((TrickleGraph<?>) graph).getNodes();
+    if (!(graph instanceof TrickleGraph)) {
+      writer.println("Unable to create dot from graph of type: " + graph.getClass());
+      return;
+    }
 
+    Map<Node<?>, ConnectedNode> nodes = ((TrickleGraph<?>) graph).getNodes();
 
     writer.println("digraph TrickleGraph {");
     for (ConnectedNode connectedNode : nodes.values()) {
