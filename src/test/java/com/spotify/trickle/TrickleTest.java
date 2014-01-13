@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.google.common.util.concurrent.Futures.immediateFailedFuture;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
+import static com.spotify.trickle.Trickle.always;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -175,7 +176,7 @@ public class TrickleTest {
     };
 
     Graph<String> graph = Trickle.graph(String.class)
-        .call(node).fallback("fallback response")
+        .call(node).fallback(always("fallback response"))
         .build();
 
     assertThat(graph.run(executorService).get(), equalTo("fallback response"));
@@ -191,7 +192,7 @@ public class TrickleTest {
     };
 
     Graph<String> graph = Trickle.graph(String.class)
-        .call(node).fallback("fallback response")
+        .call(node).fallback(always("fallback response"))
         .build();
 
     assertThat(graph.run(executorService).get(), equalTo("fallback response"));

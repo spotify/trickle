@@ -9,86 +9,86 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * Helper class that simplifies executing nodes with different numbers of parameters.
  */
-abstract class TrickleNode {
+abstract class TrickleNode<N> {
 
-  public abstract ListenableFuture<Object> run(List<Object> values);
+  public abstract ListenableFuture<N> run(List<Object> values);
 
-  static TrickleNode create(Node<?> node) {
+  static <V> TrickleNode<V> create(Node<V> node) {
     checkNotNull(node);
 
     if (node instanceof Node0) {
-      return new TrickleNode0((Node0<?>) node);
+      return new TrickleNode0<>((Node0<V>) node);
     }
     if (node instanceof Node1) {
-      return new TrickleNode1<>((Node1<?, ?>) node);
+      return new TrickleNode1<>((Node1<?, V>) node);
     }
     if (node instanceof Node2) {
-      return new TrickleNode2<>((Node2<?, ?, ?>) node);
+      return new TrickleNode2<>((Node2<?, ?, V>) node);
     }
     if (node instanceof Node3) {
-      return new TrickleNode3<>((Node3<?, ?, ?, ?>) node);
+      return new TrickleNode3<>((Node3<?, ?, ?, V>) node);
     }
 
     throw new IllegalArgumentException("unsupported node subclass: " + node.getClass());
   }
 
-  private static class TrickleNode0 extends TrickleNode {
-    private final Node0<?> delegate;
+  private static class TrickleNode0<N> extends TrickleNode<N> {
+    private final Node0<N> delegate;
 
-    public TrickleNode0(Node0<?> node) {
+    public TrickleNode0(Node0<N> node) {
       delegate = node;
     }
 
     @Override
-    public ListenableFuture<Object> run(List<Object> values) {
+    public ListenableFuture<N> run(List<Object> values) {
       // this cast is safe, as guaranteed by the API for creating nodes
       //noinspection unchecked
-      return (ListenableFuture<Object>) delegate.run();
+      return delegate.run();
     }
   }
 
-  private static class TrickleNode1<A> extends TrickleNode {
-    private final Node1<A, ?> delegate;
+  private static class TrickleNode1<A, N> extends TrickleNode<N> {
+    private final Node1<A, N> delegate;
 
-    public TrickleNode1(Node1<A, ?> node) {
+    public TrickleNode1(Node1<A, N> node) {
       delegate = node;
     }
 
     @Override
-    public ListenableFuture<Object> run(List<Object> values) {
+    public ListenableFuture<N> run(List<Object> values) {
       // this cast is safe, as guaranteed by the API for creating nodes
       //noinspection unchecked
-      return (ListenableFuture<Object>) delegate.run((A) values.get(0));
+      return delegate.run((A) values.get(0));
     }
   }
 
-  private static class TrickleNode2<A, B> extends TrickleNode {
-    private final Node2<A, B, ?> delegate;
+  private static class TrickleNode2<A, B, N> extends TrickleNode<N> {
+    private final Node2<A, B, N> delegate;
 
-    public TrickleNode2(Node2<A, B, ?> node) {
+    public TrickleNode2(Node2<A, B, N> node) {
       delegate = node;
     }
 
     @Override
-    public ListenableFuture<Object> run(List<Object> values) {
+    public ListenableFuture<N> run(List<Object> values) {
       // this cast is safe, as guaranteed by the API for creating nodes
       //noinspection unchecked
-      return (ListenableFuture<Object>) delegate.run((A) values.get(0), (B) values.get(1));
+      return delegate.run((A) values.get(0), (B) values.get(1));
     }
   }
 
-  private static class TrickleNode3<A, B, C> extends TrickleNode {
-    private final Node3<A, B, C, ?> delegate;
+  private static class TrickleNode3<A, B, C, N> extends TrickleNode<N> {
+    private final Node3<A, B, C, N> delegate;
 
-    public TrickleNode3(Node3<A, B, C, ?> node) {
+    public TrickleNode3(Node3<A, B, C, N> node) {
       delegate = node;
     }
 
     @Override
-    public ListenableFuture<Object> run(List<Object> values) {
+    public ListenableFuture<N> run(List<Object> values) {
       // this cast is safe, as guaranteed by the API for creating nodes
       //noinspection unchecked
-      return (ListenableFuture<Object>) delegate.run((A) values.get(0), (B) values.get(1), (C) values.get(2));
+      return delegate.run((A) values.get(0), (B) values.get(1), (C) values.get(2));
     }
   }
 }

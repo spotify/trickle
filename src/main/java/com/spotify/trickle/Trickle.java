@@ -1,6 +1,7 @@
 package com.spotify.trickle;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -13,6 +14,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
@@ -245,7 +247,7 @@ public final class Trickle {
     private final Node<N> node;
     private final List<Value<?>> inputs;
     private final List<Node<?>> predecessors;
-    private N defaultValue = null;
+    private Function<Throwable, N> fallback = null;
     private String nodeName = "unnamed";
 
     protected NodeBuilder(GraphBuilder<R> graphBuilder, Node<N> node) {
@@ -260,8 +262,8 @@ public final class Trickle {
       return this;
     }
 
-    public NodeBuilder<N, R> fallback(N value) {
-      defaultValue = value;
+    public NodeBuilder<N, R> fallback(Function<Throwable, N> handler) {
+      fallback = handler;
       return this;
     }
 
@@ -300,12 +302,12 @@ public final class Trickle {
       return graphBuilder.build();
     }
 
-    private ConnectedNode connect() {
+    private ConnectedNode<N> connect() {
       if (inputs.size() != argumentCount()) {
         throw new TrickleException(String.format("Incorrect argument count for node '%s' - expected %d, got %d", toString(), argumentCount(), inputs.size()));
       }
 
-      return new ConnectedNode(nodeName, node, asDeps(inputs), predecessors, Optional.fromNullable(defaultValue));
+      return new ConnectedNode<>(nodeName, node, asDeps(inputs), predecessors, Optional.fromNullable(fallback));
     }
 
     int argumentCount() {
@@ -332,5 +334,15 @@ public final class Trickle {
     public String toString() {
       return nodeName;
     }
+  }
+
+  public static <T> Function<Throwable, T> always(@Nullable final T value) {
+    return new Function<Throwable, T>() {
+      @Nullable
+      @Override
+      public T apply(@Nullable Throwable input) {
+        return value;
+      }
+    };
   }
 }

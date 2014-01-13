@@ -38,9 +38,8 @@ public class TrickleToDotTest {
       }
     };
 
-    Name<String> second = Name.named("second input", String.class);
     Name<String> first = Name.named("first input", String.class);
-
+    Name<String> second = Name.named("second input", String.class);
 
     Graph<String> g = Trickle.graph(String.class)
         .call(node0).named("node 0")

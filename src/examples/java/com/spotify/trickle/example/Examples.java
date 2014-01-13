@@ -13,6 +13,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static com.google.common.util.concurrent.Futures.immediateFuture;
+import static com.spotify.trickle.Trickle.always;
 
 /**
  * This class contains examples of how to use Trickle for combining asynchronous calls.
@@ -109,8 +110,8 @@ public class Examples {
       };
 
       graph = Trickle.graph(String.class)
-          .call(node).with(NAME).fallback("Illegal name")
-          .build();
+          .call(node).with(NAME).fallback(always("Illegal name"))
+              .build();
     }
 
     public ListenableFuture<String> greet(String name) {

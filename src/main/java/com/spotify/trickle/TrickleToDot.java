@@ -32,7 +32,7 @@ public final class TrickleToDot {
     writer.println(String.format("  %s [label=\"%s\"];", safeNodeName, connectedNode.getName()));
 
     int pos = 0;
-    for (Dep dep : connectedNode.getInputs()) {
+    for (Object dep : connectedNode.getInputs()) {
       if (dep instanceof NodeDep) {
         ConnectedNode from = nodes.get(((NodeDep) dep).getNode());
 
@@ -49,7 +49,7 @@ public final class TrickleToDot {
     }
 
 
-    for (Node<?> node : connectedNode.getPredecessors()) {
+    for (Object node : connectedNode.getPredecessors()) {
       ConnectedNode from = nodes.get(node);
 
       writer.println(String.format("  %s -> %s [style=dotted];", dotSafe(from.getName()), safeNodeName));

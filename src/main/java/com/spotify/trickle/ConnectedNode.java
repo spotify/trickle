@@ -23,22 +23,22 @@ import static com.google.common.util.concurrent.Futures.immediateFuture;
 /**
  * Represents a node that has been connected to its input dependencies.
  */
-class ConnectedNode {
+class ConnectedNode<N> {
   private final String name;
-  private final TrickleNode node;
+  private final TrickleNode<N> node;
   private final ImmutableList<Dep<?>> inputs;
   private final ImmutableList<Node<?>> predecessors;
-  private final Optional<?> defaultValue;
+  private final Optional<Function<Throwable, N>> fallback;
 
-  ConnectedNode(String name, Node<?> node, Iterable<Dep<?>> inputs, List<Node<?>> predecessors, Optional<?> defaultValue) {
+  ConnectedNode(String name, Node<N> node, Iterable<Dep<?>> inputs, List<Node<?>> predecessors, Optional<Function<Throwable, N>> fallback) {
     this.name = checkNotNull(name, "name");
     this.node = TrickleNode.create(node);
-    this.defaultValue = checkNotNull(defaultValue, "defaultValue");
+    this.fallback = checkNotNull(fallback, "fallback");
     this.predecessors = ImmutableList.copyOf(predecessors);
     this.inputs = ImmutableList.copyOf(inputs);
   }
 
-  ListenableFuture<Object> future(
+  ListenableFuture<N> future(
       final Map<Name<?>, Object> bindings,
       final Map<Node<?>, ConnectedNode> nodes,
       final Map<Node<?>, ListenableFuture<?>> visited,
@@ -70,6 +70,10 @@ class ConnectedNode {
             "Name not bound to a value for name %s, of type %s",
             bindingDep.getName(), bindingDep.getCls());
 
+
+        // the below statement is safe, it's just IntelliJ that doesn't understand that the
+        // checkArgument above will bail if bindingValue == null.
+        //noinspection ConstantConditions
         checkArgument(bindingDep.getCls().isAssignableFrom(bindingValue.getClass()),
             "Binding type mismatch, expected %s, found %s",
             bindingDep.getCls(), bindingValue.getClass());
@@ -97,11 +101,11 @@ class ConnectedNode {
 
     checkArgument(inputs.size() == futures.size(), "sanity check result: insane");
 
-    return Futures.withFallback(nodeFuture(futures, allFuture, executor), new FutureFallback<Object>() {
+    return Futures.withFallback(nodeFuture(futures, allFuture, executor), new FutureFallback<N>() {
       @Override
-      public ListenableFuture<Object> create(Throwable t) {
-        if (defaultValue.isPresent()) {
-          return immediateFuture(defaultValue.get());
+      public ListenableFuture<N> create(Throwable t) {
+        if (fallback.isPresent()) {
+          return immediateFuture(fallback.get().apply(t));
         }
 
         return immediateFailedFuture(t);
@@ -109,12 +113,12 @@ class ConnectedNode {
     });
   }
 
-  private ListenableFuture<Object> nodeFuture(final ImmutableList<ListenableFuture<?>> values, ListenableFuture<List<Object>> doneSignal, Executor executor) {
+  private ListenableFuture<N> nodeFuture(final ImmutableList<ListenableFuture<?>> values, ListenableFuture<List<Object>> doneSignal, Executor executor) {
     return Futures.transform(
         doneSignal,
-        new AsyncFunction<List<Object>, Object>() {
+        new AsyncFunction<List<Object>, N>() {
           @Override
-          public ListenableFuture<Object> apply(List<Object> input) {
+          public ListenableFuture<N> apply(List<Object> input) {
             return node.run(Lists.transform(values, new Function<ListenableFuture<?>, Object>() {
               @Override
               public Object apply(ListenableFuture<?> input) {
@@ -131,6 +135,8 @@ class ConnectedNode {
     if (visited.containsKey(node)) {
       future = visited.get(node);
     } else {
+      // losing type information here, this is fine because the API enforces it
+      //noinspection unchecked
       future = nodes.get(node).future(bindings, nodes, visited, executor);
       visited.put(node, future);
     }
@@ -141,11 +147,11 @@ class ConnectedNode {
     return name;
   }
 
-  ImmutableList<Dep<?>> getInputs() {
+  List<Dep<?>> getInputs() {
     return inputs;
   }
 
-  ImmutableList<Node<?>> getPredecessors() {
+  List<Node<?>> getPredecessors() {
     return predecessors;
   }
 
