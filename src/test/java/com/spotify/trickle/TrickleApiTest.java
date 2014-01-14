@@ -106,24 +106,6 @@ public class TrickleApiTest {
   }
 
   @Test
-  public void shouldThrowForNonMatchingArgumentList() throws Exception {
-    Node2<String, Boolean, Integer> node2 = new Node2<String, Boolean, Integer>() {
-      @Override
-      public ListenableFuture<Integer> run(String arg1, Boolean arg2) {
-        return immediateFuture(199);
-      }
-    };
-
-    thrown.expect(TrickleException.class);
-    thrown.expectMessage("Incorrect argument count");
-    thrown.expectMessage("teh second node");
-
-    Trickle.graph(String.class)
-        .call(node2).named("teh second node")
-        .build();
-  }
-
-  @Test
   public void shouldThrowForEmptyGraph() throws Exception {
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage("Empty graph");

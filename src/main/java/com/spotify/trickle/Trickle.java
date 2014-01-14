@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static java.util.Arrays.asList;
 
 
@@ -58,21 +59,21 @@ public final class Trickle {
       return nodeBuilder;
     }
 
-    public <A, N> NodeBuilder1<A, N, R> call(Node1<A, N> node) {
+    public <A, N> NeedsParameters1<A, N, R> call(Node1<A, N> node) {
       NodeBuilder1<A, N, R> nodeBuilder = new NodeBuilder1<>(this, node);
       nodes.add(nodeBuilder);
 
       return nodeBuilder;
     }
 
-    public <A, B, N> NodeBuilder2<A, B, N, R> call(Node2<A, B, N> node) {
+    public <A, B, N> NeedsParameters2<A, B, N, R> call(Node2<A, B, N> node) {
       NodeBuilder2<A, B, N, R> nodeBuilder = new NodeBuilder2<>(this, node);
       nodes.add(nodeBuilder);
 
       return nodeBuilder;
     }
 
-    public <A, B, C, N> NodeBuilder3<A, B, C, N, R> call(Node3<A, B, C, N> node) {
+    public <A, B, C, N> NeedsParameters3<A, B, C, N, R> call(Node3<A, B, C, N> node) {
       NodeBuilder3<A, B, C, N, R> nodeBuilder = new NodeBuilder3<>(this, node);
       nodes.add(nodeBuilder);
 
@@ -196,7 +197,7 @@ public final class Trickle {
     }
   }
 
-  public static final class NodeBuilder1<A, N, R> extends NodeBuilder<N, R> {
+  public static final class NodeBuilder1<A, N, R> extends NodeBuilder<N, R> implements NeedsParameters1<A, N, R> {
     private NodeBuilder1(GraphBuilder<R> graphBuilder, Node<N> node) {
       super(graphBuilder, node);
     }
@@ -211,7 +212,7 @@ public final class Trickle {
     }
   }
 
-  public static final class NodeBuilder2<A, B, N, R> extends NodeBuilder<N, R> {
+  public static final class NodeBuilder2<A, B, N, R> extends NodeBuilder<N, R> implements NeedsParameters2<A, B, N, R>  {
     private NodeBuilder2(GraphBuilder<R> graphBuilder, Node<N> node) {
       super(graphBuilder, node);
     }
@@ -226,7 +227,7 @@ public final class Trickle {
     }
   }
 
-  public static final class NodeBuilder3<A, B, C, N, R> extends NodeBuilder<N, R> {
+  public static final class NodeBuilder3<A, B, C, N, R> extends NodeBuilder<N, R> implements NeedsParameters3<A, B, C, N, R> {
     private NodeBuilder3(GraphBuilder<R> graphBuilder, Node<N> node) {
       super(graphBuilder, node);
     }
@@ -276,15 +277,15 @@ public final class Trickle {
       return graphBuilder.call(put1);
     }
 
-    public <A, O> NodeBuilder1<A, O, R> call(Node1<A, O> put1) {
+    public <A, O> NeedsParameters1<A, O, R> call(Node1<A, O> put1) {
       return graphBuilder.call(put1);
     }
 
-    public <A, B, O> NodeBuilder2<A, B, O, R> call(Node2<A, B, O> put1) {
+    public <A, B, O> NeedsParameters2<A, B, O, R> call(Node2<A, B, O> put1) {
       return graphBuilder.call(put1);
     }
 
-    public <A, B, C, O> NodeBuilder3<A, B, C, O, R> call(Node3<A, B, C, O> put1) {
+    public <A, B, C, O> NeedsParameters3<A, B, C, O, R> call(Node3<A, B, C, O> put1) {
       return graphBuilder.call(put1);
     }
 
@@ -303,9 +304,8 @@ public final class Trickle {
     }
 
     private ConnectedNode<N> connect() {
-      if (inputs.size() != argumentCount()) {
-        throw new TrickleException(String.format("Incorrect argument count for node '%s' - expected %d, got %d", toString(), argumentCount(), inputs.size()));
-      }
+      // the argument count should be enforced by the API
+      checkState(inputs.size() == argumentCount(), "PROGRAMMER ERROR: Incorrect argument count for node '%s' - expected %d, got %d", toString(), argumentCount(), inputs.size());
 
       return new ConnectedNode<>(nodeName, node, asDeps(inputs), predecessors, Optional.fromNullable(fallback));
     }
@@ -334,6 +334,18 @@ public final class Trickle {
     public String toString() {
       return nodeName;
     }
+  }
+
+  public static interface NeedsParameters1<A, N, R> {
+    NodeBuilder1<A, N, R> with(Value<A> arg1);
+  }
+
+  public static interface NeedsParameters2<A, B, N, R> {
+    NodeBuilder2<A, B, N, R> with(Value<A> arg1, Value<B> arg2);
+  }
+
+  public static interface NeedsParameters3<A, B, C, N, R> {
+    NodeBuilder3<A, B, C, N, R> with(Value<A> arg1, Value<B> arg2, Value<C> arg3);
   }
 
   public static <T> Function<Throwable, T> always(@Nullable final T value) {
