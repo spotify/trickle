@@ -51,7 +51,7 @@ public class TrickleTest {
   public void shouldConstructSingleNodeGraph() throws Exception {
     Graph<String> graph = Trickle
         .graph(String.class)
-        .call(node1)
+        .finallyCall(node1)
         .build();
 
     ListenableFuture<String> actual = graph.run(MoreExecutors.sameThreadExecutor());
@@ -64,7 +64,7 @@ public class TrickleTest {
   public void shouldExecuteSingleNodeAsynchronously() throws Exception {
     Graph<String> graph = Trickle
         .graph(String.class)
-        .call(node1)
+        .finallyCall(node1)
         .build();
 
     ListenableFuture<String> actual = graph.run(MoreExecutors.sameThreadExecutor());
@@ -87,7 +87,7 @@ public class TrickleTest {
     Name<String> inputName = Name.named("theInnnput", String.class);
     Graph<String> graph = Trickle
         .graph(String.class)
-        .call(node).with(inputName)
+        .finallyCall(node).with(inputName)
         .build();
 
     ListenableFuture<String> future = graph.bind(inputName, "petter").run(MoreExecutors.sameThreadExecutor());
@@ -130,7 +130,7 @@ public class TrickleTest {
         .graph(Integer.class)
         .call(incr1)
         .call(incr2).after(incr1)
-        .call(result).after(incr1, incr2)
+        .finallyCall(result).after(incr1, incr2)
         .build();
 
     ListenableFuture<Integer> future = graph.run();
@@ -160,7 +160,7 @@ public class TrickleTest {
 
     Graph<Integer> graph = Trickle.graph(Integer.class)
         .call(first)
-        .call(second).with(first)
+        .finallyCall(second).with(first)
         .build();
 
     assertThat(graph.run(MoreExecutors.sameThreadExecutor()).get(), equalTo("hi there!".length()));
@@ -176,7 +176,7 @@ public class TrickleTest {
     };
 
     Graph<String> graph = Trickle.graph(String.class)
-        .call(node).fallback(always("fallback response"))
+        .finallyCall(node).fallback(always("fallback response"))
         .build();
 
     assertThat(graph.run(executorService).get(), equalTo("fallback response"));
@@ -192,7 +192,7 @@ public class TrickleTest {
     };
 
     Graph<String> graph = Trickle.graph(String.class)
-        .call(node).fallback(always("fallback response"))
+        .finallyCall(node).fallback(always("fallback response"))
         .build();
 
     assertThat(graph.run(executorService).get(), equalTo("fallback response"));
@@ -217,7 +217,7 @@ public class TrickleTest {
 
     Graph<String> g = Trickle.graph(String.class)
         .call(node1).with(input)
-        .call(node2).with(node1, input)
+        .finallyCall(node2).with(node1, input)
         .build();
 
     String result = g.bind(input, "hey").run().get();
@@ -245,7 +245,7 @@ public class TrickleTest {
 
     Graph<String> g = Trickle.graph(String.class)
         .call(node1).with(input)
-        .call(node2).with(node1, input, input1)
+        .finallyCall(node2).with(node1, input, input1)
         .build();
 
     String result = g
@@ -276,7 +276,7 @@ public class TrickleTest {
 
     Graph<String> g = Trickle.graph(String.class)
         .call(node1).with(input)
-        .call(node2).with(node1, input)
+        .finallyCall(node2).with(node1, input)
         .build();
 
     thrown.expect(ExecutionException.class);
@@ -298,7 +298,7 @@ public class TrickleTest {
     Name<String> inputName = Name.named("input", String.class);
 
     Graph<Integer> g = Trickle.graph(Integer.class)
-        .call(node).with(inputName)
+        .finallyCall(node).with(inputName)
         .build();
 
     inputFuture.set("hello");
@@ -319,7 +319,7 @@ public class TrickleTest {
     Name<String> inputName = Name.named("input", String.class);
 
     Graph<Integer> g = Trickle.graph(Integer.class)
-        .call(node).with(inputName)
+        .finallyCall(node).with(inputName)
         .build();
 
 

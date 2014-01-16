@@ -31,7 +31,7 @@ public class PSearchView {
         .call(getSuggestions).with(CONTEXT, QUERY, REQUEST)
         .call(fetchTrackMetadata).with(CONTEXT, getSuggestions)
         .call(fetchPlaylistFollowers).with(CONTEXT, getSuggestions)
-        .call(allData).with(getSuggestions, fetchTrackMetadata, fetchPlaylistFollowers)
+        .finallyCall(allData).with(getSuggestions, fetchTrackMetadata, fetchPlaylistFollowers)
         .build();
   }
 
