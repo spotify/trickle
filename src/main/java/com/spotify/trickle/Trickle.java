@@ -13,6 +13,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import com.google.common.reflect.TypeToken;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -37,6 +38,11 @@ public final class Trickle {
   }
 
   public static <R> GraphBuilder<R> graph(Class<R> returnClass) {
+    checkNotNull(returnClass, "returnClass");
+    return new GraphBuilder<>();
+  }
+
+  public static <R> GraphBuilder<R> graph(TypeToken<R> returnClass) {
     checkNotNull(returnClass, "returnClass");
     return new GraphBuilder<>();
   }

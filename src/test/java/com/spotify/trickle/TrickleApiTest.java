@@ -1,13 +1,19 @@
 package com.spotify.trickle;
 
+import com.google.common.reflect.TypeToken;
 import com.google.common.util.concurrent.ListenableFuture;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.either;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * Integration-level Trickle tests.
@@ -157,4 +163,27 @@ public class TrickleApiTest {
 
     g.bind(input, "erich").bind(input, "volker");
   }
+
+  @Test
+  public void shouldWorkWithTypeToken() throws Exception {
+    Node1<String, List<String>> node1 = new Node1<String, List<String>>() {
+      @Override
+      public ListenableFuture<List<String>> run(String arg) {
+        List<String> testList = new ArrayList<>();
+        testList.add(arg);
+        return immediateFuture(testList);
+      }
+    };
+
+    Name<String> input = Name.named("listValue1", String.class);
+
+    Graph<List<String>> g = Trickle.graph(new TypeToken<List<String>>() {})
+        .call(node1).with(input)
+        .build();
+
+    List<String> output = g.bind(input, "list value 1").run().get();
+    assertThat(output.size(), is(1));
+    assertThat(output.get(0), is("list value 1"));
+  }
+
 }
