@@ -6,6 +6,8 @@ package com.spotify.trickle;
 
 import com.google.common.base.Objects;
 
+import javax.annotation.Nullable;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -41,7 +43,7 @@ public final class Name<T> implements Value<T> {
   }
 
   @Override
-  public boolean equals(Object obj) {
+  public boolean equals(@Nullable Object obj) {
     if (this == obj) {
       return true;
     }
