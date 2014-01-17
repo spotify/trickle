@@ -6,9 +6,6 @@ import com.google.common.reflect.TypeToken;
 import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.spotify.trickle.TrickleNodeBuilder.NodeBuilder1;
-import static com.spotify.trickle.TrickleNodeBuilder.NodeBuilder2;
-import static com.spotify.trickle.TrickleNodeBuilder.NodeBuilder3;
 
 
 /**

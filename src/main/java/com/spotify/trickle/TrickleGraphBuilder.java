@@ -21,27 +21,26 @@ import java.util.Set;
 * TODO: document!
 */
 final class TrickleGraphBuilder<R> implements GraphBuilder<R>, NodeChainer<R> {
-  private final Set<TrickleNodeBuilder<?, R>> nodes;
+  private final Set<ConnectedNodeBuilder<?>> nodes;
 
-  TrickleGraphBuilder(Set<TrickleNodeBuilder<?, R>> nodes) {
+  TrickleGraphBuilder(Set<ConnectedNodeBuilder<?>> nodes) {
     this.nodes = Sets.newHashSet(nodes);
   }
 
   public TrickleGraphBuilder() {
-    this(ImmutableSet.<TrickleNodeBuilder<?, R>>of());
+    this(ImmutableSet.<ConnectedNodeBuilder<?>>of());
   }
 
   @Override
-  public <N> TrickleNodeBuilder<N, R> call(Node0<N> node) {
-    TrickleNodeBuilder<N, R> nodeBuilder = new TrickleNodeBuilder<>(this, node);
+  public <N> ChainingNodeBuilder<N, R> call(Node0<N> node) {
+    ChainingNodeBuilder<N, R> nodeBuilder = new ChainingNodeBuilder<>(this, node);
     nodes.add(nodeBuilder);
-
     return nodeBuilder;
   }
 
   @Override
   public <A, N> Trickle.NeedsParameters1<A, N, R> call(Node1<A, N> node) {
-    TrickleNodeBuilder.NodeBuilder1<A, N, R> nodeBuilder = new TrickleNodeBuilder.NodeBuilder1<>(this, node);
+    ChainingNodeBuilder.NodeBuilder1<A, N, R> nodeBuilder = new ChainingNodeBuilder.NodeBuilder1<>(this, node);
     nodes.add(nodeBuilder);
 
     return nodeBuilder;
@@ -49,7 +48,7 @@ final class TrickleGraphBuilder<R> implements GraphBuilder<R>, NodeChainer<R> {
 
   @Override
   public <A, B, N> Trickle.NeedsParameters2<A, B, N, R> call(Node2<A, B, N> node) {
-    TrickleNodeBuilder.NodeBuilder2<A, B, N, R> nodeBuilder = new TrickleNodeBuilder.NodeBuilder2<>(this, node);
+    ChainingNodeBuilder.NodeBuilder2<A, B, N, R> nodeBuilder = new ChainingNodeBuilder.NodeBuilder2<>(this, node);
     nodes.add(nodeBuilder);
 
     return nodeBuilder;
@@ -57,7 +56,7 @@ final class TrickleGraphBuilder<R> implements GraphBuilder<R>, NodeChainer<R> {
 
   @Override
   public <A, B, C, N> Trickle.NeedsParameters3<A, B, C, N, R> call(Node3<A, B, C, N> node) {
-    TrickleNodeBuilder.NodeBuilder3<A, B, C, N, R> nodeBuilder = new TrickleNodeBuilder.NodeBuilder3<>(this, node);
+    ChainingNodeBuilder.NodeBuilder3<A, B, C, N, R> nodeBuilder = new ChainingNodeBuilder.NodeBuilder3<>(this, node);
     nodes.add(nodeBuilder);
 
     return nodeBuilder;
@@ -65,23 +64,32 @@ final class TrickleGraphBuilder<R> implements GraphBuilder<R>, NodeChainer<R> {
 
   @Override
   public ConfigureOrBuild<R> finallyCall(Node0<R> node) {
-    throw new UnsupportedOperationException();
+    SinkBuilder<R> nodeBuilder = new SinkBuilder<>(this, node);
+    nodes.add(nodeBuilder);
+    return nodeBuilder;
   }
 
   @Override
   public <A> Trickle.FinalNeedsParameters1<A, R> finallyCall(Node1<A, R> node) {
-    throw new UnsupportedOperationException();
+    SinkBuilder.NodeBuilder1<A, R> nodeBuilder = new SinkBuilder.NodeBuilder1<A, R>(this, node);
+    nodes.add(nodeBuilder);
+    return nodeBuilder;
   }
 
   @Override
   public <A, B> Trickle.FinalNeedsParameters2<A, B, R> finallyCall(Node2<A, B, R> node) {
-    throw new UnsupportedOperationException();
+    SinkBuilder.NodeBuilder2<A, B, R> nodeBuilder = new SinkBuilder.NodeBuilder2<A, B, R>(this, node);
+    nodes.add(nodeBuilder);
+    return nodeBuilder;
   }
 
   @Override
   public <A, B, C> Trickle.FinalNeedsParameters3<A, B, C, R> finallyCall(Node3<A, B, C, R> node) {
-    throw new UnsupportedOperationException();
+    SinkBuilder.NodeBuilder3<A, B, C, R> nodeBuilder = new SinkBuilder.NodeBuilder3<A, B, C, R>(this, node);
+    nodes.add(nodeBuilder);
+    return nodeBuilder;
   }
+
 
   @Override
   public Graph<R> build() {
@@ -92,31 +100,31 @@ final class TrickleGraphBuilder<R> implements GraphBuilder<R>, NodeChainer<R> {
     return new TrickleGraph<>(Collections.<Name<?>, Object>emptyMap(), result1, buildNodes(nodes));
   }
 
-  private Node<R> findSink(Set<TrickleNodeBuilder<?, R>> nodes) {
-    final Multimap<TrickleNodeBuilder<?, R>, TrickleNodeBuilder<?, R>> edges = findEdges(nodes);
+  private Node<R> findSink(Set<ConnectedNodeBuilder<?>> nodes) {
+    final Multimap<ConnectedNodeBuilder<?>, ConnectedNodeBuilder<?>> edges = findEdges(nodes);
 
-    Optional<Deque<TrickleNodeBuilder<?, R>>> cycle = findOneCycle(edges);
+    Optional<Deque<ConnectedNodeBuilder<?>>> cycle = findOneCycle(edges);
 
     if (cycle.isPresent()) {
       throw new TrickleException("cycle detected (there may be more): " + Joiner.on(" -> ").join(cycle.get()));
     }
 
-    Set<TrickleNodeBuilder<?, R>> sinks = Sets.filter(nodes, new NoNodeDependsOn<>(edges));
+    Set<ConnectedNodeBuilder<?>> sinks = Sets.filter(nodes, new NoNodeDependsOn<>(edges));
     if (sinks.size() != 1) {
       throw new TrickleException("Multiple sinks found: " + sinks);
     }
 
-    TrickleNodeBuilder<?, R> sinkBuilder = sinks.iterator().next();
+    ConnectedNodeBuilder<?> sinkBuilder = sinks.iterator().next();
 
     // note that there is no guarantee that this cast is safe. That's bad, but I'm not sure what
     // to do about it. TODO: think about this
     return (Node<R>) sinkBuilder.getNode();
   }
 
-  private Optional<Deque<TrickleNodeBuilder<?, R>>> findOneCycle(Multimap<TrickleNodeBuilder<?, R>, TrickleNodeBuilder<?, R>> edges) {
+  private Optional<Deque<ConnectedNodeBuilder<?>>> findOneCycle(Multimap<ConnectedNodeBuilder<?>, ConnectedNodeBuilder<?>> edges) {
 
-    for (TrickleNodeBuilder<?, R> nodeBuilder : edges.keySet()) {
-      Optional<Deque<TrickleNodeBuilder<?, R>>> cycle = findCycle(nodeBuilder, edges, new LinkedList<TrickleNodeBuilder<?, R>>());
+    for (ConnectedNodeBuilder<?> nodeBuilder : edges.keySet()) {
+      Optional<Deque<ConnectedNodeBuilder<?>>> cycle = findCycle(nodeBuilder, edges, new LinkedList<ConnectedNodeBuilder<?>>());
 
       if (cycle.isPresent()) {
         return cycle;
@@ -126,7 +134,7 @@ final class TrickleGraphBuilder<R> implements GraphBuilder<R>, NodeChainer<R> {
     return Optional.absent();
   }
 
-  private Optional<Deque<TrickleNodeBuilder<?, R>>> findCycle(TrickleNodeBuilder<?, R> current, Multimap<TrickleNodeBuilder<?, R>, TrickleNodeBuilder<?, R>> edges, Deque<TrickleNodeBuilder<?, R>> visited) {
+  private Optional<Deque<ConnectedNodeBuilder<?>>> findCycle(ConnectedNodeBuilder<?> current, Multimap<ConnectedNodeBuilder<?>, ConnectedNodeBuilder<?>> edges, Deque<ConnectedNodeBuilder<?>> visited) {
     if (visited.contains(current)) {
       // add the current node again to close the cycle - this is not perfect, since it can lead
       // to 'cycles' like A -> B -> C -> B, but that's not really a big deal.
@@ -135,8 +143,8 @@ final class TrickleGraphBuilder<R> implements GraphBuilder<R>, NodeChainer<R> {
     }
 
     visited.push(current);
-    for (TrickleNodeBuilder<?, R> nodeBuilder : edges.get(current)) {
-      Optional<Deque<TrickleNodeBuilder<?, R>>> cycle = findCycle(nodeBuilder, edges, visited);
+    for (ConnectedNodeBuilder<?> nodeBuilder : edges.get(current)) {
+      Optional<Deque<ConnectedNodeBuilder<?>>> cycle = findCycle(nodeBuilder, edges, visited);
 
       if (cycle.isPresent()) {
         return cycle;
@@ -147,12 +155,12 @@ final class TrickleGraphBuilder<R> implements GraphBuilder<R>, NodeChainer<R> {
     return Optional.absent();
   }
 
-  private Multimap<TrickleNodeBuilder<?, R>, TrickleNodeBuilder<?, R>> findEdges(Set<TrickleNodeBuilder<?, R>> nodes) {
-    Map<Node<?>, TrickleNodeBuilder<?, R>> buildersForNode = extractBuildersPerNode(nodes);
+  private Multimap<ConnectedNodeBuilder<?>, ConnectedNodeBuilder<?>> findEdges(Set<ConnectedNodeBuilder<?>> nodes) {
+    Map<Node<?>, ConnectedNodeBuilder<?>> buildersForNode = extractBuildersPerNode(nodes);
 
-    Multimap<TrickleNodeBuilder<?, R>, TrickleNodeBuilder<?, R>> result = HashMultimap.create();
+    Multimap<ConnectedNodeBuilder<?>, ConnectedNodeBuilder<?>> result = HashMultimap.create();
 
-    for (TrickleNodeBuilder<?, R> node : nodes) {
+    for (ConnectedNodeBuilder<?> node : nodes) {
       for (Value<?> input : node.getInputs()) {
         if (input instanceof Node) {
           result.put(node, buildersForNode.get(input));
@@ -167,35 +175,35 @@ final class TrickleGraphBuilder<R> implements GraphBuilder<R>, NodeChainer<R> {
     return result;
   }
 
-  private Map<Node<?>, TrickleNodeBuilder<?, R>> extractBuildersPerNode(Set<TrickleNodeBuilder<?, R>> nodeBuilders) {
-    Map<Node<?>, TrickleNodeBuilder<?, R>> buildersForNode = Maps.newHashMap();
+  private Map<Node<?>, ConnectedNodeBuilder<?>> extractBuildersPerNode(Set<ConnectedNodeBuilder<?>> nodeBuilders) {
+    Map<Node<?>, ConnectedNodeBuilder<?>> buildersForNode = Maps.newHashMap();
 
-    for (TrickleNodeBuilder<?, R> node : nodeBuilders) {
+    for (ConnectedNodeBuilder<?> node : nodeBuilders) {
       buildersForNode.put(node.getNode(), node);
     }
     return buildersForNode;
   }
 
 
-  private Map<Node<?>, ConnectedNode<?>> buildNodes(Iterable<TrickleNodeBuilder<?, R>> nodeBuilders) {
+  private Map<Node<?>, ConnectedNode<?>> buildNodes(Iterable<ConnectedNodeBuilder<?>> nodeBuilders) {
     ImmutableMap.Builder<Node<?>, ConnectedNode<?>> builder = ImmutableMap.builder();
 
-    for (TrickleNodeBuilder<?, R> nodeBuilder : nodeBuilders) {
+    for (ConnectedNodeBuilder<?> nodeBuilder : nodeBuilders) {
       builder.put(nodeBuilder.getNode(), nodeBuilder.connect());
     }
 
     return builder.build();
   }
 
-  private static class NoNodeDependsOn<R> implements Predicate<TrickleNodeBuilder<?, R>> {
-    private final Multimap<TrickleNodeBuilder<?, R>, TrickleNodeBuilder<?, R>> edges;
+  private static class NoNodeDependsOn<R> implements Predicate<ConnectedNodeBuilder<?>> {
+    private final Multimap<ConnectedNodeBuilder<?>, ConnectedNodeBuilder<?>> edges;
 
-    public NoNodeDependsOn(Multimap<TrickleNodeBuilder<?, R>, TrickleNodeBuilder<?, R>> edges) {
+    public NoNodeDependsOn(Multimap<ConnectedNodeBuilder<?>, ConnectedNodeBuilder<?>> edges) {
       this.edges = edges;
     }
 
     @Override
-    public boolean apply(TrickleNodeBuilder<?, R> input) {
+    public boolean apply(ConnectedNodeBuilder<?> input) {
       return !edges.values().contains(input);
     }
   }
