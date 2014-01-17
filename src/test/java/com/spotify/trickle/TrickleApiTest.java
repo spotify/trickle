@@ -169,7 +169,7 @@ public class TrickleApiTest {
     Node1<String, List<String>> node1 = new Node1<String, List<String>>() {
       @Override
       public ListenableFuture<List<String>> run(String arg) {
-        List<String> testList = new ArrayList<>();
+        List<String> testList = new ArrayList<String>();
         testList.add(arg);
         return immediateFuture(testList);
       }

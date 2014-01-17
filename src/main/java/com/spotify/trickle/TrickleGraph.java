@@ -41,7 +41,7 @@ class TrickleGraph<T> implements Graph<T> {
 
     checkState(newInputs.put(name, value) == null, "Duplicate binding for name: " + name);
 
-    return new TrickleGraph<>(newInputs, out, nodes);
+    return new TrickleGraph<T>(newInputs, out, nodes);
   }
 
   @Override

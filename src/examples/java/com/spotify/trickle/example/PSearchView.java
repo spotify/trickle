@@ -109,21 +109,21 @@ public class PSearchView {
     return new Node3<Suggestions, List<MetadataReply<Track>>, List<Long>, AllData>() {
       @Override
       public ListenableFuture<AllData> run(Suggestions suggestions, List<MetadataReply<Track>> metadataReplies, List<Long> followers) {
-        EntityData.Builder<Album> albumDataBuilder = new EntityData.Builder<>();
+        EntityData.Builder<Album> albumDataBuilder = new EntityData.Builder<Album>();
         albumDataBuilder.withTotal(suggestions.getAlbumCount());
         for (Album album : suggestions.getAlbumList()) {
           albumDataBuilder.withHit(Album.fromSuggestAlbum(album));
         }
         final EntityData<Album> albums = albumDataBuilder.build();
 
-        EntityData.Builder<Artist> artistDataBuilder = new EntityData.Builder<>();
+        EntityData.Builder<Artist> artistDataBuilder = new EntityData.Builder<Artist>();
         artistDataBuilder.withTotal(suggestions.getArtistCount());
         for (Artist artist : suggestions.getArtistList()) {
           artistDataBuilder.withHit(Artist.fromSuggestArtist(artist));
         }
         final EntityData<Artist> artists = artistDataBuilder.build();
 
-        EntityData.Builder<Track> trackDataBuilder = new EntityData.Builder<>();
+        EntityData.Builder<Track> trackDataBuilder = new EntityData.Builder<Track>();
         trackDataBuilder.withTotal(suggestions.getTrackCount());
         for (ListZip.Pair<MetadataReply<Track>, Track> pair : ListZip.zip(metadataReplies, suggestions.getTrackList())) {
           if (pair.first != null) {
@@ -132,7 +132,7 @@ public class PSearchView {
         }
         final EntityData<Track> tracks = trackDataBuilder.build();
 
-        EntityData.Builder<Playlist> playlistDataBuilder = new EntityData.Builder<>();
+        EntityData.Builder<Playlist> playlistDataBuilder = new EntityData.Builder<Playlist>();
         playlistDataBuilder.withTotal(suggestions.getPlaylistCount());
         for (ListZip.Pair<Playlist, Long> pair : ListZip.zip(suggestions.getPlaylistList(), followers)) {
           playlistDataBuilder.withHit(Playlist.fromSuggestPlaylist(pair.first, pair.second));

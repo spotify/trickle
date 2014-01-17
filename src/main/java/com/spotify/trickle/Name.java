@@ -33,7 +33,7 @@ public final class Name<T> implements Value<T> {
    * @return a Name instance
    */
   public static <U> Name<U> named(String name, Class<U> klazz) {
-    return new Name<>(name, klazz);
+    return new Name<U>(name, klazz);
   }
 
   @Override

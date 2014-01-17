@@ -39,12 +39,12 @@ public final class Trickle {
 
   public static <R> GraphBuilder<R> graph(Class<R> returnClass) {
     checkNotNull(returnClass, "returnClass");
-    return new GraphBuilder<>();
+    return new GraphBuilder<R>();
   }
 
   public static <R> GraphBuilder<R> graph(TypeToken<R> returnClass) {
     checkNotNull(returnClass, "returnClass");
-    return new GraphBuilder<>();
+    return new GraphBuilder<R>();
   }
 
   public static final class GraphBuilder<R> {
@@ -59,28 +59,28 @@ public final class Trickle {
     }
 
     public <N> NodeBuilder<N, R> call(Node0<N> node) {
-      NodeBuilder<N, R> nodeBuilder = new NodeBuilder<>(this, node);
+      NodeBuilder<N, R> nodeBuilder = new NodeBuilder<N, R>(this, node);
       nodes.add(nodeBuilder);
 
       return nodeBuilder;
     }
 
     public <A, N> NeedsParameters1<A, N, R> call(Node1<A, N> node) {
-      NodeBuilder1<A, N, R> nodeBuilder = new NodeBuilder1<>(this, node);
+      NodeBuilder1<A, N, R> nodeBuilder = new NodeBuilder1<A, N, R>(this, node);
       nodes.add(nodeBuilder);
 
       return nodeBuilder;
     }
 
     public <A, B, N> NeedsParameters2<A, B, N, R> call(Node2<A, B, N> node) {
-      NodeBuilder2<A, B, N, R> nodeBuilder = new NodeBuilder2<>(this, node);
+      NodeBuilder2<A, B, N, R> nodeBuilder = new NodeBuilder2<A, B, N, R>(this, node);
       nodes.add(nodeBuilder);
 
       return nodeBuilder;
     }
 
     public <A, B, C, N> NeedsParameters3<A, B, C, N, R> call(Node3<A, B, C, N> node) {
-      NodeBuilder3<A, B, C, N, R> nodeBuilder = new NodeBuilder3<>(this, node);
+      NodeBuilder3<A, B, C, N, R> nodeBuilder = new NodeBuilder3<A, B, C, N, R>(this, node);
       nodes.add(nodeBuilder);
 
       return nodeBuilder;
@@ -91,7 +91,7 @@ public final class Trickle {
 
       Node<R> result1 = findSink(nodes);
 
-      return new TrickleGraph<>(Collections.<Name<?>, Object>emptyMap(), result1, buildNodes(nodes));
+      return new TrickleGraph<R>(Collections.<Name<?>, Object>emptyMap(), result1, buildNodes(nodes));
     }
 
     private Node<R> findSink(Set<NodeBuilder<?, R>> nodes) {
@@ -103,7 +103,7 @@ public final class Trickle {
         throw new TrickleException("cycle detected (there may be more): " + Joiner.on(" -> ").join(cycle.get()));
       }
 
-      Set<NodeBuilder<?, R>> sinks = Sets.filter(nodes, new NoNodeDependsOn<>(edges));
+      Set<NodeBuilder<?, R>> sinks = Sets.filter(nodes, new NoNodeDependsOn<R>(edges));
       if (sinks.size() != 1) {
         throw new TrickleException("Multiple sinks found: " + sinks);
       }
@@ -260,8 +260,8 @@ public final class Trickle {
     protected NodeBuilder(GraphBuilder<R> graphBuilder, Node<N> node) {
       this.graphBuilder = graphBuilder;
       this.node = node;
-      inputs = new ArrayList<>();
-      predecessors = new ArrayList<>();
+      inputs = new ArrayList<Value<?>>();
+      predecessors = new ArrayList<Node<?>>();
     }
 
     private NodeBuilder<N, R> with(Value<?>... inputs) {
@@ -313,21 +313,23 @@ public final class Trickle {
       // the argument count should be enforced by the API
       checkState(inputs.size() == argumentCount(), "PROGRAMMER ERROR: Incorrect argument count for node '%s' - expected %d, got %d", toString(), argumentCount(), inputs.size());
 
-      return new ConnectedNode<>(nodeName, node, asDeps(inputs), predecessors, Optional.fromNullable(fallback));
+      return new ConnectedNode<N>(nodeName, node, asDeps(inputs), predecessors, Optional.fromNullable(fallback));
     }
 
     int argumentCount() {
       return 0;
     }
 
+    @SuppressWarnings("unchecked")
+    // this method does casts that are guaranteed safe by the API.
     private static List<Dep<?>> asDeps(List<Value<?>> inputs) {
       List<Dep<?>> result = Lists.newArrayList();
 
       for (Object input : inputs) {
         if (input instanceof Name) {
-          result.add(new BindingDep<>((Name<?>) input));
+          result.add(new BindingDep<Object>((Name<Object>) input));
         } else if (input instanceof Node) {
-          result.add(new NodeDep<>((Node<?>) input));
+          result.add(new NodeDep<Object>((Node<Object>) input));
         } else {
           throw new IllegalStateException("PROGRAMMER ERROR: illegal input object: " + input);
         }
