@@ -4,8 +4,7 @@
 
 package com.spotify.trickle;
 
-import javax.annotation.Nullable;
-import java.util.Objects;
+import com.google.common.base.Objects;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -38,11 +37,11 @@ public final class Name<T> implements Value<T> {
 
   @Override
   public int hashCode() {
-    return Objects.hash(getName(), klazz);
+    return Objects.hashCode(name, klazz);
   }
 
   @Override
-  public boolean equals(@Nullable Object obj) {
+  public boolean equals(Object obj) {
     if (this == obj) {
       return true;
     }
@@ -50,7 +49,7 @@ public final class Name<T> implements Value<T> {
       return false;
     }
     final Name other = (Name) obj;
-    return Objects.equals(this.getName(), other.getName()) && Objects.equals(this.klazz, other.klazz);
+    return Objects.equal(this.name, other.name) && Objects.equal(this.klazz, other.klazz);
   }
 
   @Override
