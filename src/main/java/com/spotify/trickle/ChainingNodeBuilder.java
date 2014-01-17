@@ -2,10 +2,8 @@ package com.spotify.trickle;
 
 import com.google.common.base.Function;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.spotify.trickle.Trickle.NeedsParameters1;
 import static com.spotify.trickle.Trickle.NeedsParameters2;
-import static java.util.Arrays.asList;
 
 /**
 * TODO: document!
@@ -17,7 +15,7 @@ class ChainingNodeBuilder<N, R> extends AbstractNodeBuilder<N, R> implements Con
   }
 
   protected ChainingNodeBuilder<N, R> with(Value<?>... inputs) {
-    this.inputs.addAll(asList(inputs));
+    addInputs(inputs);
     return this;
   }
 
@@ -35,47 +33,47 @@ class ChainingNodeBuilder<N, R> extends AbstractNodeBuilder<N, R> implements Con
 
   @Override
   public <O> ChainingNodeBuilder<O, R> call(Node0<O> put1) {
-    return graphBuilder.call(put1);
+    return getGraphBuilder().call(put1);
   }
 
   @Override
   public <A, O> NeedsParameters1<A, O, R> call(Node1<A, O> put1) {
-    return graphBuilder.call(put1);
+    return getGraphBuilder().call(put1);
   }
 
   @Override
   public <A, B, O> NeedsParameters2<A, B, O, R> call(Node2<A, B, O> put1) {
-    return graphBuilder.call(put1);
+    return getGraphBuilder().call(put1);
   }
 
   @Override
   public <A, B, C, O> Trickle.NeedsParameters3<A, B, C, O, R> call(Node3<A, B, C, O> put1) {
-    return graphBuilder.call(put1);
+    return getGraphBuilder().call(put1);
   }
 
   @Override
   public ConfigureOrBuild<R> finallyCall(Node0<R> node) {
-    return graphBuilder.finallyCall(node);
+    return getGraphBuilder().finallyCall(node);
   }
 
   @Override
   public <A> Trickle.FinalNeedsParameters1<A, R> finallyCall(Node1<A, R> node) {
-    return graphBuilder.finallyCall(node);
+    return getGraphBuilder().finallyCall(node);
   }
 
   @Override
   public <A, B> Trickle.FinalNeedsParameters2<A, B, R> finallyCall(Node2<A, B, R> node) {
-    return graphBuilder.finallyCall(node);
+    return getGraphBuilder().finallyCall(node);
   }
 
   @Override
   public <A, B, C> Trickle.FinalNeedsParameters3<A, B, C, R> finallyCall(Node3<A, B, C, R> node) {
-    return graphBuilder.finallyCall(node);
+    return getGraphBuilder().finallyCall(node);
   }
 
   @Override
   public ChainingNodeBuilder<N, R> after(Node<?>... predecessors) {
-    this.predecessors.addAll(asList(predecessors));
+    addPredecessors(predecessors);
     return this;
   }
 

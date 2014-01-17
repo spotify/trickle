@@ -26,27 +26,27 @@ public final class Trickle {
     return new TrickleGraphBuilder<>();
   }
 
-  public static interface NeedsParameters1<A, N, R> {
+  public interface NeedsParameters1<A, N, R> {
     ConfigureOrChain<N, R> with(Value<A> arg1);
   }
 
-  public static interface NeedsParameters2<A, B, N, R> {
+  public interface NeedsParameters2<A, B, N, R> {
     ConfigureOrChain<N, R> with(Value<A> arg1, Value<B> arg2);
   }
 
-  public static interface NeedsParameters3<A, B, C, N, R> {
+  public interface NeedsParameters3<A, B, C, N, R> {
     ConfigureOrChain<N, R> with(Value<A> arg1, Value<B> arg2, Value<C> arg3);
   }
 
-  public static interface FinalNeedsParameters1<A, R> {
+  public interface FinalNeedsParameters1<A, R> {
     ConfigureOrBuild<R> with(Value<A> arg1);
   }
 
-  public static interface FinalNeedsParameters2<A, B, R> {
+  public interface FinalNeedsParameters2<A, B, R> {
     ConfigureOrBuild<R> with(Value<A> arg1, Value<B> arg2);
   }
 
-  public static interface FinalNeedsParameters3<A, B, C, R> {
+  public interface FinalNeedsParameters3<A, B, C, R> {
     ConfigureOrBuild<R> with(Value<A> arg1, Value<B> arg2, Value<C> arg3);
   }
 

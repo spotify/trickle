@@ -5,7 +5,6 @@ import com.google.common.base.Function;
 import static com.spotify.trickle.Trickle.FinalNeedsParameters1;
 import static com.spotify.trickle.Trickle.FinalNeedsParameters2;
 import static com.spotify.trickle.Trickle.FinalNeedsParameters3;
-import static java.util.Arrays.asList;
 
 /**
 * TODO: document!
@@ -17,7 +16,7 @@ class SinkBuilder<R> extends AbstractNodeBuilder<R, R> implements ConfigureOrBui
   }
 
   protected SinkBuilder<R> with(Value<?>... inputs) {
-    this.inputs.addAll(asList(inputs));
+    addInputs(inputs);
     return this;
   }
 
@@ -35,7 +34,7 @@ class SinkBuilder<R> extends AbstractNodeBuilder<R, R> implements ConfigureOrBui
 
   @Override
   public SinkBuilder<R> after(Node<?>... predecessors) {
-    this.predecessors.addAll(asList(predecessors));
+    addPredecessors(predecessors);
     return this;
   }
 
@@ -44,13 +43,8 @@ class SinkBuilder<R> extends AbstractNodeBuilder<R, R> implements ConfigureOrBui
   }
 
   @Override
-  public String toString() {
-    return nodeName;
-  }
-
-  @Override
   public Graph<R> build() {
-    return graphBuilder.build();
+    return getGraphBuilder().build();
   }
 
 

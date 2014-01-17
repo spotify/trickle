@@ -9,17 +9,18 @@ import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static java.util.Arrays.asList;
 
 /**
  * TODO: document!
  */
 abstract class AbstractNodeBuilder<N, R> implements ConnectedNodeBuilder<N> {
-  protected final TrickleGraphBuilder<R> graphBuilder;
-  protected final Node<N> node;
-  protected final List<Value<?>> inputs;
-  protected final List<Node<?>> predecessors;
-  protected Function<Throwable, N> fallback = null;
-  protected String nodeName = "unnamed";
+  private final TrickleGraphBuilder<R> graphBuilder;
+  private final Node<N> node;
+  private final List<Value<?>> inputs;
+  private final List<Node<?>> predecessors;
+  private Function<Throwable, N> fallback = null;
+  private String nodeName = "unnamed";
 
   AbstractNodeBuilder(TrickleGraphBuilder<R> graphBuilder, Node<N> node) {
     this.graphBuilder = checkNotNull(graphBuilder, "graphBuilder");
@@ -82,5 +83,17 @@ abstract class AbstractNodeBuilder<N, R> implements ConnectedNodeBuilder<N> {
 
   protected void setName(String name) {
     nodeName = checkNotNull(name, "name");
+  }
+
+  protected void addPredecessors(Node<?>[] predecessors) {
+    this.predecessors.addAll(asList(predecessors));
+  }
+
+  protected void addInputs(Value<?>[] inputs) {
+    this.inputs.addAll(asList(inputs));
+  }
+
+  protected TrickleGraphBuilder<R> getGraphBuilder() {
+    return graphBuilder;
   }
 }
