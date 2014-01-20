@@ -63,7 +63,7 @@ class ConnectedNode<N> {
     checkArgument(inputs.size() == futures.size(), "sanity check result: insane");
 
     return Futures.withFallback(
-        nodeFuture(futures, allFuture, state.executor), new FutureFallback<N>() {
+        nodeFuture(futures, allFuture, state.getExecutor()), new FutureFallback<N>() {
       @Override
       public ListenableFuture<N> create(Throwable t) {
         if (fallback.isPresent()) {

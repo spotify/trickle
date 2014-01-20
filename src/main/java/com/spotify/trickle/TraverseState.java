@@ -12,10 +12,10 @@ import java.util.concurrent.Executor;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 class TraverseState {
-  final Map<Name<?>, ?> bindings;
-  final Map<Node<?>, ConnectedNode<?>> nodes;
-  final Map<Node<?>, ListenableFuture<?>> visited;
-  final Executor executor;
+  private final Map<Name<?>, ?> bindings;
+  private final Map<Node<?>, ConnectedNode<?>> nodes;
+  private final Map<Node<?>, ListenableFuture<?>> visited;
+  private final Executor executor;
 
   TraverseState(Map<Name<?>, ?> bindings,
                 Map<Node<?>, ConnectedNode<?>> nodes,
@@ -30,6 +30,8 @@ class TraverseState {
   <T> ListenableFuture<T> futureForNode(final Node<T> node) {
     final ListenableFuture<T> future;
     if (visited.containsKey(node)) {
+      // this cast is fine because the API enforces it
+      //noinspection unchecked
       future = (ListenableFuture<T>) visited.get(node);
     } else {
       // losing type information here, this is fine because the API enforces it
@@ -40,9 +42,15 @@ class TraverseState {
     return future;
   }
 
-  public <T> T getBinding(Name<T> name) {
+  <T> T getBinding(Name<T> name) {
     checkNotNull(name, "name");
 
+    // this cast is fine because the API enforces it
+    //noinspection unchecked
     return (T) bindings.get(name);
+  }
+
+  Executor getExecutor() {
+    return executor;
   }
 }
