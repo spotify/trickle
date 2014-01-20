@@ -1,7 +1,7 @@
 package com.spotify.trickle;
 
 /**
- * TODO: document!
+ * Defines operations possible on an intermediate node builder when constructing a graph.
  */
 public interface NodeChainer<R> {
   <O> ConfigureOrChain<O, R> call(Node0<O> node);

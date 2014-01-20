@@ -1,7 +1,7 @@
 package com.spotify.trickle;
 
 /**
- * TODO: document!
+ * Defines methods needed to build a graph of connected nodes.
  */
 interface ConnectedNodeBuilder<N> {
   ConnectedNode<N> connect();

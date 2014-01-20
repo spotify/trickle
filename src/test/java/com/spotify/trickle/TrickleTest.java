@@ -183,6 +183,29 @@ public class TrickleTest {
   }
 
   @Test
+  public void shouldReturnDefaultForFailedCallWithDefaultIntermediateNode() throws Exception {
+    Node0<String> node1 = new Node0<String>() {
+      @Override
+      public ListenableFuture<String> run() {
+        throw new RuntimeException("expected");
+      }
+    };
+    Node1<String, Integer> node2 = new Node1<String, Integer>() {
+      @Override
+      public ListenableFuture<Integer> run(String arg) {
+        return immediateFuture(arg.hashCode());
+      }
+    };
+
+    Graph<Integer> graph = Trickle.graph(Integer.class)
+        .call(node1).fallback(always("fallback response"))
+        .finallyCall(node2).with(node1)
+        .build();
+
+    assertThat(graph.run(executorService).get(), equalTo("fallback response".hashCode()));
+  }
+
+  @Test
   public void shouldReturnDefaultForFailedResponseWithDefault() throws Exception {
     Node0<String> node = new Node0<String>() {
       @Override

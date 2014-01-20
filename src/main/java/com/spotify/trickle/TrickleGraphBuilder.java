@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
-* TODO: document!
+* Top-level builder class.
 */
 final class TrickleGraphBuilder<R> implements GraphBuilder<R>, NodeChainer<R> {
   private final Set<ConnectedNodeBuilder<?>> nodes;

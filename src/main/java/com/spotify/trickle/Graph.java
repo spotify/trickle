@@ -5,7 +5,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.util.concurrent.Executor;
 
 /**
- * TODO: document!
+ * A runnable graph, possibly with unbound input parameters.
  */
 public interface Graph<T> {
   /**
@@ -36,15 +36,18 @@ public interface Graph<T> {
    * {@link com.google.common.util.concurrent.MoreExecutors#sameThreadExecutor()}.
    *
    * @return a future for the value returned by the graph execution.
+   * @throws IllegalArgumentException if not all {@link Name}s used in node invocations are bound
+   * to values
    */
   ListenableFuture<T> run();
-
 
   /**
    * Run the graph, executing node methods on the supplied executor.
    *
    * @param executor to run callbacks on
    * @return a future for the value returned by the graph execution.
+   * @throws IllegalArgumentException if not all {@link Name}s used in node invocations are bound
+   * to values
    */
   ListenableFuture<T> run(Executor executor);
 

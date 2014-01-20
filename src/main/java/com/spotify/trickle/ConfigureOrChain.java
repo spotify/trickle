@@ -1,7 +1,14 @@
 package com.spotify.trickle;
 
+import com.google.common.base.Function;
+
 /**
- * TODO: document!
+ * Defines operations available on an intermediate node builder when constructing a graph.
  */
-public interface ConfigureOrChain<N, R> extends ConfigurableChainableNode<N, R>, NodeChainer<R> {
+public interface ConfigureOrChain<N, R> extends NodeChainer<R> {
+  ConfigureOrChain<N, R> fallback(Function<Throwable, N> handler);
+
+  ConfigureOrChain<N, R> named(String name);
+
+  ConfigureOrChain<N, R> after(Node<?>... predecessors);
 }

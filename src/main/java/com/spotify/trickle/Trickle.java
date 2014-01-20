@@ -9,7 +9,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 
 /**
- * TODO: document!
+ * TODO: document! This class documentation should have some examples, rationale, etc.
  */
 public final class Trickle {
   private Trickle() {

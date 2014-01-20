@@ -1,7 +1,7 @@
 package com.spotify.trickle;
 
 /**
- * TODO: document!
+ * Defines the method for building a graph.
  */
 public interface GraphBuilder<R> {
   Graph<R> build();

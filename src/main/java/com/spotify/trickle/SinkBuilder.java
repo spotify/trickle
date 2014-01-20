@@ -7,8 +7,8 @@ import static com.spotify.trickle.Trickle.FinalNeedsParameters2;
 import static com.spotify.trickle.Trickle.FinalNeedsParameters3;
 
 /**
-* TODO: document!
-*/
+ * Implements operations for configuring the sink and building the graph.
+ */
 class SinkBuilder<R> extends AbstractNodeBuilder<R, R> implements ConfigureOrBuild<R> {
 
   SinkBuilder(TrickleGraphBuilder<R> graphBuilder, Node<R> node) {
