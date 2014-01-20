@@ -21,7 +21,7 @@ public final class Trickle {
     return new TrickleGraphBuilder<R>();
   }
 
-  public static <R> TrickleGraphBuilder<R> graph(TypeToken<R> returnClass) {
+  public static <R> NodeChainer<R> graph(TypeToken<R> returnClass) {
     checkNotNull(returnClass, "returnClass");
     return new TrickleGraphBuilder<R>();
   }
