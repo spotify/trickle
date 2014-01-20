@@ -17,16 +17,16 @@ abstract class TrickleNode<N> {
     checkNotNull(node);
 
     if (node instanceof Node0) {
-      return new TrickleNode0<>((Node0<V>) node);
+      return new TrickleNode0<V>((Node0<V>) node);
     }
     if (node instanceof Node1) {
-      return new TrickleNode1<>((Node1<?, V>) node);
+      return new TrickleNode1<Object, V>((Node1<Object, V>) node);
     }
     if (node instanceof Node2) {
-      return new TrickleNode2<>((Node2<?, ?, V>) node);
+      return new TrickleNode2<Object, Object, V>((Node2<Object, Object, V>) node);
     }
     if (node instanceof Node3) {
-      return new TrickleNode3<>((Node3<?, ?, ?, V>) node);
+      return new TrickleNode3<Object, Object, Object, V>((Node3<Object, Object, Object, V>) node);
     }
 
     throw new IllegalArgumentException("unsupported node subclass: " + node.getClass());

@@ -18,12 +18,12 @@ public final class Trickle {
 
   public static <R> NodeChainer<R> graph(Class<R> returnClass) {
     checkNotNull(returnClass, "returnClass");
-    return new TrickleGraphBuilder<>();
+    return new TrickleGraphBuilder<R>();
   }
 
   public static <R> TrickleGraphBuilder<R> graph(TypeToken<R> returnClass) {
     checkNotNull(returnClass, "returnClass");
-    return new TrickleGraphBuilder<>();
+    return new TrickleGraphBuilder<R>();
   }
 
   public interface NeedsParameters1<A, N, R> {

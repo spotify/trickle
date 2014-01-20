@@ -33,14 +33,14 @@ final class TrickleGraphBuilder<R> implements GraphBuilder<R>, NodeChainer<R> {
 
   @Override
   public <N> ChainingNodeBuilder<N, R> call(Node0<N> node) {
-    ChainingNodeBuilder<N, R> nodeBuilder = new ChainingNodeBuilder<>(this, node);
+    ChainingNodeBuilder<N, R> nodeBuilder = new ChainingNodeBuilder<N, R>(this, node);
     nodes.add(nodeBuilder);
     return nodeBuilder;
   }
 
   @Override
   public <A, N> Trickle.NeedsParameters1<A, N, R> call(Node1<A, N> node) {
-    ChainingNodeBuilder.NodeBuilder1<A, N, R> nodeBuilder = new ChainingNodeBuilder.NodeBuilder1<>(this, node);
+    ChainingNodeBuilder.NodeBuilder1<A, N, R> nodeBuilder = new ChainingNodeBuilder.NodeBuilder1<A, N, R>(this, node);
     nodes.add(nodeBuilder);
 
     return nodeBuilder;
@@ -48,7 +48,7 @@ final class TrickleGraphBuilder<R> implements GraphBuilder<R>, NodeChainer<R> {
 
   @Override
   public <A, B, N> Trickle.NeedsParameters2<A, B, N, R> call(Node2<A, B, N> node) {
-    ChainingNodeBuilder.NodeBuilder2<A, B, N, R> nodeBuilder = new ChainingNodeBuilder.NodeBuilder2<>(this, node);
+    ChainingNodeBuilder.NodeBuilder2<A, B, N, R> nodeBuilder = new ChainingNodeBuilder.NodeBuilder2<A, B, N, R>(this, node);
     nodes.add(nodeBuilder);
 
     return nodeBuilder;
@@ -56,7 +56,7 @@ final class TrickleGraphBuilder<R> implements GraphBuilder<R>, NodeChainer<R> {
 
   @Override
   public <A, B, C, N> Trickle.NeedsParameters3<A, B, C, N, R> call(Node3<A, B, C, N> node) {
-    ChainingNodeBuilder.NodeBuilder3<A, B, C, N, R> nodeBuilder = new ChainingNodeBuilder.NodeBuilder3<>(this, node);
+    ChainingNodeBuilder.NodeBuilder3<A, B, C, N, R> nodeBuilder = new ChainingNodeBuilder.NodeBuilder3<A, B, C, N, R>(this, node);
     nodes.add(nodeBuilder);
 
     return nodeBuilder;
@@ -64,7 +64,7 @@ final class TrickleGraphBuilder<R> implements GraphBuilder<R>, NodeChainer<R> {
 
   @Override
   public ConfigureOrBuild<R> finallyCall(Node0<R> node) {
-    SinkBuilder<R> nodeBuilder = new SinkBuilder<>(this, node);
+    SinkBuilder<R> nodeBuilder = new SinkBuilder<R>(this, node);
     nodes.add(nodeBuilder);
     return nodeBuilder;
   }
@@ -97,7 +97,7 @@ final class TrickleGraphBuilder<R> implements GraphBuilder<R>, NodeChainer<R> {
 
     Node<R> result1 = findSink(nodes);
 
-    return new TrickleGraph<>(Collections.<Name<?>, Object>emptyMap(), result1, buildNodes(nodes));
+    return new TrickleGraph<R>(Collections.<Name<?>, Object>emptyMap(), result1, buildNodes(nodes));
   }
 
   private Node<R> findSink(Set<ConnectedNodeBuilder<?>> nodes) {
@@ -109,15 +109,15 @@ final class TrickleGraphBuilder<R> implements GraphBuilder<R>, NodeChainer<R> {
       throw new TrickleException("cycle detected (there may be more): " + Joiner.on(" -> ").join(cycle.get()));
     }
 
-    Set<ConnectedNodeBuilder<?>> sinks = Sets.filter(nodes, new NoNodeDependsOn<>(edges));
+    Set<ConnectedNodeBuilder<?>> sinks = Sets.filter(nodes, new NoNodeDependsOn(edges));
     if (sinks.size() != 1) {
       throw new TrickleException("Multiple sinks found: " + sinks);
     }
 
     ConnectedNodeBuilder<?> sinkBuilder = sinks.iterator().next();
 
-    // note that there is no guarantee that this cast is safe. That's bad, but I'm not sure what
-    // to do about it. TODO: think about this
+    // this cast is guaranteed to be safe by the API
+    //noinspection unchecked
     return (Node<R>) sinkBuilder.getNode();
   }
 
@@ -195,7 +195,7 @@ final class TrickleGraphBuilder<R> implements GraphBuilder<R>, NodeChainer<R> {
     return builder.build();
   }
 
-  private static class NoNodeDependsOn<R> implements Predicate<ConnectedNodeBuilder<?>> {
+  private static class NoNodeDependsOn implements Predicate<ConnectedNodeBuilder<?>> {
     private final Multimap<ConnectedNodeBuilder<?>, ConnectedNodeBuilder<?>> edges;
 
     public NoNodeDependsOn(Multimap<ConnectedNodeBuilder<?>, ConnectedNodeBuilder<?>> edges) {

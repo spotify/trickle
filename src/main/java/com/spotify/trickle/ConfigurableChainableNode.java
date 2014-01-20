@@ -3,7 +3,7 @@ package com.spotify.trickle;
 import com.google.common.base.Function;
 
 /**
- * TODO: document!
+ * Defines the operations possible for a node that is not the sink.
  */
 public interface ConfigurableChainableNode<N, R> {
   ConfigureOrChain<N, R> fallback(Function<Throwable, N> handler);

@@ -6,7 +6,7 @@ import static com.spotify.trickle.Trickle.NeedsParameters1;
 import static com.spotify.trickle.Trickle.NeedsParameters2;
 
 /**
-* TODO: document!
+* Implements support for configuring a node or adding another node to the graph under construction.
 */
 class ChainingNodeBuilder<N, R> extends AbstractNodeBuilder<N, R> implements ConfigureOrChain<N, R> {
 

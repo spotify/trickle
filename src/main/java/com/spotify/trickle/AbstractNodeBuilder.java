@@ -12,7 +12,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static java.util.Arrays.asList;
 
 /**
- * TODO: document!
+ * Builder class that manages most of what's needed to hook up a node into a graph.
  */
 abstract class AbstractNodeBuilder<N, R> implements ConnectedNodeBuilder<N> {
   private final TrickleGraphBuilder<R> graphBuilder;
@@ -25,8 +25,8 @@ abstract class AbstractNodeBuilder<N, R> implements ConnectedNodeBuilder<N> {
   AbstractNodeBuilder(TrickleGraphBuilder<R> graphBuilder, Node<N> node) {
     this.graphBuilder = checkNotNull(graphBuilder, "graphBuilder");
     this.node = checkNotNull(node, "node");
-    inputs = new ArrayList<>();
-    predecessors = new ArrayList<>();
+    inputs = new ArrayList<Value<?>>();
+    predecessors = new ArrayList<Node<?>>();
   }
 
   @Override
@@ -34,21 +34,23 @@ abstract class AbstractNodeBuilder<N, R> implements ConnectedNodeBuilder<N> {
     // the argument count should be enforced by the API
     checkState(inputs.size() == argumentCount(), "PROGRAMMER ERROR: Incorrect argument count for node '%s' - expected %d, got %d", toString(), argumentCount(), inputs.size());
 
-    return new ConnectedNode<>(nodeName, node, asDeps(inputs), predecessors, Optional.fromNullable(fallback));
+    return new ConnectedNode<N>(nodeName, node, asDeps(inputs), predecessors, Optional.fromNullable(fallback));
   }
 
   int argumentCount() {
     return 0;
   }
 
+  @SuppressWarnings("unchecked")
+  // this method does a couple of unsafe-looking casts, but they are guaranteed by the API to be fine.
   private static List<Dep<?>> asDeps(List<Value<?>> inputs) {
     List<Dep<?>> result = Lists.newArrayList();
 
     for (Object input : inputs) {
       if (input instanceof Name) {
-        result.add(new BindingDep<>((Name<?>) input));
+        result.add(new BindingDep<Object>((Name<Object>) input));
       } else if (input instanceof Node) {
-        result.add(new NodeDep<>((Node<?>) input));
+        result.add(new NodeDep<Object>((Node<Object>) input));
       } else {
         throw new IllegalStateException("PROGRAMMER ERROR: illegal input object: " + input);
       }
