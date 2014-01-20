@@ -38,10 +38,6 @@ class SinkBuilder<R> extends AbstractNodeBuilder<R, R> implements ConfigureOrBui
     return this;
   }
 
-  int argumentCount() {
-    return 0;
-  }
-
   @Override
   public Graph<R> build() {
     return getGraphBuilder().build();
@@ -58,8 +54,9 @@ class SinkBuilder<R> extends AbstractNodeBuilder<R, R> implements ConfigureOrBui
       return 1;
     }
 
-    public NodeBuilder1<A, R> with(Value<A> arg1) {
-      return (NodeBuilder1<A, R>) super.with(arg1);
+    @Override
+    public ConfigureOrBuild<R> with(Value<A> arg1) {
+      return super.with(arg1);
     }
   }
 
@@ -73,8 +70,9 @@ class SinkBuilder<R> extends AbstractNodeBuilder<R, R> implements ConfigureOrBui
       return 2;
     }
 
-    public NodeBuilder2<A, B, R> with(Value<A> arg1, Value<B> arg2) {
-      return (NodeBuilder2<A, B, R>) super.with(arg1, arg2);
+    @Override
+    public ConfigureOrBuild<R> with(Value<A> arg1, Value<B> arg2) {
+      return super.with(arg1, arg2);
     }
   }
 
@@ -88,8 +86,9 @@ class SinkBuilder<R> extends AbstractNodeBuilder<R, R> implements ConfigureOrBui
       return 3;
     }
 
-    public NodeBuilder3<A, B, C, R> with(Value<A> arg1, Value<B> arg2, Value<C> arg3) {
-      return (NodeBuilder3<A, B, C, R>) super.with(arg1, arg2, arg3);
+    @Override
+    public ConfigureOrBuild<R> with(Value<A> arg1, Value<B> arg2, Value<C> arg3) {
+      return super.with(arg1, arg2, arg3);
     }
   }
 }

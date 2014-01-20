@@ -88,8 +88,9 @@ class ChainingNodeBuilder<N, R> extends AbstractNodeBuilder<N, R> implements Con
       return 1;
     }
 
-    public NodeBuilder1<A, N, R> with(Value<A> arg1) {
-      return (NodeBuilder1<A, N, R>) super.with(arg1);
+    @Override
+    public ConfigureOrChain<N, R> with(Value<A> arg1) {
+      return super.with(arg1);
     }
   }
 
@@ -103,8 +104,9 @@ class ChainingNodeBuilder<N, R> extends AbstractNodeBuilder<N, R> implements Con
       return 2;
     }
 
-    public NodeBuilder2<A, B, N, R> with(Value<A> arg1, Value<B> arg2) {
-      return (NodeBuilder2<A, B, N, R>) super.with(arg1, arg2);
+    @Override
+    public ConfigureOrChain<N, R> with(Value<A> arg1, Value<B> arg2) {
+      return super.with(arg1, arg2);
     }
   }
 
@@ -118,8 +120,9 @@ class ChainingNodeBuilder<N, R> extends AbstractNodeBuilder<N, R> implements Con
       return 3;
     }
 
-    public NodeBuilder3<A, B, C, N, R> with(Value<A> arg1, Value<B> arg2, Value<C> arg3) {
-      return (NodeBuilder3<A, B, C, N, R>) super.with(arg1, arg2, arg3);
+    @Override
+    public ConfigureOrChain<N, R> with(Value<A> arg1, Value<B> arg2, Value<C> arg3) {
+      return super.with(arg1, arg2, arg3);
     }
   }
 }
