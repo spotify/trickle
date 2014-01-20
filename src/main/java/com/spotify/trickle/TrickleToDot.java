@@ -4,7 +4,10 @@ import java.io.PrintWriter;
 import java.util.Map;
 
 /**
- * TODO: document!
+ * Provides a method to write a graph to the DOT language, which allows it to be displayed
+ * graphically for troubleshooting.
+ *
+ * TODO: document more/better!
  */
 public final class TrickleToDot {
   private TrickleToDot() {

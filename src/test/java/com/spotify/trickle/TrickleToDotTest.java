@@ -45,7 +45,7 @@ public class TrickleToDotTest {
         .call(node0).named("node 0")
         .call(node1).with(node0, first).named("node 1")
         .call(node2).with(node1, node0, second).named("node 2")
-        .call(node3).with(second).after(node1, node2)
+        .finallyCall(node3).with(second).after(node1, node2)
         .build();
 
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();

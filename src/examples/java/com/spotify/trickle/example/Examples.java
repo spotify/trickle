@@ -47,7 +47,7 @@ public class Examples {
     Graph<String> graph = Trickle.graph(String.class)
         .call(transformName).with(NAME).named("nameTransformer")
         .call(transformGreeting).with(GREETING)
-        .call(combine).with(transformGreeting, transformName).named("combiner")
+        .finallyCall(combine).with(transformGreeting, transformName).named("combiner")
         .build();
 
     System.out.println(graph.bind(NAME, "world").bind(GREETING, "Hello").run().get());
@@ -82,7 +82,7 @@ public class Examples {
       graph = Trickle.graph(Integer.class)
           .call(combineInputs).with(NAME, GREETING)
           .call(sideTrack)
-          .call(length).with(combineInputs).after(sideTrack)
+          .finallyCall(length).with(combineInputs).after(sideTrack)
           .build();
     }
 
@@ -110,8 +110,8 @@ public class Examples {
       };
 
       graph = Trickle.graph(String.class)
-          .call(node).with(NAME).fallback(always("Illegal name"))
-              .build();
+          .finallyCall(node).with(NAME).fallback(always("Illegal name"))
+          .build();
     }
 
     public ListenableFuture<String> greet(String name) {

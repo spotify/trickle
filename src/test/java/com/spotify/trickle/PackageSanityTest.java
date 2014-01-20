@@ -19,6 +19,7 @@ public class PackageSanityTest extends AbstractPackageSanityTests {
         throw new UnsupportedOperationException();
       }
     });
+    setDefault(TrickleGraphBuilder.class, new TrickleGraphBuilder());
     super.setUp();
   }
 }

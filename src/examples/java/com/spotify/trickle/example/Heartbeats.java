@@ -27,7 +27,7 @@ public class Heartbeats {
         .call(fetchCurrent).with(ENDPOINT)
         .call(updateState).with(ENDPOINT).after(fetchCurrent)
         .call(updateSerial).with(fetchCurrent).after(updateState)
-        .call(returnResult).after(updateSerial)
+        .finallyCall(returnResult).after(updateSerial)
         .build();
   }
 
