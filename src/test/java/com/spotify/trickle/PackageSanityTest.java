@@ -1,5 +1,6 @@
 package com.spotify.trickle;
 
+import com.google.common.base.Predicate;
 import com.google.common.testing.AbstractPackageSanityTests;
 import com.google.common.util.concurrent.ListenableFuture;
 import org.junit.Before;
@@ -15,11 +16,19 @@ public class PackageSanityTest extends AbstractPackageSanityTests {
     // AbstractPackageSanityTests creates some non-null instance of Node to use
     setDefault(Node.class, new Node0() {
       @Override
-      public ListenableFuture run() {
+      public ListenableFuture<Object> run() {
         throw new UnsupportedOperationException();
       }
     });
-    setDefault(TrickleGraphBuilder.class, new TrickleGraphBuilder());
+
+    // TODO how to test these
+    ignoreClasses(new Predicate<Class<?>>() {
+      @Override
+      public boolean apply(Class<?> aClass) {
+        return aClass.equals(TrickleGraph.class)
+            || aClass.equals(GraphDep.class);
+      }
+    });
     super.setUp();
   }
 }

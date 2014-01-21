@@ -1,7 +1,6 @@
 package com.spotify.trickle;
 
 import java.io.PrintWriter;
-import java.util.Map;
 
 /**
  * Provides a method to write a graph to the DOT language, which allows it to be displayed
@@ -20,26 +19,23 @@ public final class TrickleToDot {
       return;
     }
 
-    Map<Node<?>, ConnectedNode<?>> nodes = ((TrickleGraph<?>) graph).getNodes();
+    ConnectedNode<?> connectedNode = ((TrickleGraph<?>) graph).getConnectedNode();
 
     writer.println("digraph TrickleGraph {");
-    for (ConnectedNode<?> connectedNode : nodes.values()) {
-      writeDependenciesForNode(nodes, connectedNode, writer);
-    }
+    writeDependenciesForNode(connectedNode, writer);
     writer.println("}");
     writer.flush();
   }
 
-  private static void writeDependenciesForNode(Map<Node<?>, ConnectedNode<?>> nodes,
-                                               ConnectedNode<?> connectedNode,
+  private static void writeDependenciesForNode(ConnectedNode<?> connectedNode,
                                                PrintWriter writer) {
     String safeNodeName = dotSafe(connectedNode.getName());
     writer.println(String.format("  %s [label=\"%s\"];", safeNodeName, connectedNode.getName()));
 
     int pos = 0;
     for (Object dep : connectedNode.getInputs()) {
-      if (dep instanceof NodeDep) {
-        ConnectedNode<?> from = nodes.get(((NodeDep<?>) dep).getNode());
+      if (dep instanceof GraphDep) {
+        ConnectedNode<?> from = ((GraphDep<?>) dep).getGraph().getConnectedNode();
 
         writer.println(String.format("  %s -> %s [label=\"arg%d\"];", dotSafe(from.getName()), safeNodeName, pos));
       }
@@ -54,8 +50,8 @@ public final class TrickleToDot {
     }
 
 
-    for (Object node : connectedNode.getPredecessors()) {
-      ConnectedNode<?> from = nodes.get(node);
+    for (TrickleGraph<?> node : connectedNode.getPredecessors()) {
+      ConnectedNode<?> from = node.getConnectedNode();
 
       writer.println(String.format("  %s -> %s [style=dotted];", dotSafe(from.getName()), safeNodeName));
     }

@@ -6,6 +6,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.spotify.trickle.*;
 
 import static com.spotify.trickle.Name.named;
+import static com.spotify.trickle.Trickle.call;
 
 /**
  * TODO: document!
@@ -22,13 +23,10 @@ public class Heartbeats {
     Node1<RegistryEntry, Void> updateSerial = updateSerial();
     Node0<Long> returnResult = returnHeartbeatInterval();
 
-    graph = Trickle
-        .graph(Long.class)
-        .call(fetchCurrent).with(ENDPOINT)
-        .call(updateState).with(ENDPOINT).after(fetchCurrent)
-        .call(updateSerial).with(fetchCurrent).after(updateState)
-        .finallyCall(returnResult).after(updateSerial)
-        .build();
+    Graph<RegistryEntry> g1 = call(fetchCurrent).with(ENDPOINT);
+    Graph<Boolean> g2       = call(updateState).with(ENDPOINT).after(g1);
+    Graph<Void> g3          = call(updateSerial).with(g1).after(g2);
+    graph = call(returnResult).after(g3);
   }
 
   private Node1<Endpoint, RegistryEntry> fetchCurrent() {

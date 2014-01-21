@@ -6,6 +6,8 @@ import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
+
+import com.spotify.trickle.ConfigureNode;
 import com.spotify.trickle.Graph;
 import com.spotify.trickle.Name;
 import com.spotify.trickle.Node2;
@@ -13,6 +15,8 @@ import com.spotify.trickle.Node3;
 import com.spotify.trickle.Trickle;
 
 import java.util.List;
+
+import static com.spotify.trickle.Trickle.call;
 
 public class PSearchView {
   private static final Name<RequestContext> CONTEXT = Name.named("context", RequestContext.class);
@@ -27,12 +31,10 @@ public class PSearchView {
     Node2<RequestContext, Suggestions, List<Long>> fetchPlaylistFollowers = playlistFollowersNode();
     Node3<Suggestions, List<MetadataReply<Track>>, List<Long>, AllData> allData = combineItAllNode();
 
-    graph = Trickle.graph(AllData.class)
-        .call(getSuggestions).with(CONTEXT, QUERY, REQUEST)
-        .call(fetchTrackMetadata).with(CONTEXT, getSuggestions)
-        .call(fetchPlaylistFollowers).with(CONTEXT, getSuggestions)
-        .finallyCall(allData).with(getSuggestions, fetchTrackMetadata, fetchPlaylistFollowers)
-        .build();
+    Graph<Suggestions> g1                = call(getSuggestions).with(CONTEXT, QUERY, REQUEST);
+    Graph<List<MetadataReply<Track>>> g2 = call(fetchTrackMetadata).with(CONTEXT, g1);
+    Graph<List<Long>> g3                 = call(fetchPlaylistFollowers).with(CONTEXT, g1);
+    graph = call(allData).with(g1, g2, g3);
   }
 
   public ListenableFuture<AllData> suggest(final RequestContext context,

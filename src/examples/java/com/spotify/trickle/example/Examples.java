@@ -1,6 +1,8 @@
 package com.spotify.trickle.example;
 
 import com.google.common.util.concurrent.ListenableFuture;
+
+import com.spotify.trickle.ConfigureNode;
 import com.spotify.trickle.Graph;
 import com.spotify.trickle.Name;
 import com.spotify.trickle.Node0;
@@ -14,6 +16,7 @@ import java.util.concurrent.Executors;
 
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static com.spotify.trickle.Trickle.always;
+import static com.spotify.trickle.Trickle.call;
 
 /**
  * This class contains examples of how to use Trickle for combining asynchronous calls.
@@ -44,13 +47,11 @@ public class Examples {
       }
     };
 
-    Graph<String> graph = Trickle.graph(String.class)
-        .call(transformName).with(NAME).named("nameTransformer")
-        .call(transformGreeting).with(GREETING)
-        .finallyCall(combine).with(transformGreeting, transformName).named("combiner")
-        .build();
+    Graph<String> g1 = call(transformName).with(NAME).named("nameTransformer");
+    Graph<String> g2 = call(transformGreeting).with(GREETING);
+    Graph<String> g3 = call(combine).with(g1, g2).named("combiner");
 
-    System.out.println(graph.bind(NAME, "world").bind(GREETING, "Hello").run().get());
+    System.out.println(g3.bind(NAME, "world").bind(GREETING, "Hello").run().get());
   }
 
   public static class SeparateInstantiationAndExecution {
@@ -79,11 +80,9 @@ public class Examples {
         }
       };
 
-      graph = Trickle.graph(Integer.class)
-          .call(combineInputs).with(NAME, GREETING)
-          .call(sideTrack)
-          .finallyCall(length).with(combineInputs).after(sideTrack)
-          .build();
+      Graph<String> n1 = call(combineInputs).with(NAME, GREETING);
+      Graph<Void> n2   = call(sideTrack);
+      graph            = call(length).with(n1).after(n2);
     }
 
     public ListenableFuture<Integer> combinedLength(String name, String greeting) {
@@ -109,9 +108,7 @@ public class Examples {
         }
       };
 
-      graph = Trickle.graph(String.class)
-          .finallyCall(node).with(NAME).fallback(always("Illegal name"))
-          .build();
+      graph = call(node).with(NAME).fallback(always("Illegal name"));
     }
 
     public ListenableFuture<String> greet(String name) {

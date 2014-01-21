@@ -7,7 +7,7 @@ import java.util.concurrent.Executor;
 /**
  * A runnable graph, possibly with unbound input parameters.
  */
-public interface Graph<T> {
+public interface Graph<T> extends Value<T> {
   /**
    * Bind a parameter name to a concrete value. This means that this input value will immediately
    * be available for use.

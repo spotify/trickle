@@ -14,31 +14,67 @@ import static java.util.Arrays.asList;
 /**
  * Builder class that manages most of what's needed to hook up a node into a graph.
  */
-abstract class AbstractNodeBuilder<N, R> implements ConnectedNodeBuilder<N> {
-  private final TrickleGraphBuilder<R> graphBuilder;
-  private final Node<N> node;
+abstract class AbstractNodeBuilder<R> implements ConnectedNodeBuilder<R> {
+  private String name = "unnamed";
+  private final Node<R> node;
   private final List<Value<?>> inputs;
-  private final List<Node<?>> predecessors;
-  private Function<Throwable, N> fallback = null;
-  private String nodeName = "unnamed";
+  private final List<Graph<?>> predecessors;
+  private Function<Throwable, R> fallback = null;
 
-  AbstractNodeBuilder(TrickleGraphBuilder<R> graphBuilder, Node<N> node) {
-    this.graphBuilder = checkNotNull(graphBuilder, "graphBuilder");
+//  private final ConnectedNodeBuilder<R> node;
+
+  AbstractNodeBuilder(Node<R> node) {
     this.node = checkNotNull(node, "node");
     inputs = new ArrayList<Value<?>>();
-    predecessors = new ArrayList<Node<?>>();
+    predecessors = new ArrayList<Graph<?>>();
   }
 
   @Override
-  public final ConnectedNode<N> connect() {
+  public final ConnectedNode<R> connect() {
     // the argument count should be enforced by the API
-    checkState(inputs.size() == argumentCount(), "PROGRAMMER ERROR: Incorrect argument count for node '%s' - expected %d, got %d", toString(), argumentCount(), inputs.size());
+    checkState(inputs.size() == argumentCount(),
+               "PROGRAMMER ERROR: Incorrect argument count for node '%s' - expected %d, got %d",
+               toString(), argumentCount(), inputs.size());
 
-    return new ConnectedNode<N>(nodeName, node, asDeps(inputs), predecessors, Optional.fromNullable(fallback));
+    return new ConnectedNode<R>(name, node, asDeps(inputs), asGraphs(predecessors),
+                                Optional.fromNullable(fallback));
+  }
+
+  TrickleGraph<R> getGraph() {
+    return new TrickleGraph<R>(node, connect());
   }
 
   int argumentCount() {
     return 0;
+  }
+
+  protected void setFallback(Function<Throwable, R> handler) {
+    fallback = checkNotNull(handler, "handler");
+  }
+
+  protected void setName(String name) {
+    this.name = checkNotNull(name, "name");
+  }
+
+  protected void addPredecessors(Graph<?>[] predecessors) {
+    this.predecessors.addAll(asList(predecessors));
+  }
+
+  protected void addInputs(Value<?>[] inputs) {
+    this.inputs.addAll(asList(inputs));
+  }
+
+  private static List<TrickleGraph<?>> asGraphs(List<Graph<?>> predecessors) {
+    List<TrickleGraph<?>> result = Lists.newArrayList();
+
+    for (Graph<?> predecessor : predecessors) {
+      if (predecessor instanceof AbstractNodeBuilder) {
+        AbstractNodeBuilder<?> nodeBuilder = (AbstractNodeBuilder<?>) predecessor;
+        result.add(nodeBuilder.getGraph());
+      }
+    }
+
+    return result;
   }
 
   @SuppressWarnings("unchecked")
@@ -49,8 +85,8 @@ abstract class AbstractNodeBuilder<N, R> implements ConnectedNodeBuilder<N> {
     for (Object input : inputs) {
       if (input instanceof Name) {
         result.add(new BindingDep<Object>((Name<Object>) input));
-      } else if (input instanceof Node) {
-        result.add(new NodeDep<Object>((Node<Object>) input));
+      } else if (input instanceof AbstractNodeBuilder) {
+        result.add(new GraphDep<Object>(((AbstractNodeBuilder<Object>) input).getGraph()));
       } else {
         throw new IllegalStateException("PROGRAMMER ERROR: illegal input object: " + input);
       }
@@ -60,42 +96,7 @@ abstract class AbstractNodeBuilder<N, R> implements ConnectedNodeBuilder<N> {
   }
 
   @Override
-  public final Node<N> getNode() {
-    return node;
-  }
-
-  @Override
   public String toString() {
-    return nodeName;
-  }
-
-  @Override
-  public final Iterable<Value<?>> getInputs() {
-    return inputs;
-  }
-
-  @Override
-  public final Iterable<Node<?>> getPredecessors() {
-    return predecessors;
-  }
-
-  protected void setFallback(Function<Throwable, N> handler) {
-    fallback = checkNotNull(handler, "handler");
-  }
-
-  protected void setName(String name) {
-    nodeName = checkNotNull(name, "name");
-  }
-
-  protected void addPredecessors(Node<?>[] predecessors) {
-    this.predecessors.addAll(asList(predecessors));
-  }
-
-  protected void addInputs(Value<?>[] inputs) {
-    this.inputs.addAll(asList(inputs));
-  }
-
-  protected TrickleGraphBuilder<R> getGraphBuilder() {
-    return graphBuilder;
+    return name;
   }
 }

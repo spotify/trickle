@@ -26,14 +26,11 @@ class ConnectedNode<N> {
   private final String name;
   private final TrickleNode<N> node;
   private final ImmutableList<Dep<?>> inputs;
-  private final ImmutableList<Node<?>> predecessors;
+  private final ImmutableList<TrickleGraph<?>> predecessors;
   private final Optional<Function<Throwable, N>> fallback;
 
-  ConnectedNode(String name,
-                Node<N> node,
-                Iterable<Dep<?>> inputs,
-                List<Node<?>> predecessors,
-                Optional<Function<Throwable, N>> fallback) {
+  ConnectedNode(String name, Node<N> node, Iterable<Dep<?>> inputs,
+                List<TrickleGraph<?>> predecessors, Optional<Function<Throwable, N>> fallback) {
     this.name = checkNotNull(name, "name");
     this.node = TrickleNode.create(node);
     this.fallback = checkNotNull(fallback, "fallback");
@@ -54,8 +51,8 @@ class ConnectedNode<N> {
 
     // future for signaling propagation - needs to include predecessors, too
     List<ListenableFuture<?>> mustHappenBefore = Lists.newArrayList(futures);
-    for (Node<?> predecessor : predecessors) {
-      mustHappenBefore.add(state.futureForNode(predecessor));
+    for (TrickleGraph<?> predecessor : predecessors) {
+      mustHappenBefore.add(state.futureForGraph(predecessor));
     }
 
     final ListenableFuture<List<Object>> allFuture = allAsList(mustHappenBefore);
@@ -102,7 +99,7 @@ class ConnectedNode<N> {
     return inputs;
   }
 
-  List<Node<?>> getPredecessors() {
+  List<TrickleGraph<?>> getPredecessors() {
     return predecessors;
   }
 
