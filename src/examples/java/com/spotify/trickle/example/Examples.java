@@ -2,7 +2,7 @@ package com.spotify.trickle.example;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
-import com.spotify.trickle.ConfigureNode;
+import com.spotify.trickle.ConfigurableGraph;
 import com.spotify.trickle.Graph;
 import com.spotify.trickle.Name;
 import com.spotify.trickle.Node0;
@@ -51,7 +51,52 @@ public class Examples {
     Graph<String> g2 = call(transformGreeting).with(GREETING);
     Graph<String> g3 = call(combine).with(g1, g2).named("combiner");
 
-    System.out.println(g3.bind(NAME, "world").bind(GREETING, "Hello").run().get());
+    String s = g3
+        .bind(NAME, "world")
+        .bind(GREETING, "Hello")
+        .run().get();
+    System.out.println(s);
+  }
+
+  /**
+   * Declaring the graph variables along with the nodes with the same names
+   * but assign them later when composing the graph.
+   *
+   * @throws Exception
+   */
+  public static void helloWorldVariableConvention() throws Exception {
+    Graph<String> transformNameG;
+    Node1<String, String> transformName = new Node1<String, String>() {
+      @Override
+      public ListenableFuture<String> run(String name) {
+        return immediateFuture("$$" + name);
+      }
+    };
+    Graph<String> transformGreetingG;
+    Node1<String, String> transformGreeting = new Node1<String, String>() {
+      @Override
+      public ListenableFuture<String> run(String greeting) {
+        return immediateFuture(greeting + "$$$");
+      }
+    };
+    Graph<String> combineG;
+    Node2<String, String, String> combine = new Node2<String, String, String>() {
+      @Override
+      public ListenableFuture<String> run(String greet, String name) {
+        String result = String.format("%s %s!", greet.replaceAll("$", ""), name.replaceAll("$", ""));
+        return immediateFuture(result);
+      }
+    };
+
+    transformNameG = call(transformName).with(NAME).named("nameTransformer");
+    transformGreetingG = call(transformGreeting).with(GREETING);
+    combineG = call(combine).with(transformNameG, transformGreetingG).named("combiner");
+
+    String s = combineG
+        .bind(NAME, "world")
+        .bind(GREETING, "Hello")
+        .run().get();
+    System.out.println(s);
   }
 
   public static class SeparateInstantiationAndExecution {

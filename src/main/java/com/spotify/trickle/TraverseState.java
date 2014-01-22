@@ -15,7 +15,7 @@ import static com.google.common.collect.Maps.newHashMap;
 
 class TraverseState {
   private final Map<Name<?>, Object> bindings;
-  private final Map<Node<?>, ListenableFuture<?>> visited = newHashMap();
+  private final Map<Graph<?>, ListenableFuture<?>> visited = newHashMap();
   private final Executor executor;
 
   TraverseState(Map<Name<?>, Object> bindings, Executor executor) {
@@ -31,39 +31,38 @@ class TraverseState {
     return (T) bindings.get(name);
   }
 
-  <T> ListenableFuture<T> futureForGraph(TrickleGraph<T> graph) {
+  <T> ListenableFuture<T> futureForGraph(Graph<T> graph) {
     checkNotNull(graph, "node");
-    final Node<T> node = graph.getNode();
     final ListenableFuture<T> future;
 
-    if (hasVisited(node)) {
-      future = getVisited(node);
+    if (hasVisited(graph)) {
+      future = getVisited(graph);
     } else {
       future = graph.run(this);
-      visit(node, future);
+      visit(graph, future);
     }
     return future;
   }
 
-  <T> boolean hasVisited(Node<T> node) {
-    checkNotNull(node, "node");
+  <T> boolean hasVisited(Graph<T> graph) {
+    checkNotNull(graph, "graph");
 
-    return visited.containsKey(node);
+    return visited.containsKey(graph);
   }
 
-  <T> ListenableFuture<T> getVisited(Node<T> node) {
-    checkNotNull(node, "node");
+  <T> ListenableFuture<T> getVisited(Graph<T> graph) {
+    checkNotNull(graph, "graph");
 
     // this cast is fine because the API enforces it
     //noinspection unchecked
-    return (ListenableFuture<T>) visited.get(node);
+    return (ListenableFuture<T>) visited.get(graph);
   }
 
-  <T> void visit(Node<T> node, ListenableFuture<T> future) {
-    checkNotNull(node, "node");
+  <T> void visit(Graph<T> graph, ListenableFuture<T> future) {
+    checkNotNull(graph, "graph");
     checkNotNull(future, "future");
 
-    visited.put(node, future);
+    visited.put(graph, future);
   }
 
   Executor getExecutor() {

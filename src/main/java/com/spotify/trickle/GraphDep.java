@@ -9,14 +9,14 @@ import com.google.common.util.concurrent.ListenableFuture;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 class GraphDep<T> implements Dep<T> {
-  private final TrickleGraph<T> graph;
+  private final Graph<T> graph;
 
-  public GraphDep(TrickleGraph<T> graph) {
+  public GraphDep(Graph<T> graph) {
     checkNotNull(graph, "graph");
     this.graph = graph;
   }
 
-  public TrickleGraph<T> getGraph() {
+  public Graph<T> getGraph() {
     return graph;
   }
 

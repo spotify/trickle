@@ -7,7 +7,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 
-import com.spotify.trickle.ConfigureNode;
+import com.spotify.trickle.ConfigurableGraph;
 import com.spotify.trickle.Graph;
 import com.spotify.trickle.Name;
 import com.spotify.trickle.Node2;

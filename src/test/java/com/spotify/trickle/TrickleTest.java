@@ -121,6 +121,42 @@ public class TrickleTest {
   }
 
   @Test
+  public void shouldCallMultipleGraphsOfSameNodeOnceEach() throws Exception {
+    final AtomicInteger counter = new AtomicInteger(0);
+
+    Node1<String, String> greet = new Node1<String, String>() {
+      @Override
+      public ListenableFuture<String> run(String name) {
+        counter.incrementAndGet();
+        return immediateFuture("hello " + name + "!");
+      }
+    };
+    Node1<String, String> noop = new Node1<String, String>() {
+      @Override
+      public ListenableFuture<String> run(String input) {
+        return immediateFuture(input);
+      }
+    };
+    Node2<String, String, String> node2 = new Node2<String, String, String>() {
+      @Override
+      public ListenableFuture<String> run(String input1, String input2) {
+        return immediateFuture(input1 + input2);
+      }
+    };
+
+    Name<String> inputName = Name.named("theInnnput", String.class);
+    Graph<String> g11 = call(greet).with(inputName).named("1111");
+    Graph<String> g12 = call(greet).with(inputName).named("1112");
+    Graph<String> g2 = call(noop).with(g11).named("222");
+    Graph<String> g3 = call(node2).with(g2, g11).named("222");
+    Graph<String> g4 = call(node2).with(g3, g12).named("333");
+
+    ListenableFuture<String> future = g4.bind(inputName, "rouz").run();
+    assertThat(future.get(), equalTo("hello rouz!hello rouz!hello rouz!"));
+    assertThat(counter.get(), equalTo(2));
+  }
+
+  @Test
   public void shouldMakeAfterHappenAfter() throws Exception {
     final AtomicInteger counter = new AtomicInteger(0);
     final CountDownLatch latch = new CountDownLatch(1);
