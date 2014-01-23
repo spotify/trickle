@@ -160,6 +160,9 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
     }
 
     @Override
+    @SuppressWarnings("PMD.UselessOverridingMethod")
+    // this method override is not useless - it ensures that you can only call the 'with'
+    // method with a value of the correct type.
     public ConfigurableGraph<R> with(Value<A> arg1) {
       return super.with(arg1);
     }

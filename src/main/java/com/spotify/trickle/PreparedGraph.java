@@ -127,10 +127,6 @@ final class PreparedGraph<R> extends Graph<R> {
         executor);
   }
 
-  private TraverseState createState(Executor executor) {
-    return new TraverseState(inputBindings, executor);
-  }
-
   private PreparedGraph<R> addToInputs(Name<?> name, Object value) {
     checkState(!inputBindings.containsKey(name), "Duplicate binding for name: " + name);
 
