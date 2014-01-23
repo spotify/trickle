@@ -1,7 +1,6 @@
 package com.spotify.trickle;
 
 import com.google.common.base.Function;
-import com.google.common.reflect.TypeToken;
 
 import javax.annotation.Nullable;
 
@@ -16,38 +15,36 @@ public final class Trickle {
     // prevent instantiation
   }
 
-  public static <R> NodeChainer<R> graph(Class<R> returnClass) {
-    checkNotNull(returnClass, "returnClass");
-    return new TrickleGraphBuilder<R>();
+  public static <R> ConfigurableGraph<R> call(Node0<R> node) {
+    checkNotNull(node, "node");
+    return new GraphBuilder<R>(node);
   }
 
-  public static <R> NodeChainer<R> graph(TypeToken<R> returnClass) {
-    checkNotNull(returnClass, "returnClass");
-    return new TrickleGraphBuilder<R>();
+  public static <A, R> NeedsParameters1<A, R> call(Node1<A, R> node) {
+    checkNotNull(node, "node");
+    return new GraphBuilder.GraphBuilder1<A, R>(node);
   }
 
-  public interface NeedsParameters1<A, N, R> {
-    ConfigureOrChain<N, R> with(Value<A> arg1);
+  public static <A, B, R> NeedsParameters2<A, B, R> call(Node2<A, B, R> node) {
+    checkNotNull(node, "node");
+    return new GraphBuilder.GraphBuilder2<A, B, R>(node);
   }
 
-  public interface NeedsParameters2<A, B, N, R> {
-    ConfigureOrChain<N, R> with(Value<A> arg1, Value<B> arg2);
+  public static <A, B, C, R> NeedsParameters3<A, B, C, R> call(Node3<A, B, C, R> node) {
+    checkNotNull(node, "node");
+    return new GraphBuilder.GraphBuilder3<A, B, C, R>(node);
   }
 
-  public interface NeedsParameters3<A, B, C, N, R> {
-    ConfigureOrChain<N, R> with(Value<A> arg1, Value<B> arg2, Value<C> arg3);
+  public interface NeedsParameters1<A, R> {
+    ConfigurableGraph<R> with(Value<A> arg1);
   }
 
-  public interface FinalNeedsParameters1<A, R> {
-    ConfigureOrBuild<R> with(Value<A> arg1);
+  public interface NeedsParameters2<A, B, R> {
+    ConfigurableGraph<R> with(Value<A> arg1, Value<B> arg2);
   }
 
-  public interface FinalNeedsParameters2<A, B, R> {
-    ConfigureOrBuild<R> with(Value<A> arg1, Value<B> arg2);
-  }
-
-  public interface FinalNeedsParameters3<A, B, C, R> {
-    ConfigureOrBuild<R> with(Value<A> arg1, Value<B> arg2, Value<C> arg3);
+  public interface NeedsParameters3<A, B, C, R> {
+    ConfigurableGraph<R> with(Value<A> arg1, Value<B> arg2, Value<C> arg3);
   }
 
   public static <T> Function<Throwable, T> always(@Nullable final T value) {
@@ -59,4 +56,7 @@ public final class Trickle {
       }
     };
   }
+
+//  public static run(Graph g, BoundValue... inputs) {}
+//  public static BoundValue bind(Name n, Object value) {}
 }

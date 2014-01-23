@@ -1,7 +1,6 @@
 package com.spotify.trickle;
 
 import java.io.PrintWriter;
-import java.util.Map;
 
 /**
  * Provides a method to write a graph to the DOT language, which allows it to be displayed
@@ -15,33 +14,30 @@ public final class TrickleToDot {
   }
 
   public static void writeToDot(Graph<?> graph, PrintWriter writer) {
-    if (!(graph instanceof TrickleGraph)) {
+    if (!(graph instanceof GraphBuilder)) {
       writer.println("Unable to create dot from graph of type: " + graph.getClass());
       return;
     }
 
-    Map<Node<?>, ConnectedNode<?>> nodes = ((TrickleGraph<?>) graph).getNodes();
+    GraphBuilder<?> graphBuilder = (GraphBuilder<?>) graph;
 
     writer.println("digraph TrickleGraph {");
-    for (ConnectedNode<?> connectedNode : nodes.values()) {
-      writeDependenciesForNode(nodes, connectedNode, writer);
-    }
+    writeDependenciesForNode(graphBuilder, writer);
     writer.println("}");
     writer.flush();
   }
 
-  private static void writeDependenciesForNode(Map<Node<?>, ConnectedNode<?>> nodes,
-                                               ConnectedNode<?> connectedNode,
-                                               PrintWriter writer) {
-    String safeNodeName = dotSafe(connectedNode.getName());
-    writer.println(String.format("  %s [label=\"%s\"];", safeNodeName, connectedNode.getName()));
+  private static void writeDependenciesForNode(GraphBuilder<?> graphBuilder, PrintWriter writer) {
+    String safeNodeName = dotSafe(graphBuilder.name);
+    writer.println(String.format("  %s [label=\"%s\"];", safeNodeName, graphBuilder.name));
 
     int pos = 0;
-    for (Object dep : connectedNode.getInputs()) {
-      if (dep instanceof NodeDep) {
-        ConnectedNode<?> from = nodes.get(((NodeDep<?>) dep).getNode());
+    for (Object dep : graphBuilder.inputs) {
+      if (dep instanceof GraphDep) {
+        GraphBuilder<?> from = (GraphBuilder<?>) ((GraphDep<?>) dep).getGraph();
 
-        writer.println(String.format("  %s -> %s [label=\"arg%d\"];", dotSafe(from.getName()), safeNodeName, pos));
+        writer.println(String.format("  %s -> %s [label=\"arg%d\"];", dotSafe(from.name),
+                                     safeNodeName, pos));
       }
       else {
         Name<?> name = ((BindingDep<?>) dep).getName();
@@ -54,10 +50,11 @@ public final class TrickleToDot {
     }
 
 
-    for (Object node : connectedNode.getPredecessors()) {
-      ConnectedNode<?> from = nodes.get(node);
+    for (Graph<?> node : graphBuilder.predecessors) {
+      GraphBuilder<?> from = (GraphBuilder<?>) node;
 
-      writer.println(String.format("  %s -> %s [style=dotted];", dotSafe(from.getName()), safeNodeName));
+      writer.println(String.format("  %s -> %s [style=dotted];", dotSafe(from.name),
+                                   safeNodeName));
     }
   }
 

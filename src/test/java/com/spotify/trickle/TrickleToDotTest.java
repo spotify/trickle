@@ -6,6 +6,8 @@ import org.junit.Test;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
 
+import static com.spotify.trickle.Trickle.call;
+
 /**
  * TODO: document!
  */
@@ -41,12 +43,10 @@ public class TrickleToDotTest {
     Name<String> first = Name.named("first input", String.class);
     Name<String> second = Name.named("second input", String.class);
 
-    Graph<String> g = Trickle.graph(String.class)
-        .call(node0).named("node 0")
-        .call(node1).with(node0, first).named("node 1")
-        .call(node2).with(node1, node0, second).named("node 2")
-        .finallyCall(node3).with(second).after(node1, node2)
-        .build();
+    Graph<String> g0 = call(node0).named("node 0");
+    Graph<String> g1 = call(node1).with(g0, first).named("node 1");
+    Graph<String> g2 = call(node2).with(g1, g0, second).named("node 2");
+    Graph<String> g = call(node3).with(second).after(g1, g2);
 
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     PrintWriter writer = new PrintWriter(outputStream);
