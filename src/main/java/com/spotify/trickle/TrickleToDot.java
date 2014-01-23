@@ -1,6 +1,9 @@
 package com.spotify.trickle;
 
+import com.google.common.collect.Sets;
+
 import java.io.PrintWriter;
+import java.util.Set;
 
 /**
  * Provides a method to write a graph to the DOT language, which allows it to be displayed
@@ -14,47 +17,50 @@ public final class TrickleToDot {
   }
 
   public static void writeToDot(Graph<?> graph, PrintWriter writer) {
-    if (!(graph instanceof GraphBuilder)) {
-      writer.println("Unable to create dot from graph of type: " + graph.getClass());
-      return;
-    }
-
-    GraphBuilder<?> graphBuilder = (GraphBuilder<?>) graph;
-
     writer.println("digraph TrickleGraph {");
-    writeDependenciesForNode(graphBuilder, writer);
+    writeDependenciesForNode(graph, writer, Sets.<GraphElement>newHashSet());
     writer.println("}");
     writer.flush();
   }
 
-  private static void writeDependenciesForNode(GraphBuilder<?> graphBuilder, PrintWriter writer) {
-    String safeNodeName = dotSafe(graphBuilder.getName());
-    writer.println(String.format("  %s [label=\"%s\"];", safeNodeName, graphBuilder.getName()));
+  private static void writeDependenciesForNode(Graph<?> graph, PrintWriter writer, Set<GraphElement> visited) {
+    if (visited.contains(graph)) {
+      return;
+    }
+
+    visited.add(graph);
+
+    String safeNodeName = dotSafe(graph.name());
+    writer.println(String.format("  %s [label=\"%s\"];", safeNodeName, graph.name()));
 
     int pos = 0;
-    for (Object dep : graphBuilder.getInputs()) {
-      if (dep instanceof GraphDep) {
-        GraphBuilder<?> from = (GraphBuilder<?>) ((GraphDep<?>) dep).getGraph();
-
-        writer.println(String.format("  %s -> %s [label=\"arg%d\"];", dotSafe(from.getName()),
+    for (GraphElement dep : graph.inputs()) {
+      if (dep.type() == GraphElement.Type.GRAPH) {
+        writer.println(String.format("  %s -> %s [label=\"arg%d\"];", dotSafe(dep.name()),
                                      safeNodeName, pos));
-      }
-      else {
-        Name<?> name = ((BindingDep<?>) dep).getName();
 
-        writer.println(String.format("  %s [label=\"%s\" shape=box];", dotSafe(name.getName()), name.getName()));
-        writer.println(String.format("  %s -> %s [label=\"arg%d\"];", dotSafe(name.getName()), safeNodeName, pos));
+        Graph<?> upstream = ((GraphDep<?>) dep).getGraph();
+
+        writeDependenciesForNode(upstream, writer, visited);
+      }
+      else if (!visited.contains(dep)) {
+        writer.println(String.format("  %s [label=\"%s\" shape=box];", dotSafe(dep.name()), dep.name()));
+        writer.println(String.format("  %s -> %s [label=\"arg%d\"];", dotSafe(dep.name()), safeNodeName, pos));
+
+        visited.add(dep);
       }
 
       pos++;
     }
 
 
-    for (Graph<?> node : graphBuilder.getPredecessors()) {
-      GraphBuilder<?> from = (GraphBuilder<?>) node;
+    for (GraphElement node : graph.predecessors()) {
+      Graph<?> from = (Graph<?>) node;
 
-      writer.println(String.format("  %s -> %s [style=dotted];", dotSafe(from.getName()),
+      writer.println(String.format("  %s -> %s [style=dotted];", dotSafe(from.name()),
                                    safeNodeName));
+
+      writeDependenciesForNode(from, writer, visited);
     }
   }
 

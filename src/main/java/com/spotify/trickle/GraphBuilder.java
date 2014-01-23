@@ -152,6 +152,26 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
     return fallback;
   }
 
+  @Override
+  public String name() {
+    return name;
+  }
+
+  @Override
+  public List<? extends GraphElement> inputs() {
+    return inputs;
+  }
+
+  @Override
+  public List<? extends GraphElement> predecessors() {
+    return predecessors;
+  }
+
+  @Override
+  public Type type() {
+    return Type.GRAPH;
+  }
+
   static final class GraphBuilder1<A, R> extends GraphBuilder<R>
       implements Trickle.NeedsParameters1<A, R> {
 

@@ -1,6 +1,9 @@
 package com.spotify.trickle;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
+
+import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -32,5 +35,25 @@ class BindingDep<T> implements Dep<T> {
     } else {
       return immediateFuture(bindingValue);
     }
+  }
+
+  @Override
+  public String name() {
+    return name.getName();
+  }
+
+  @Override
+  public List<? extends GraphElement> inputs() {
+    return ImmutableList.of();
+  }
+
+  @Override
+  public List<? extends GraphElement> predecessors() {
+    return ImmutableList.of();
+  }
+
+  @Override
+  public Type type() {
+    return Type.CONSTANT;
   }
 }
