@@ -28,15 +28,15 @@ public final class TrickleToDot {
   }
 
   private static void writeDependenciesForNode(GraphBuilder<?> graphBuilder, PrintWriter writer) {
-    String safeNodeName = dotSafe(graphBuilder.name);
-    writer.println(String.format("  %s [label=\"%s\"];", safeNodeName, graphBuilder.name));
+    String safeNodeName = dotSafe(graphBuilder.getName());
+    writer.println(String.format("  %s [label=\"%s\"];", safeNodeName, graphBuilder.getName()));
 
     int pos = 0;
-    for (Object dep : graphBuilder.inputs) {
+    for (Object dep : graphBuilder.getInputs()) {
       if (dep instanceof GraphDep) {
         GraphBuilder<?> from = (GraphBuilder<?>) ((GraphDep<?>) dep).getGraph();
 
-        writer.println(String.format("  %s -> %s [label=\"arg%d\"];", dotSafe(from.name),
+        writer.println(String.format("  %s -> %s [label=\"arg%d\"];", dotSafe(from.getName()),
                                      safeNodeName, pos));
       }
       else {
@@ -50,10 +50,10 @@ public final class TrickleToDot {
     }
 
 
-    for (Graph<?> node : graphBuilder.predecessors) {
+    for (Graph<?> node : graphBuilder.getPredecessors()) {
       GraphBuilder<?> from = (GraphBuilder<?>) node;
 
-      writer.println(String.format("  %s -> %s [style=dotted];", dotSafe(from.name),
+      writer.println(String.format("  %s -> %s [style=dotted];", dotSafe(from.getName()),
                                    safeNodeName));
     }
   }

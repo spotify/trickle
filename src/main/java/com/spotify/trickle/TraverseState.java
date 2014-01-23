@@ -5,12 +5,14 @@
 package com.spotify.trickle;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.Map;
 import java.util.concurrent.Executor;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Maps.newHashMap;
 
 class TraverseState {
@@ -69,8 +71,10 @@ class TraverseState {
     return executor;
   }
 
-  void merge(final TraverseState state) {
-    bindings.putAll(state.bindings);
+  void addBindings(Map<Name<?>, Object> newBindings) {
+    Sets.SetView<Name<?>> intersection = Sets.intersection(bindings.keySet(), newBindings.keySet());
+    checkState(intersection.isEmpty(), "Duplicate binding for names: %s", intersection);
+    bindings.putAll(newBindings);
   }
 
   static TraverseState empty(Executor executor) {

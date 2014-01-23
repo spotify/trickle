@@ -70,7 +70,7 @@ final class PreparedGraph<R> extends Graph<R> {
 
   @Override
   ListenableFuture<R> run(TraverseState state) {
-    state.merge(createState(state.getExecutor()));
+    state.addBindings(inputBindings);
     return future(state);
   }
 
@@ -78,7 +78,7 @@ final class PreparedGraph<R> extends Graph<R> {
     final ImmutableList.Builder<ListenableFuture<?>> futuresListBuilder = builder();
 
     // get node and value dependencies
-    for (Dep<?> input : graph.inputs) {
+    for (Dep<?> input : graph.getInputs()) {
       final ListenableFuture<?> inputFuture = input.getFuture(state);
       futuresListBuilder.add(inputFuture);
     }
@@ -87,20 +87,20 @@ final class PreparedGraph<R> extends Graph<R> {
 
     // future for signaling propagation - needs to include predecessors, too
     List<ListenableFuture<?>> mustHappenBefore = Lists.newArrayList(futures);
-    for (Graph<?> predecessor : graph.predecessors) {
+    for (Graph<?> predecessor : graph.getPredecessors()) {
       mustHappenBefore.add(state.futureForGraph(predecessor));
     }
 
     final ListenableFuture<List<Object>> allFuture = allAsList(mustHappenBefore);
 
-    checkArgument(graph.inputs.size() == futures.size(), "sanity check result: insane");
+    checkArgument(graph.getInputs().size() == futures.size(), "sanity check result: insane");
 
     return Futures.withFallback(
         nodeFuture(futures, allFuture, state.getExecutor()), new FutureFallback<R>() {
       @Override
       public ListenableFuture<R> create(Throwable t) {
-        if (graph.fallback.isPresent()) {
-          return immediateFuture(graph.fallback.get().apply(t));
+        if (graph.getFallback().isPresent()) {
+          return immediateFuture(graph.getFallback().get().apply(t));
         }
 
         return immediateFailedFuture(t);
@@ -116,7 +116,7 @@ final class PreparedGraph<R> extends Graph<R> {
         new AsyncFunction<List<Object>, R>() {
           @Override
           public ListenableFuture<R> apply(List<Object> input) {
-            return graph.node.run(Lists.transform(values, new Function<ListenableFuture<?>, Object>() {
+            return graph.getNode().run(Lists.transform(values, new Function<ListenableFuture<?>, Object>() {
               @Override
               public Object apply(ListenableFuture<?> input) {
                 return Futures.getUnchecked(input);

@@ -10,7 +10,6 @@ import java.util.concurrent.Executor;
 
 import static com.google.common.base.Optional.of;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.copyOf;
 import static java.util.Arrays.asList;
 
@@ -18,13 +17,13 @@ import static java.util.Arrays.asList;
  * Builder class that manages most of what's needed to hook up a node into a graph.
  */
 class GraphBuilder<R> extends ConfigurableGraph<R> {
-  final String name;
-  final TrickleNode<R> node;
+  private final String name;
+  private final TrickleNode<R> node;
 
-  final ImmutableList<Dep<?>> inputs;
-  final ImmutableList<Graph<?>> predecessors;
+  private final ImmutableList<Dep<?>> inputs;
+  private final ImmutableList<Graph<?>> predecessors;
 
-  final Optional<Function<Throwable, R>> fallback;
+  private final Optional<Function<Throwable, R>> fallback;
 
   GraphBuilder(String name,
                TrickleNode<R> node,
@@ -41,10 +40,6 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
   GraphBuilder(Node<R> node) {
     this("unnamed", TrickleNode.create(checkNotNull(node, "node")), ImmutableList.<Dep<?>>of(),
          ImmutableList.<Graph<?>>of(), Optional.<Function<Throwable, R>>absent());
-  }
-
-  int argumentCount() {
-    return 0;
   }
 
   private GraphBuilder<R> withName(String name) {
@@ -70,13 +65,6 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
         .build();
   }
 
-  private void validate() {
-    // the argument count should be enforced by the API
-    checkState(inputs.size() == argumentCount(),
-               "PROGRAMMER ERROR: Incorrect argument count for node '%s' - expected %d, got %d",
-               toString(), argumentCount(), inputs.size());
-  }
-
   @SuppressWarnings("unchecked")
   // this method does a couple of unsafe-looking casts, but they are guaranteed by the API to be fine.
   private static ImmutableList<Dep<?>> asDeps(List<Value<?>> inputs) {
@@ -85,8 +73,8 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
     for (Object input : inputs) {
       if (input instanceof Name) {
         result.add(new BindingDep<Object>((Name<Object>) input));
-      } else if (input instanceof GraphBuilder) {
-        result.add(new GraphDep<Object>((GraphBuilder<Object>) input));
+      } else if (input instanceof Graph) {
+        result.add(new GraphDep<Object>((Graph<Object>) input));
       } else {
         throw new IllegalStateException("PROGRAMMER ERROR: illegal input object: " + input);
       }
@@ -144,16 +132,31 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
     return new PreparedGraph<R>(this).run(state);
   }
 
+  String getName() {
+    return name;
+  }
+
+  TrickleNode<R> getNode() {
+    return node;
+  }
+
+  ImmutableList<Dep<?>> getInputs() {
+    return inputs;
+  }
+
+  ImmutableList<Graph<?>> getPredecessors() {
+    return predecessors;
+  }
+
+  Optional<Function<Throwable, R>> getFallback() {
+    return fallback;
+  }
+
   static final class GraphBuilder1<A, R> extends GraphBuilder<R>
       implements Trickle.NeedsParameters1<A, R> {
 
     GraphBuilder1(Node<R> node) {
       super(node);
-    }
-
-    @Override
-    int argumentCount() {
-      return 1;
     }
 
     @Override
@@ -170,11 +173,6 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
     }
 
     @Override
-    int argumentCount() {
-      return 2;
-    }
-
-    @Override
     public ConfigurableGraph<R> with(Value<A> arg1, Value<B> arg2) {
       return super.with(arg1, arg2);
     }
@@ -185,11 +183,6 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
 
     GraphBuilder3(Node<R> node) {
       super(node);
-    }
-
-    @Override
-    int argumentCount() {
-      return 3;
     }
 
     @Override

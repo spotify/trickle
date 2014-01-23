@@ -55,4 +55,56 @@ public class TrickleApiTest {
     g.bind(input, "erich").bind(input, "volker");
   }
 
+  @Test
+  public void shouldThrowForDuplicateBindOfNameInChainedSubgraphs() throws Exception {
+    Node1<String, String> node1 = new Node1<String, String>() {
+      @Override
+      public ListenableFuture<String> run(String arg) {
+        return immediateFuture(arg + ", 1");
+      }
+    };
+
+    Name<String> input = Name.named("mein Name", String.class);
+
+    Graph<String> g1 = call(node1).with(input).bind(input, "erich");
+    Graph<String> g2 = call(node1).with(g1);
+
+    thrown.expect(IllegalStateException.class);
+    thrown.expectMessage("Duplicate binding for name");
+    thrown.expectMessage("mein Name");
+
+    g2.bind(input, "volker").run();
+  }
+
+  @Test
+  public void shouldThrowForDuplicateBindOfNameInDiamondSubgraphs() throws Exception {
+    Node1<String, String> node1 = new Node1<String, String>() {
+      @Override
+      public ListenableFuture<String> run(String arg) {
+        return immediateFuture(arg + ", 1");
+      }
+    };
+   Node2<String, String, String> node2 = new Node2<String, String, String>() {
+      @Override
+      public ListenableFuture<String> run(String arg, String arg2) {
+        return immediateFuture(arg + ", " + arg2);
+      }
+    };
+
+    Name<String> input = Name.named("mitt namn", String.class);
+    Name<String> input2 = Name.named("nåt", String.class);
+
+    Graph<String> g1 = call(node1).with(input).bind(input, "erik").bind(input2, "hej");
+    Graph<String> g2 = call(node1).with(input).bind(input, "folke").bind(input2, "hopp");
+
+    thrown.expect(IllegalStateException.class);
+    thrown.expectMessage("Duplicate binding for name");
+    thrown.expectMessage("mitt namn");
+    thrown.expectMessage("nåt");
+
+    // creating the 'bad' graph after setting up the thrown expectations, since it would be nice
+    // to be able to detect the problem at construction time rather than runtime.
+    Graph<String> g3 = call(node2).with(g1, g2);
+    g3.run();
+  }
 }
