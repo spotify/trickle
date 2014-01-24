@@ -7,7 +7,7 @@ import java.util.concurrent.Executor;
 /**
  * A runnable graph, possibly with unbound input parameters.
  */
-public abstract class Graph<T> implements Value<T> {
+public abstract class Graph<T> implements Value<T>, NodeInfo {
 
   /**
    * Bind a parameter name to a concrete value. This means that this input value will immediately

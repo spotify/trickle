@@ -6,6 +6,8 @@ package com.spotify.trickle;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
+import java.util.List;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 class GraphDep<T> implements Dep<T> {
@@ -23,5 +25,10 @@ class GraphDep<T> implements Dep<T> {
   @Override
   public ListenableFuture<T> getFuture(TraverseState state) {
     return state.futureForGraph(graph);
+  }
+
+  @Override
+  public NodeInfo getNodeInfo() {
+    return graph;
   }
 }

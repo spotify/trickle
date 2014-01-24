@@ -3,6 +3,7 @@ package com.spotify.trickle;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.List;
@@ -150,6 +151,31 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
 
   Optional<Function<Throwable, R>> getFallback() {
     return fallback;
+  }
+
+  @Override
+  public String name() {
+    return name;
+  }
+
+  @Override
+  public List<? extends NodeInfo> inputs() {
+    return Lists.transform(inputs, new Function<Dep<?>, NodeInfo>() {
+      @Override
+      public NodeInfo apply(Dep<?> input) {
+        return input.getNodeInfo();
+      }
+    });
+  }
+
+  @Override
+  public List<? extends NodeInfo> predecessors() {
+    return predecessors;
+  }
+
+  @Override
+  public Type type() {
+    return Type.GRAPH;
   }
 
   static final class GraphBuilder1<A, R> extends GraphBuilder<R>

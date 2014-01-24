@@ -1,6 +1,9 @@
 package com.spotify.trickle;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
+
+import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -28,9 +31,61 @@ class BindingDep<T> implements Dep<T> {
                   "Name not bound to a value for name %s", name);
 
     if (bindingValue instanceof ListenableFuture) {
+      // this cast is guaranteed by the API to be safe.
+      //noinspection unchecked
       return (ListenableFuture<T>) bindingValue;
     } else {
       return immediateFuture(bindingValue);
+    }
+  }
+
+  @Override
+  public NodeInfo getNodeInfo() {
+    return new ParameterNodeInfo();
+  }
+
+
+  private class ParameterNodeInfo implements NodeInfo {
+    @Override
+    public String name() {
+      return name.getName();
+    }
+
+    @Override
+    public List<? extends NodeInfo> inputs() {
+      return ImmutableList.of();
+    }
+
+    @Override
+    public List<? extends NodeInfo> predecessors() {
+      return ImmutableList.of();
+    }
+
+    @Override
+    public Type type() {
+      return Type.PARAMETER;
+    }
+
+    @Override
+    public int hashCode() {
+      return name.hashCode();
+    }
+
+    private Name<?> getName() {
+      return name;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (!(obj instanceof BindingDep.ParameterNodeInfo)) {
+        return false;
+      }
+
+      // ignoring the type parameter of the name here.
+      //noinspection unchecked
+      ParameterNodeInfo other = (ParameterNodeInfo) obj;
+
+      return other.getName().equals(name);
     }
   }
 }
