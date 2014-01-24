@@ -3,7 +3,7 @@
 
   <groupId>com.spotify</groupId>
   <artifactId>trickle</artifactId>
-  <version>0.4</version>
+  <version>0.5-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>trickle</name>
@@ -18,7 +18,7 @@
 
   <scm>
     <developerConnection>scm:git:ssh://git@ghe.spotify.net/step/trickle</developerConnection>
-    <tag>v0.4</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <dependencies>
