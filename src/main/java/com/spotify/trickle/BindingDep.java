@@ -31,6 +31,8 @@ class BindingDep<T> implements Dep<T> {
                   "Name not bound to a value for name %s", name);
 
     if (bindingValue instanceof ListenableFuture) {
+      // this cast is guaranteed by the API to be safe.
+      //noinspection unchecked
       return (ListenableFuture<T>) bindingValue;
     } else {
       return immediateFuture(bindingValue);
@@ -38,22 +40,52 @@ class BindingDep<T> implements Dep<T> {
   }
 
   @Override
-  public String name() {
-    return name.getName();
+  public NodeInfo getNodeInfo() {
+    return new ParameterNodeInfo();
   }
 
-  @Override
-  public List<? extends GraphElement> inputs() {
-    return ImmutableList.of();
-  }
 
-  @Override
-  public List<? extends GraphElement> predecessors() {
-    return ImmutableList.of();
-  }
+  private class ParameterNodeInfo implements NodeInfo {
+    @Override
+    public String name() {
+      return name.getName();
+    }
 
-  @Override
-  public Type type() {
-    return Type.CONSTANT;
+    @Override
+    public List<? extends NodeInfo> inputs() {
+      return ImmutableList.of();
+    }
+
+    @Override
+    public List<? extends NodeInfo> predecessors() {
+      return ImmutableList.of();
+    }
+
+    @Override
+    public Type type() {
+      return Type.PARAMETER;
+    }
+
+    @Override
+    public int hashCode() {
+      return name.hashCode();
+    }
+
+    private Name<?> getName() {
+      return name;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (!(obj instanceof BindingDep.ParameterNodeInfo)) {
+        return false;
+      }
+
+      // ignoring the type parameter of the name here.
+      //noinspection unchecked
+      ParameterNodeInfo other = (ParameterNodeInfo) obj;
+
+      return other.getName().equals(name);
+    }
   }
 }

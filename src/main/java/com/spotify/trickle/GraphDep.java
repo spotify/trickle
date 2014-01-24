@@ -28,22 +28,7 @@ class GraphDep<T> implements Dep<T> {
   }
 
   @Override
-  public String name() {
-    return graph.name();
-  }
-
-  @Override
-  public List<? extends GraphElement> inputs() {
-    return graph.inputs();
-  }
-
-  @Override
-  public List<? extends GraphElement> predecessors() {
-    return graph.predecessors();
-  }
-
-  @Override
-  public Type type() {
-    return graph.type();
+  public NodeInfo getNodeInfo() {
+    return graph;
   }
 }

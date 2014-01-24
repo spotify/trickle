@@ -148,12 +148,12 @@ final class PreparedGraph<R> extends Graph<R> {
   }
 
   @Override
-  public List<? extends GraphElement> inputs() {
+  public List<? extends NodeInfo> inputs() {
     return graph.inputs();
   }
 
   @Override
-  public List<? extends GraphElement> predecessors() {
+  public List<? extends NodeInfo> predecessors() {
     return graph.predecessors();
   }
 

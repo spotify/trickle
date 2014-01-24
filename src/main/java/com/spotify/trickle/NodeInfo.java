@@ -5,14 +5,14 @@ import java.util.List;
 /**
  * TODO: document!
  */
-public interface GraphElement {
+public interface NodeInfo {
   String name();
-  List<? extends GraphElement> inputs();
-  List<? extends GraphElement> predecessors();
+  List<? extends NodeInfo> inputs();
+  List<? extends NodeInfo> predecessors();
   Type type();
 
   public static enum Type {
-    CONSTANT,
+    PARAMETER,
     GRAPH
   }
 }
