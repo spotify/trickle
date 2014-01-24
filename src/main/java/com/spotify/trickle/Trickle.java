@@ -1,10 +1,5 @@
 package com.spotify.trickle;
 
-import com.google.common.base.Function;
-
-import javax.annotation.Nullable;
-
-
 /**
  * TODO: document! This class documentation should have some examples, rationale, etc.
  */
@@ -30,24 +25,15 @@ public final class Trickle {
   }
 
   public interface NeedsParameters1<A, R> {
-    ConfigurableGraph<R> with(Value<A> arg1);
+    ConfigurableGraph<R> with(Parameter<A> arg1);
   }
 
   public interface NeedsParameters2<A, B, R> {
-    ConfigurableGraph<R> with(Value<A> arg1, Value<B> arg2);
+    ConfigurableGraph<R> with(Parameter<A> arg1, Parameter<B> arg2);
   }
 
   public interface NeedsParameters3<A, B, C, R> {
-    ConfigurableGraph<R> with(Value<A> arg1, Value<B> arg2, Value<C> arg3);
+    ConfigurableGraph<R> with(Parameter<A> arg1, Parameter<B> arg2, Parameter<C> arg3);
   }
 
-  public static <T> Function<Throwable, T> always(@Nullable final T value) {
-    return new Function<Throwable, T>() {
-      @Nullable
-      @Override
-      public T apply(@Nullable Throwable input) {
-        return value;
-      }
-    };
-  }
 }

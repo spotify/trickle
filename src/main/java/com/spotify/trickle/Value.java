@@ -1,8 +1,0 @@
-package com.spotify.trickle;
-
-/**
- * Marker interface for a value of type T. Clients should never implement this interface directly,
- * only the NodeN interfaces that indicate the number of parameters a particular node needs.
- */
-public interface Value<T> {
-}

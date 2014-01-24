@@ -6,8 +6,6 @@ package com.spotify.trickle;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
-import java.util.List;
-
 import static com.google.common.base.Preconditions.checkNotNull;
 
 class GraphDep<T> implements Dep<T> {

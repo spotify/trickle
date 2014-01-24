@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.google.common.util.concurrent.Futures.immediateFailedFuture;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
-import static com.spotify.trickle.Trickle.always;
+import static com.spotify.trickle.Fallbacks.always;
 import static com.spotify.trickle.Trickle.call;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -394,6 +394,4 @@ public class TrickleTest {
 
     assertThat(future.get(), equalTo(9));
   }
-
-  // TODO: test that verifies blocking behaviour!
 }

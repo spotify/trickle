@@ -68,7 +68,7 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
 
   @SuppressWarnings("unchecked")
   // this method does a couple of unsafe-looking casts, but they are guaranteed by the API to be fine.
-  private static ImmutableList<Dep<?>> asDeps(List<Value<?>> inputs) {
+  private static ImmutableList<Dep<?>> asDeps(List<Parameter<?>> inputs) {
     ImmutableList.Builder<Dep<?>> result = ImmutableList.builder();
 
     for (Object input : inputs) {
@@ -89,7 +89,7 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
     return name;
   }
 
-  private ConfigurableGraph<R> with(Value<?>... inputs) {
+  private ConfigurableGraph<R> with(Parameter<?>... inputs) {
     return withInputs(asDeps(asList(inputs)));
   }
 
@@ -159,7 +159,7 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
   }
 
   @Override
-  public List<? extends NodeInfo> inputs() {
+  public List<? extends NodeInfo> arguments() {
     return Lists.transform(inputs, new Function<Dep<?>, NodeInfo>() {
       @Override
       public NodeInfo apply(Dep<?> input) {
@@ -169,13 +169,13 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
   }
 
   @Override
-  public List<? extends NodeInfo> predecessors() {
+  public Iterable<? extends NodeInfo> predecessors() {
     return predecessors;
   }
 
   @Override
   public Type type() {
-    return Type.GRAPH;
+    return Type.NODE;
   }
 
   static final class GraphBuilder1<A, R> extends GraphBuilder<R>
@@ -189,7 +189,7 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
     @SuppressWarnings("PMD.UselessOverridingMethod")
     // this method override is not useless - it ensures that you can only call the 'with'
     // method with a value of the correct type.
-    public ConfigurableGraph<R> with(Value<A> arg1) {
+    public ConfigurableGraph<R> with(Parameter<A> arg1) {
       return super.with(arg1);
     }
   }
@@ -202,7 +202,7 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
     }
 
     @Override
-    public ConfigurableGraph<R> with(Value<A> arg1, Value<B> arg2) {
+    public ConfigurableGraph<R> with(Parameter<A> arg1, Parameter<B> arg2) {
       return super.with(arg1, arg2);
     }
   }
@@ -215,7 +215,7 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
     }
 
     @Override
-    public ConfigurableGraph<R> with(Value<A> arg1, Value<B> arg2, Value<C> arg3) {
+    public ConfigurableGraph<R> with(Parameter<A> arg1, Parameter<B> arg2, Parameter<C> arg3) {
       return super.with(arg1, arg2, arg3);
     }
   }

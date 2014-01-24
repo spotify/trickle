@@ -18,14 +18,17 @@ import java.util.List;
 
 import static com.spotify.trickle.Trickle.call;
 
-public class PSearchView {
+/**
+ * Example from SearchView (BFS) - probably quite out of date.
+ */
+public class SearchView {
   private static final Name<RequestContext> CONTEXT = Name.named("context", RequestContext.class);
   private static final Name<Message> REQUEST = Name.named("request", Message.class);
   private static final Name<String> QUERY = Name.named("query", String.class);
 
   private final Graph<AllData> graph;
 
-  public PSearchView() {
+  public SearchView() {
     Node3<RequestContext, String, Message, Suggestions> getSuggestions = suggestionsNode();
     Node2<RequestContext, Suggestions, List<MetadataReply<Track>>> fetchTrackMetadata = trackMetaDataNode();
     Node2<RequestContext, Suggestions, List<Long>> fetchPlaylistFollowers = playlistFollowersNode();

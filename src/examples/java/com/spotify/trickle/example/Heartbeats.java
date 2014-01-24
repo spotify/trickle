@@ -9,7 +9,7 @@ import static com.spotify.trickle.Name.named;
 import static com.spotify.trickle.Trickle.call;
 
 /**
- * TODO: document!
+ * Example from nameless-registry; somewhat out of date.
  */
 public class Heartbeats {
   public static final Name<Endpoint> ENDPOINT = named("endpoint", Endpoint.class);

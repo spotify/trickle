@@ -8,13 +8,11 @@ import java.io.PrintWriter;
 
 import static com.spotify.trickle.Trickle.call;
 
-/**
- * TODO: document!
- */
 public class TrickleToDotTest {
 
   @Test
   public void shouldGenerateDot() throws Exception {
+    // this isn't a proper test, but then the TrickleToDot class isn't a proper class either.
     Node0<String> node0 = new Node0<String>() {
       @Override
       public ListenableFuture<String> run() {

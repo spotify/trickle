@@ -9,7 +9,7 @@ import java.util.Set;
  * Provides a method to write a graph to the DOT language, which allows it to be displayed
  * graphically for troubleshooting.
  *
- * TODO: document more/better!
+ * TODO: this class is experimental, in order to prove a point. We'll revisit troubleshooting later.
  */
 public final class TrickleToDot {
   private TrickleToDot() {
@@ -24,7 +24,6 @@ public final class TrickleToDot {
   }
 
   private static void writeDependenciesForNode(NodeInfo node, PrintWriter writer, Set<NodeInfo> visited) {
-    // TODO: use some other node description/identification..
     if (visited.contains(node)) {
       return;
     }
@@ -33,10 +32,10 @@ public final class TrickleToDot {
 
     String safeNodeName = dotSafe(node.name());
 
-    writer.println(String.format("  %s [label=\"%s\"%s];", safeNodeName, node.name(), (node.type() == NodeInfo.Type.GRAPH ? "" : " shape=box")));
+    writer.println(String.format("  %s [label=\"%s\"%s];", safeNodeName, node.name(), (node.type() == NodeInfo.Type.NODE ? "" : " shape=box")));
 
     int pos = 0;
-    for (NodeInfo input : node.inputs()) {
+    for (NodeInfo input : node.arguments()) {
       writeDependenciesForNode(input, writer, visited);
 
       writer.println(String.format("  %s -> %s [label=\"arg%d\"];", dotSafe(input.name()), safeNodeName, pos));

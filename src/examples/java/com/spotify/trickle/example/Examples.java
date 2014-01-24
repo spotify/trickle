@@ -2,20 +2,18 @@ package com.spotify.trickle.example;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
-import com.spotify.trickle.ConfigurableGraph;
 import com.spotify.trickle.Graph;
 import com.spotify.trickle.Name;
 import com.spotify.trickle.Node0;
 import com.spotify.trickle.Node1;
 import com.spotify.trickle.Node2;
-import com.spotify.trickle.Trickle;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static com.google.common.util.concurrent.Futures.immediateFuture;
-import static com.spotify.trickle.Trickle.always;
+import static com.spotify.trickle.Fallbacks.always;
 import static com.spotify.trickle.Trickle.call;
 
 /**
@@ -61,6 +59,7 @@ public class Examples {
   /**
    * Declaring the graph variables along with the nodes with the same names
    * but assign them later when composing the graph.
+   * NOTE: we're not yet sure that this is a useful convention!
    *
    * @throws Exception
    */
@@ -171,9 +170,10 @@ public class Examples {
 
     ExecutorService executor = Executors.newSingleThreadExecutor();
 
+    FallbackAndExecutor fallbackAndExecutor = new FallbackAndExecutor(executor);
     System.out.println("\nFallback:\n-------");
-    System.out.println(new FallbackAndExecutor(executor).greet("gof").get());
-    System.out.println(new FallbackAndExecutor(executor).greet("igor").get());
+    System.out.println(fallbackAndExecutor.greet("gof").get());
+    System.out.println(fallbackAndExecutor.greet("igor").get());
 
     executor.shutdown();
   }

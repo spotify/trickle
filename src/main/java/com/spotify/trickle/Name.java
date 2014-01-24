@@ -17,7 +17,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @param <T> the type of values with this name
  */
-public final class Name<T> implements Value<T> {
+public final class Name<T> implements Parameter<T> {
   private final String name;
   private final Class<T> klazz;
 

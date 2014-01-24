@@ -52,12 +52,12 @@ class BindingDep<T> implements Dep<T> {
     }
 
     @Override
-    public List<? extends NodeInfo> inputs() {
+    public List<? extends NodeInfo> arguments() {
       return ImmutableList.of();
     }
 
     @Override
-    public List<? extends NodeInfo> predecessors() {
+    public Iterable<? extends NodeInfo> predecessors() {
       return ImmutableList.of();
     }
 
