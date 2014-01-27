@@ -13,7 +13,7 @@ public class PackageSanityTest extends AbstractPackageSanityTests {
   @Before
   @Override
   public void setUp() throws Exception {
-    setDefault(Name.class, Name.named("hi", Object.class));
+    setDefault(Name.class, Name.named("hi"));
     // this is needed since otherwise, the wrong exception gets thrown by the ConnectedNode
     // constructor - no raw Nodes should ever be used, only NodeN:s, and it seems the
     // AbstractPackageSanityTests creates some non-null instance of Func to use

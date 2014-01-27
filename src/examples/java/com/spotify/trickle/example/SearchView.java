@@ -20,9 +20,9 @@ import static com.spotify.trickle.Trickle.call;
  * Example from SearchView (BFS) - probably quite out of date.
  */
 public class SearchView {
-  private static final Name<RequestContext> CONTEXT = Name.named("context", RequestContext.class);
-  private static final Name<Message> REQUEST = Name.named("request", Message.class);
-  private static final Name<String> QUERY = Name.named("query", String.class);
+  private static final Name<RequestContext> CONTEXT = Name.named("context");
+  private static final Name<Message> REQUEST = Name.named("request");
+  private static final Name<String> QUERY = Name.named("query");
 
   private final Graph<AllData> graph;
 

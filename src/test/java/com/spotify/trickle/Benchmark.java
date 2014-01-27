@@ -84,7 +84,7 @@ public class Benchmark {
   }
 
 
-  public static final Name<String> HEARTBEAT_ENDPOINT = new Name<String>("heartbeat", String.class);
+  public static final Name<String> HEARTBEAT_ENDPOINT = new Name<String>("heartbeat");
 
   @State(Scope.Thread)
   public static class TrickleGraph {

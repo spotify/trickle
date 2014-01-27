@@ -19,27 +19,24 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public final class Name<T> implements Parameter<T> {
   private final String name;
-  private final Class<T> klazz;
 
-  Name(String name, Class<T> klazz) {
+  Name(String name) {
     this.name = checkNotNull(name);
-    this.klazz = checkNotNull(klazz, "class");
   }
 
   /**
    * Factory method for a name.
    *
    * @param name String identifier for the name. Must be unique within a single {@link Graph}
-   * @param klazz the type of values with this name
    * @return a Name instance
    */
-  public static <U> Name<U> named(String name, Class<U> klazz) {
-    return new Name<U>(name, klazz);
+  public static <U> Name<U> named(String name) {
+    return new Name<U>(name);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(name, klazz);
+    return Objects.hashCode(name);
   }
 
   @Override
@@ -51,7 +48,7 @@ public final class Name<T> implements Parameter<T> {
       return false;
     }
     final Name other = (Name) obj;
-    return Objects.equal(this.name, other.name) && Objects.equal(this.klazz, other.klazz);
+    return Objects.equal(this.name, other.name);
   }
 
   @Override
