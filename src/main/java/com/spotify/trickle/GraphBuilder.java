@@ -133,10 +133,6 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
     return new PreparedGraph<R>(this).run(state);
   }
 
-  String getName() {
-    return name;
-  }
-
   TrickleNode<R> getNode() {
     return node;
   }
