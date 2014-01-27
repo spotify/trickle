@@ -16,14 +16,14 @@ public class PackageSanityTest extends AbstractPackageSanityTests {
     setDefault(Name.class, Name.named("hi", Object.class));
     // this is needed since otherwise, the wrong exception gets thrown by the ConnectedNode
     // constructor - no raw Nodes should ever be used, only NodeN:s, and it seems the
-    // AbstractPackageSanityTests creates some non-null instance of Node to use
-    final Node0<Object> node0 = new Node0<Object>() {
+    // AbstractPackageSanityTests creates some non-null instance of Func to use
+    final Func0<Object> node0 = new Func0<Object>() {
       @Override
       public ListenableFuture<Object> run() {
         throw new UnsupportedOperationException();
       }
     };
-    setDefault(Node.class, node0);
+    setDefault(Func.class, node0);
     setDefault(TrickleNode.class, new TrickleNode() {
       @Override
       public ListenableFuture run(List values) {

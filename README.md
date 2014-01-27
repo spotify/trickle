@@ -24,23 +24,23 @@ Name the parameters to your call graph:
   public static final Name<String> ARTIST = new Name("artist", String.class);
 ```
 
-Define the nodes to be executed:
+Define the code to be executed in the nodes of your graph:
 
 ```java
 
-  Node1<String, List<Track>> findTracks = new Node1<String, List<Track>>() { 
+  Func1<String, List<Track>> findTracks = new Func1<String, List<Track>>() {
       @Override
       public ListenableFuture<List<Track>> run(String keyword) {
         return search.findTracks(keyword);
       }
   };
-  Node1<String, Artist> findArtist = new Node1<String, Artist>() {
+  Func1<String, Artist> findArtist = new Func1<String, Artist>() {
       @Override
       public ListenableFuture<Artist> run(String artistName) {
         return metadata.lookupArtist(artistName);
       }
   };
-  Node2<Artist, List<Track>, MyOutput> combine = new Node2<Artist, List<Track>, MyOutput>() {
+  Func2<Artist, List<Track>, MyOutput> combine = new Func2<Artist, List<Track>, MyOutput>() {
       @Override
       public ListenableFuture<MyOutput> run(Artist artist, List<Track> tracks) {
         return Futures.immediateFuture(new MyOutput(artist, tracks));

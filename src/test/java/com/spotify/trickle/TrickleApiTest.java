@@ -17,7 +17,7 @@ public class TrickleApiTest {
 
   @Test
   public void shouldThrowForMissingInput() throws Exception {
-    Node1<String, String> node1 = new Node1<String, String>() {
+    Func1<String, String> node1 = new Func1<String, String>() {
       @Override
       public ListenableFuture<String> run(String arg) {
         return immediateFuture(arg + ", 1");
@@ -37,7 +37,7 @@ public class TrickleApiTest {
 
   @Test
   public void shouldThrowForDuplicateBindOfName() throws Exception {
-    Node1<String, String> node1 = new Node1<String, String>() {
+    Func1<String, String> node1 = new Func1<String, String>() {
       @Override
       public ListenableFuture<String> run(String arg) {
         return immediateFuture(arg + ", 1");
@@ -57,7 +57,7 @@ public class TrickleApiTest {
 
   @Test
   public void shouldThrowForDuplicateBindOfNameInChainedSubgraphs() throws Exception {
-    Node1<String, String> node1 = new Node1<String, String>() {
+    Func1<String, String> node1 = new Func1<String, String>() {
       @Override
       public ListenableFuture<String> run(String arg) {
         return immediateFuture(arg + ", 1");
@@ -78,13 +78,13 @@ public class TrickleApiTest {
 
   @Test
   public void shouldThrowForDuplicateBindOfNameInDiamondSubgraphs() throws Exception {
-    Node1<String, String> node1 = new Node1<String, String>() {
+    Func1<String, String> node1 = new Func1<String, String>() {
       @Override
       public ListenableFuture<String> run(String arg) {
         return immediateFuture(arg + ", 1");
       }
     };
-   Node2<String, String, String> node2 = new Node2<String, String, String>() {
+   Func2<String, String, String> node2 = new Func2<String, String, String>() {
       @Override
       public ListenableFuture<String> run(String arg, String arg2) {
         return immediateFuture(arg + ", " + arg2);

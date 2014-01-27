@@ -38,8 +38,8 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
     this.fallback = checkNotNull(fallback, "fallback");
   }
 
-  GraphBuilder(Node<R> node) {
-    this("unnamed", TrickleNode.create(checkNotNull(node, "node")), ImmutableList.<Dep<?>>of(),
+  GraphBuilder(Func<R> func) {
+    this("unnamed", TrickleNode.create(checkNotNull(func, "func")), ImmutableList.<Dep<?>>of(),
          ImmutableList.<Graph<?>>of(), Optional.<Function<Throwable, R>>absent());
   }
 
@@ -177,8 +177,8 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
   static final class GraphBuilder1<A, R> extends GraphBuilder<R>
       implements Trickle.NeedsParameters1<A, R> {
 
-    GraphBuilder1(Node<R> node) {
-      super(node);
+    GraphBuilder1(Func<R> func) {
+      super(func);
     }
 
     @Override
@@ -193,8 +193,8 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
   static final class GraphBuilder2<A, B, R> extends GraphBuilder<R>
       implements Trickle.NeedsParameters2<A, B, R> {
 
-    GraphBuilder2(Node<R> node) {
-      super(node);
+    GraphBuilder2(Func<R> func) {
+      super(func);
     }
 
     @Override
@@ -206,8 +206,8 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
   static final class GraphBuilder3<A, B, C, R> extends GraphBuilder<R>
       implements Trickle.NeedsParameters3<A, B, C, R> {
 
-    GraphBuilder3(Node<R> node) {
-      super(node);
+    GraphBuilder3(Func<R> func) {
+      super(func);
     }
 
     @Override

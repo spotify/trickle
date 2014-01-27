@@ -2,11 +2,11 @@ package com.spotify.trickle.example;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
+import com.spotify.trickle.Func0;
+import com.spotify.trickle.Func1;
 import com.spotify.trickle.Graph;
 import com.spotify.trickle.Name;
-import com.spotify.trickle.Node0;
-import com.spotify.trickle.Node1;
-import com.spotify.trickle.Node2;
+import com.spotify.trickle.Func2;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
@@ -25,19 +25,19 @@ public class Examples {
   public static final Name<String> GREETING = Name.named("greeting", String.class);
 
   public static void helloWorld() throws Exception {
-    Node1<String, String> transformName = new Node1<String, String>() {
+    Func1<String, String> transformName = new Func1<String, String>() {
       @Override
       public ListenableFuture<String> run(String name) {
         return immediateFuture("$$" + name);
       }
     };
-    Node1<String, String> transformGreeting = new Node1<String, String>() {
+    Func1<String, String> transformGreeting = new Func1<String, String>() {
       @Override
       public ListenableFuture<String> run(String greeting) {
         return immediateFuture(greeting + "$$$");
       }
     };
-    Node2<String, String, String> combine = new Node2<String, String, String>() {
+    Func2<String, String, String> combine = new Func2<String, String, String>() {
       @Override
       public ListenableFuture<String> run(String greet, String name) {
         String result = String.format("%s %s!", greet.replaceAll("$", ""), name.replaceAll("$", ""));
@@ -65,21 +65,21 @@ public class Examples {
    */
   public static void helloWorldVariableConvention() throws Exception {
     Graph<String> transformNameG;
-    Node1<String, String> transformName = new Node1<String, String>() {
+    Func1<String, String> transformName = new Func1<String, String>() {
       @Override
       public ListenableFuture<String> run(String name) {
         return immediateFuture("$$" + name);
       }
     };
     Graph<String> transformGreetingG;
-    Node1<String, String> transformGreeting = new Node1<String, String>() {
+    Func1<String, String> transformGreeting = new Func1<String, String>() {
       @Override
       public ListenableFuture<String> run(String greeting) {
         return immediateFuture(greeting + "$$$");
       }
     };
     Graph<String> combineG;
-    Node2<String, String, String> combine = new Node2<String, String, String>() {
+    Func2<String, String, String> combine = new Func2<String, String, String>() {
       @Override
       public ListenableFuture<String> run(String greet, String name) {
         String result = String.format("%s %s!", greet.replaceAll("$", ""), name.replaceAll("$", ""));
@@ -102,21 +102,21 @@ public class Examples {
     private final Graph<Integer> graph;
 
     public SeparateInstantiationAndExecution() {
-      Node2<String, String, String> combineInputs = new Node2<String, String, String>() {
+      Func2<String, String, String> combineInputs = new Func2<String, String, String>() {
         @Override
         public ListenableFuture<String> run(String arg1, String arg2) {
           System.out.println(" - combining inputs");
           return immediateFuture(arg1 + " " + arg2);
         }
       };
-      Node1<String, Integer> length = new Node1<String, Integer>() {
+      Func1<String, Integer> length = new Func1<String, Integer>() {
         @Override
         public ListenableFuture<Integer> run(String arg) {
           System.out.println(" - calculating lengths");
           return immediateFuture(arg.length());
         }
       };
-      Node0<Void> sideTrack = new Node0<Void>() {
+      Func0<Void> sideTrack = new Func0<Void>() {
         @Override
         public ListenableFuture<Void> run() {
           System.out.println(" - getting sidetracked!");
@@ -141,7 +141,7 @@ public class Examples {
     public FallbackAndExecutor(Executor executor) {
       this.executor = executor;
 
-      Node1<String, String> node = new Node1<String, String>() {
+      Func1<String, String> node = new Func1<String, String>() {
         @Override
         public ListenableFuture<String> run(String arg) {
           if (arg.equals("igor")) {

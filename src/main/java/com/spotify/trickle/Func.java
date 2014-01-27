@@ -5,5 +5,5 @@ package com.spotify.trickle;
  * and should never be implemented directly. Instead, you should implement one of the sub-interfaces
  * that indicate the number of parameters used for the node.
  */
-public interface Node<R> {
+public interface Func<R> {
 }

@@ -28,7 +28,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * Integration-level Trickle tests.
  */
 public class TrickleTest {
-  Node0<String> node1;
+  Func0<String> node1;
 
   SettableFuture<String> future1;
   ListeningExecutorService executorService;
@@ -40,7 +40,7 @@ public class TrickleTest {
   public void setUp() throws Exception {
     future1 = SettableFuture.create();
 
-    node1 = new Node0<String>() {
+    node1 = new Func0<String>() {
       @Override
       public ListenableFuture<String> run() {
         return future1;
@@ -78,7 +78,7 @@ public class TrickleTest {
 
   @Test
   public void shouldUseInputs() throws Exception {
-    Node1<String, String> node = new Node1<String, String>() {
+    Func1<String, String> node = new Func1<String, String>() {
       @Override
       public ListenableFuture<String> run(String name) {
         return immediateFuture("hello " + name + "!");
@@ -96,20 +96,20 @@ public class TrickleTest {
   public void shouldCallDependenciesOnlyOnce() throws Exception {
     final AtomicInteger counter = new AtomicInteger(0);
 
-    Node1<String, String> greet = new Node1<String, String>() {
+    Func1<String, String> greet = new Func1<String, String>() {
       @Override
       public ListenableFuture<String> run(String name) {
         counter.incrementAndGet();
         return immediateFuture("hello " + name + "!");
       }
     };
-    Node1<String, String> noop = new Node1<String, String>() {
+    Func1<String, String> noop = new Func1<String, String>() {
       @Override
       public ListenableFuture<String> run(String input) {
         return immediateFuture(input);
       }
     };
-    Node2<String, String, Integer> node2 = new Node2<String, String, Integer>() {
+    Func2<String, String, Integer> node2 = new Func2<String, String, Integer>() {
       @Override
       public ListenableFuture<Integer> run(String input1, String input2) {
         return immediateFuture(input1.length() + input2.length());
@@ -130,20 +130,20 @@ public class TrickleTest {
   public void shouldCallMultipleGraphsOfSameNodeOnceEach() throws Exception {
     final AtomicInteger counter = new AtomicInteger(0);
 
-    Node1<String, String> greet = new Node1<String, String>() {
+    Func1<String, String> greet = new Func1<String, String>() {
       @Override
       public ListenableFuture<String> run(String name) {
         counter.incrementAndGet();
         return immediateFuture("hello " + name + "!");
       }
     };
-    Node1<String, String> noop = new Node1<String, String>() {
+    Func1<String, String> noop = new Func1<String, String>() {
       @Override
       public ListenableFuture<String> run(String input) {
         return immediateFuture(input);
       }
     };
-    Node2<String, String, String> node2 = new Node2<String, String, String>() {
+    Func2<String, String, String> node2 = new Func2<String, String, String>() {
       @Override
       public ListenableFuture<String> run(String input1, String input2) {
         return immediateFuture(input1 + input2);
@@ -167,14 +167,14 @@ public class TrickleTest {
     final AtomicInteger counter = new AtomicInteger(0);
     final CountDownLatch latch = new CountDownLatch(1);
 
-    Node0<Void> incr1 = new Node0<Void>() {
+    Func0<Void> incr1 = new Func0<Void>() {
       @Override
       public ListenableFuture<Void> run() {
         counter.incrementAndGet();
         return immediateFuture(null);
       }
     };
-    Node0<Void> incr2 = new Node0<Void>() {
+    Func0<Void> incr2 = new Func0<Void>() {
       @Override
       public ListenableFuture<Void> run() {
         return executorService.submit(new Callable<Void>() {
@@ -187,7 +187,7 @@ public class TrickleTest {
         });
       }
     };
-    Node0<Integer> result = new Node0<Integer>() {
+    Func0<Integer> result = new Func0<Integer>() {
       @Override
       public ListenableFuture<Integer> run() {
         return immediateFuture(counter.get());
@@ -210,13 +210,13 @@ public class TrickleTest {
 
   @Test
   public void shouldForwardValues() throws Exception {
-    Node0<String> first = new Node0<String>() {
+    Func0<String> first = new Func0<String>() {
       @Override
       public ListenableFuture<String> run() {
         return immediateFuture("hi there!");
       }
     };
-    Node1<String, Integer> second = new Node1<String, Integer>() {
+    Func1<String, Integer> second = new Func1<String, Integer>() {
       @Override
       public ListenableFuture<Integer> run(String arg) {
         return immediateFuture(arg.length());
@@ -231,7 +231,7 @@ public class TrickleTest {
 
   @Test
   public void shouldReturnDefaultForFailedCallWithDefault() throws Exception {
-    Node0<String> node = new Node0<String>() {
+    Func0<String> node = new Func0<String>() {
       @Override
       public ListenableFuture<String> run() {
         throw new RuntimeException("expected");
@@ -245,13 +245,13 @@ public class TrickleTest {
 
   @Test
   public void shouldReturnDefaultForFailedCallWithDefaultIntermediateNode() throws Exception {
-    Node0<String> node1 = new Node0<String>() {
+    Func0<String> node1 = new Func0<String>() {
       @Override
       public ListenableFuture<String> run() {
         throw new RuntimeException("expected");
       }
     };
-    Node1<String, Integer> node2 = new Node1<String, Integer>() {
+    Func1<String, Integer> node2 = new Func1<String, Integer>() {
       @Override
       public ListenableFuture<Integer> run(String arg) {
         return immediateFuture(arg.hashCode());
@@ -266,7 +266,7 @@ public class TrickleTest {
 
   @Test
   public void shouldReturnDefaultForFailedResponseWithDefault() throws Exception {
-    Node0<String> node = new Node0<String>() {
+    Func0<String> node = new Func0<String>() {
       @Override
       public ListenableFuture<String> run() {
         return immediateFailedFuture(new RuntimeException("expected"));
@@ -280,13 +280,13 @@ public class TrickleTest {
 
   @Test
   public void shouldHandleTwoInputParameters() throws Exception {
-    Node1<String, String> node1 = new Node1<String, String>() {
+    Func1<String, String> node1 = new Func1<String, String>() {
       @Override
       public ListenableFuture<String> run(String arg) {
         return immediateFuture(arg + ", 1");
       }
     };
-    Node2<String, String, String> node2 = new Node2<String, String, String>() {
+    Func2<String, String, String> node2 = new Func2<String, String, String>() {
       @Override
       public ListenableFuture<String> run(String arg1, String arg2) {
         return immediateFuture(arg1 + ", " + arg2 + ", 2");
@@ -305,13 +305,13 @@ public class TrickleTest {
 
   @Test
   public void shouldHandleThreeInputParameters() throws Exception {
-    Node1<String, String> node1 = new Node1<String, String>() {
+    Func1<String, String> node1 = new Func1<String, String>() {
       @Override
       public ListenableFuture<String> run(String arg) {
         return immediateFuture(arg + ", 1");
       }
     };
-    Node3<String, String, String, String> node2 = new Node3<String, String, String, String>() {
+    Func3<String, String, String, String> node2 = new Func3<String, String, String, String>() {
       @Override
       public ListenableFuture<String> run(String arg1, String arg2, String arg3) {
         return immediateFuture(arg1 + ", " + arg2 + ", " + arg3 + ", 2");
@@ -335,13 +335,13 @@ public class TrickleTest {
   @Test
   public void shouldPropagateExceptionsToResultFuture() throws Exception {
     final RuntimeException expected = new RuntimeException("expected");
-    Node1<String, String> node1 = new Node1<String, String>() {
+    Func1<String, String> node1 = new Func1<String, String>() {
       @Override
       public ListenableFuture<String> run(String arg) {
         return immediateFailedFuture(expected);
       }
     };
-    Node2<String, String, String> node2 = new Node2<String, String, String>() {
+    Func2<String, String, String> node2 = new Func2<String, String, String>() {
       @Override
       public ListenableFuture<String> run(String arg1, String arg2) {
         return immediateFuture(arg1 + ", " + arg2 + ", 2");
@@ -363,7 +363,7 @@ public class TrickleTest {
   public void shouldAllowPassingFuturesAsParameters() throws Exception {
     SettableFuture<String> inputFuture = SettableFuture.create();
 
-    Node1<String, Integer> node = new Node1<String, Integer>() {
+    Func1<String, Integer> node = new Func1<String, Integer>() {
       @Override
       public ListenableFuture<Integer> run(String arg) {
         return immediateFuture(arg.length());
@@ -382,7 +382,7 @@ public class TrickleTest {
   public void shouldNotBlockOnInputFutures() throws Exception {
     SettableFuture<String> inputFuture = SettableFuture.create();
 
-    Node1<String, Integer> node = new Node1<String, Integer>() {
+    Func1<String, Integer> node = new Func1<String, Integer>() {
       @Override
       public ListenableFuture<Integer> run(String arg) {
         return immediateFuture(arg.length());

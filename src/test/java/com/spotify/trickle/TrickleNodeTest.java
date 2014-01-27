@@ -26,7 +26,7 @@ public class TrickleNodeTest {
 
   @Test
   public void shouldInstantiateNode0() throws Exception {
-    TrickleNode node = TrickleNode.create(new Node0<Object>() {
+    TrickleNode node = TrickleNode.create(new Func0<Object>() {
       @Override
       public ListenableFuture<Object> run() {
         return future;
@@ -38,7 +38,7 @@ public class TrickleNodeTest {
 
   @Test
   public void shouldInstantiateNode1() throws Exception {
-    TrickleNode node = TrickleNode.create(new Node1<String, Object>() {
+    TrickleNode node = TrickleNode.create(new Func1<String, Object>() {
       @Override
       public ListenableFuture<Object> run(String arg) {
         return future;
@@ -50,7 +50,7 @@ public class TrickleNodeTest {
 
   @Test
   public void shouldInstantiateNode2() throws Exception {
-    TrickleNode node = TrickleNode.create(new Node2<String, String, Object>() {
+    TrickleNode node = TrickleNode.create(new Func2<String, String, Object>() {
       @Override
       public ListenableFuture<Object> run(String arg, String arg2) {
         return future;
@@ -62,7 +62,7 @@ public class TrickleNodeTest {
 
   @Test
   public void shouldInstantiateNode3() throws Exception {
-    TrickleNode node = TrickleNode.create(new Node3<String, String, String, Object>() {
+    TrickleNode node = TrickleNode.create(new Func3<String, String, String, Object>() {
       @Override
       public ListenableFuture<Object> run(String arg, String arg2, String arg3) {
         return future;
@@ -76,6 +76,6 @@ public class TrickleNodeTest {
   public void shouldFailForUnknownNode() throws Exception {
     thrown.expect(IllegalArgumentException.class);
 
-    TrickleNode.create(new Node<Object>() { });
+    TrickleNode.create(new Func<Object>() { });
   }
 }

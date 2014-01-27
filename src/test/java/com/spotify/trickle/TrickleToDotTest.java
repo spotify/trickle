@@ -13,25 +13,25 @@ public class TrickleToDotTest {
   @Test
   public void shouldGenerateDot() throws Exception {
     // this isn't a proper test, but then the TrickleToDot class isn't a proper class either.
-    Node0<String> node0 = new Node0<String>() {
+    Func0<String> node0 = new Func0<String>() {
       @Override
       public ListenableFuture<String> run() {
         throw new UnsupportedOperationException();
       }
     };
-    Node2<String, String, String> node1 = new Node2<String, String, String>() {
+    Func2<String, String, String> node1 = new Func2<String, String, String>() {
       @Override
       public ListenableFuture<String> run(String arg, String arg2) {
         throw new UnsupportedOperationException();
       }
     };
-    Node3<String, String, String, String> node2 = new Node3<String, String, String, String>() {
+    Func3<String, String, String, String> node2 = new Func3<String, String, String, String>() {
       @Override
       public ListenableFuture<String> run(String arg, String arg2, String arg3) {
         throw new UnsupportedOperationException();
       }
     };
-    Node1<String, String> node3 = new Node1<String, String>() {
+    Func1<String, String> node3 = new Func1<String, String>() {
       @Override
       public ListenableFuture<String> run(String arg) {
         throw new UnsupportedOperationException();

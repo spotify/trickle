@@ -17,7 +17,6 @@ import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 import rx.Observable;
-import rx.util.functions.Func1;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -103,27 +102,27 @@ public class Benchmark {
     }
 
 
-    Node1<String, Integer> getEndpoint =
-        new Node1<String, Integer>() {
+    Func1<String, Integer> getEndpoint =
+        new Func1<String, Integer>() {
           @Override
           public ListenableFuture<Integer> run(String arg) {
             return fetchEndpoint(arg, executor);
           }
         };
-    Node1<String, Boolean> putHeartbeatEntry = new Node1<String, Boolean>() {
+    Func1<String, Boolean> putHeartbeatEntry = new Func1<String, Boolean>() {
       @Override
       public ListenableFuture<Boolean> run(String arg) {
         return putHeartbeat(arg, executor);
       }
     };
-    Node1<Integer, Void> updateSerial =
-        new Node1<Integer, Void>() {
+    Func1<Integer, Void> updateSerial =
+        new Func1<Integer, Void>() {
           @Override
           public ListenableFuture<Void> run(Integer arg) {
             return updateSerialCall(executor);
           }
         };
-    Node0<Long> resultNode = new Node0<Long>() {
+    Func0<Long> resultNode = new Func0<Long>() {
       @Override
       public ListenableFuture<Long> run() {
         return heartbeatIntervalMillis(executor);
@@ -214,17 +213,17 @@ public class Benchmark {
 
     return Observable
         .from(fetchEndpoint(hey, graph.executor))
-        .flatMap(new Func1<Integer, Observable<? extends Boolean>>() {
+        .flatMap(new rx.util.functions.Func1<Integer, Observable<Boolean>>() {
           @Override
-          public Observable<? extends Boolean> call(Integer integer) {
+          public Observable<Boolean> call(Integer integer) {
             return Observable.from(putHeartbeat(hey, graph.executor));
           }
-        }).flatMap(new Func1<Boolean, Observable<?>>() {
+        }).flatMap(new rx.util.functions.Func1<Boolean, Observable<?>>() {
           @Override
           public Observable<?> call(Boolean aBoolean) {
             return Observable.from(updateSerialCall(graph.executor));
           }
-        }).flatMap(new Func1<Object, Observable<? extends Long>>() {
+        }).flatMap(new rx.util.functions.Func1<Object, Observable<? extends Long>>() {
           @Override
           public Observable<? extends Long> call(Object o) {
             return Observable.from(heartbeatIntervalMillis(graph.executor));
@@ -240,6 +239,7 @@ public class Benchmark {
         .measurementIterations(5)
         .forks(1)
 //        .addProfiler(ProfilerType.STACK)
+//        .addProfiler(ProfilerType.HS_GC)
 //        .addProfiler(ProfilerType.HS_RT)
         .build();
 

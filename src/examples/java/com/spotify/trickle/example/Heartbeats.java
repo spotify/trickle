@@ -18,10 +18,10 @@ public class Heartbeats {
   final Graph<Long> graph;
 
   public Heartbeats() {
-    final Node1<Endpoint, RegistryEntry> fetchCurrent = fetchCurrent();
-    Node1<Endpoint, Boolean> updateState = updateState();
-    Node1<RegistryEntry, Void> updateSerial = updateSerial();
-    Node0<Long> returnResult = returnHeartbeatInterval();
+    final Func1<Endpoint, RegistryEntry> fetchCurrent = fetchCurrent();
+    Func1<Endpoint, Boolean> updateState = updateState();
+    Func1<RegistryEntry, Void> updateSerial = updateSerial();
+    Func0<Long> returnResult = returnHeartbeatInterval();
 
     Graph<RegistryEntry> g1 = call(fetchCurrent).with(ENDPOINT);
     Graph<Boolean> g2       = call(updateState).with(ENDPOINT).after(g1);
@@ -29,8 +29,8 @@ public class Heartbeats {
     graph = call(returnResult).after(g3);
   }
 
-  private Node1<Endpoint, RegistryEntry> fetchCurrent() {
-    return new Node1<Endpoint, RegistryEntry>() {
+  private Func1<Endpoint, RegistryEntry> fetchCurrent() {
+    return new Func1<Endpoint, RegistryEntry>() {
       @Override
       public ListenableFuture<RegistryEntry> run(Endpoint arg) {
         return null;
@@ -38,8 +38,8 @@ public class Heartbeats {
     };
   }
 
-  private Node1<Endpoint, Boolean> updateState() {
-    return new Node1<Endpoint, Boolean>() {
+  private Func1<Endpoint, Boolean> updateState() {
+    return new Func1<Endpoint, Boolean>() {
       @Override
       public ListenableFuture<Boolean> run(Endpoint endpoint) {
         return null;
@@ -47,8 +47,8 @@ public class Heartbeats {
     };
   }
 
-  private Node1<RegistryEntry, Void> updateSerial() {
-    return new Node1<RegistryEntry, Void>() {
+  private Func1<RegistryEntry, Void> updateSerial() {
+    return new Func1<RegistryEntry, Void>() {
       @Override
       public ListenableFuture<Void> run(RegistryEntry arg) {
         if (arg == null || arg.getState() == State.DOWN) {
@@ -60,8 +60,8 @@ public class Heartbeats {
     };
   }
 
-  private Node0<Long> returnHeartbeatInterval() {
-    return new Node0<Long>() {
+  private Func0<Long> returnHeartbeatInterval() {
+    return new Func0<Long>() {
       @Override
       public ListenableFuture<Long> run() {
         return Futures.immediateFuture(heartbeatIntervalMillis);

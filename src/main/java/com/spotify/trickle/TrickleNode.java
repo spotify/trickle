@@ -13,29 +13,29 @@ abstract class TrickleNode<N> {
 
   public abstract ListenableFuture<N> run(List<Object> values);
 
-  static <V> TrickleNode<V> create(Node<V> node) {
-    checkNotNull(node);
+  static <V> TrickleNode<V> create(Func<V> func) {
+    checkNotNull(func);
 
-    if (node instanceof Node0) {
-      return new TrickleNode0<V>((Node0<V>) node);
+    if (func instanceof Func0) {
+      return new TrickleNode0<V>((Func0<V>) func);
     }
-    if (node instanceof Node1) {
-      return new TrickleNode1<Object, V>((Node1<Object, V>) node);
+    if (func instanceof Func1) {
+      return new TrickleNode1<Object, V>((Func1<Object, V>) func);
     }
-    if (node instanceof Node2) {
-      return new TrickleNode2<Object, Object, V>((Node2<Object, Object, V>) node);
+    if (func instanceof Func2) {
+      return new TrickleNode2<Object, Object, V>((Func2<Object, Object, V>) func);
     }
-    if (node instanceof Node3) {
-      return new TrickleNode3<Object, Object, Object, V>((Node3<Object, Object, Object, V>) node);
+    if (func instanceof Func3) {
+      return new TrickleNode3<Object, Object, Object, V>((Func3<Object, Object, Object, V>) func);
     }
 
-    throw new IllegalArgumentException("unsupported node subclass: " + node.getClass());
+    throw new IllegalArgumentException("unsupported func subclass: " + func.getClass());
   }
 
   private static class TrickleNode0<N> extends TrickleNode<N> {
-    private final Node0<N> delegate;
+    private final Func0<N> delegate;
 
-    public TrickleNode0(Node0<N> node) {
+    public TrickleNode0(Func0<N> node) {
       delegate = node;
     }
 
@@ -48,9 +48,9 @@ abstract class TrickleNode<N> {
   }
 
   private static class TrickleNode1<A, N> extends TrickleNode<N> {
-    private final Node1<A, N> delegate;
+    private final Func1<A, N> delegate;
 
-    public TrickleNode1(Node1<A, N> node) {
+    public TrickleNode1(Func1<A, N> node) {
       delegate = node;
     }
 
@@ -63,9 +63,9 @@ abstract class TrickleNode<N> {
   }
 
   private static class TrickleNode2<A, B, N> extends TrickleNode<N> {
-    private final Node2<A, B, N> delegate;
+    private final Func2<A, B, N> delegate;
 
-    public TrickleNode2(Node2<A, B, N> node) {
+    public TrickleNode2(Func2<A, B, N> node) {
       delegate = node;
     }
 
@@ -78,9 +78,9 @@ abstract class TrickleNode<N> {
   }
 
   private static class TrickleNode3<A, B, C, N> extends TrickleNode<N> {
-    private final Node3<A, B, C, N> delegate;
+    private final Func3<A, B, C, N> delegate;
 
-    public TrickleNode3(Node3<A, B, C, N> node) {
+    public TrickleNode3(Func3<A, B, C, N> node) {
       delegate = node;
     }
 

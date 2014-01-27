@@ -7,12 +7,10 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 
-import com.spotify.trickle.ConfigurableGraph;
+import com.spotify.trickle.Func2;
+import com.spotify.trickle.Func3;
 import com.spotify.trickle.Graph;
 import com.spotify.trickle.Name;
-import com.spotify.trickle.Node2;
-import com.spotify.trickle.Node3;
-import com.spotify.trickle.Trickle;
 
 import java.util.List;
 
@@ -29,10 +27,10 @@ public class SearchView {
   private final Graph<AllData> graph;
 
   public SearchView() {
-    Node3<RequestContext, String, Message, Suggestions> getSuggestions = suggestionsNode();
-    Node2<RequestContext, Suggestions, List<MetadataReply<Track>>> fetchTrackMetadata = trackMetaDataNode();
-    Node2<RequestContext, Suggestions, List<Long>> fetchPlaylistFollowers = playlistFollowersNode();
-    Node3<Suggestions, List<MetadataReply<Track>>, List<Long>, AllData> allData = combineItAllNode();
+    Func3<RequestContext, String, Message, Suggestions> getSuggestions = suggestionsNode();
+    Func2<RequestContext, Suggestions, List<MetadataReply<Track>>> fetchTrackMetadata = trackMetaDataNode();
+    Func2<RequestContext, Suggestions, List<Long>> fetchPlaylistFollowers = playlistFollowersNode();
+    Func3<Suggestions, List<MetadataReply<Track>>, List<Long>, AllData> allData = combineItAllNode();
 
     Graph<Suggestions> g1                = call(getSuggestions).with(CONTEXT, QUERY, REQUEST);
     Graph<List<MetadataReply<Track>>> g2 = call(fetchTrackMetadata).with(CONTEXT, g1);
@@ -50,8 +48,8 @@ public class SearchView {
         .run(MoreExecutors.sameThreadExecutor());
   }
 
-  private Node3<RequestContext, String, Message, Suggestions> suggestionsNode() {
-    return new Node3<RequestContext, String, Message, Suggestions>() {
+  private Func3<RequestContext, String, Message, Suggestions> suggestionsNode() {
+    return new Func3<RequestContext, String, Message, Suggestions>() {
       @Override
       public ListenableFuture<Suggestions> run(RequestContext context, String query, Message request) {
         return getSuggestions(context, query, "track,album,artist,playlist", request.getParameter("country"));
@@ -80,8 +78,8 @@ public class SearchView {
 
     return hermesURL;
   }
-  private Node2<RequestContext, Suggestions, List<MetadataReply<Track>>> trackMetaDataNode() {
-    return new Node2<RequestContext, Suggestions, List<MetadataReply<Track>>>() {
+  private Func2<RequestContext, Suggestions, List<MetadataReply<Track>>> trackMetaDataNode() {
+    return new Func2<RequestContext, Suggestions, List<MetadataReply<Track>>>() {
       @Override
       public ListenableFuture<List<MetadataReply<Track>>> run(RequestContext context, Suggestions suggestions) {
         List<String> gids = Lists.transform(suggestions.getTrackList(), new Function<Track, String>() {
@@ -95,8 +93,8 @@ public class SearchView {
     };
   }
 
-  private Node2<RequestContext, Suggestions, List<Long>> playlistFollowersNode() {
-    return new Node2<RequestContext, Suggestions, List<Long>>() {
+  private Func2<RequestContext, Suggestions, List<Long>> playlistFollowersNode() {
+    return new Func2<RequestContext, Suggestions, List<Long>>() {
       @Override
       public ListenableFuture<List<Long>> run(RequestContext context, Suggestions suggestions) {
         List<String> uris = Lists.transform(suggestions.getPlaylistList(), new Function<Playlist, String>() {
@@ -110,8 +108,8 @@ public class SearchView {
     };
   }
 
-  private Node3<Suggestions, List<MetadataReply<Track>>, List<Long>, AllData> combineItAllNode() {
-    return new Node3<Suggestions, List<MetadataReply<Track>>, List<Long>, AllData>() {
+  private Func3<Suggestions, List<MetadataReply<Track>>, List<Long>, AllData> combineItAllNode() {
+    return new Func3<Suggestions, List<MetadataReply<Track>>, List<Long>, AllData>() {
       @Override
       public ListenableFuture<AllData> run(Suggestions suggestions, List<MetadataReply<Track>> metadataReplies, List<Long> followers) {
         EntityData.Builder<Album> albumDataBuilder = new EntityData.Builder<Album>();
