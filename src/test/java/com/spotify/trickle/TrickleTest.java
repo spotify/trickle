@@ -4,6 +4,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -46,6 +47,11 @@ public class TrickleTest {
       }
     };
     executorService = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
+  }
+
+  @After
+  public void shutdown() {
+    executorService.shutdown();
   }
 
   @Test

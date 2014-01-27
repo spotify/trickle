@@ -19,10 +19,6 @@ class BindingDep<T> implements Dep<T> {
     this.name = checkNotNull(name, "name");
   }
 
-  public Name<T> getName() {
-    return name;
-  }
-
   @Override
   public ListenableFuture<T> getFuture(final TraverseState state) {
     final T bindingValue = state.getBinding(name);

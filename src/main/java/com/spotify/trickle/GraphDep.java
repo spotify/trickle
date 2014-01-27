@@ -16,10 +16,6 @@ class GraphDep<T> implements Dep<T> {
     this.graph = graph;
   }
 
-  public Graph<T> getGraph() {
-    return graph;
-  }
-
   @Override
   public ListenableFuture<T> getFuture(TraverseState state) {
     return state.futureForGraph(graph);
