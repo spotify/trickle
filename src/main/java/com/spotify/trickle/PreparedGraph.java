@@ -22,7 +22,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.builder;
 import static com.google.common.util.concurrent.Futures.allAsList;
 import static com.google.common.util.concurrent.Futures.immediateFailedFuture;
-import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static com.google.common.util.concurrent.MoreExecutors.sameThreadExecutor;
 
 /**
@@ -100,7 +99,11 @@ final class PreparedGraph<R> extends Graph<R> {
       @Override
       public ListenableFuture<R> create(Throwable t) {
         if (graph.getFallback().isPresent()) {
-          return immediateFuture(graph.getFallback().get().apply(t));
+          try {
+            return graph.getFallback().get().apply(t);
+          } catch (Exception e) {
+            return immediateFailedFuture(e);
+          }
         }
 
         return immediateFailedFuture(t);

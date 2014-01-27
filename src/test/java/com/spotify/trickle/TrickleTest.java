@@ -1,5 +1,6 @@
 package com.spotify.trickle;
 
+import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -351,6 +352,39 @@ public class TrickleTest {
     Name<String> input = Name.named("in", String.class);
 
     Graph<String> g1 = call(node1).with(input);
+    Graph<String> g = call(node2).with(g1, input);
+
+    thrown.expect(ExecutionException.class);
+    thrown.expectCause(equalTo(expected));
+
+    g.bind(input, "hey").run().get();
+  }
+
+  @Test
+  public void shouldPropagateExceptionsToResultFutureForFailedDefault() throws Exception {
+    final RuntimeException unexpected = new RuntimeException("not me");
+    final RuntimeException expected = new RuntimeException("expected");
+    Func1<String, String> node1 = new Func1<String, String>() {
+      @Override
+      public ListenableFuture<String> run(String arg) {
+        return immediateFailedFuture(unexpected);
+      }
+    };
+    Func2<String, String, String> node2 = new Func2<String, String, String>() {
+      @Override
+      public ListenableFuture<String> run(String arg1, String arg2) {
+        return immediateFuture(arg1 + ", " + arg2 + ", 2");
+      }
+    };
+
+    Name<String> input = Name.named("in", String.class);
+
+    Graph<String> g1 = call(node1).with(input).fallback(new AsyncFunction<Throwable, String>() {
+      @Override
+      public ListenableFuture<String> apply(Throwable input) throws Exception {
+        throw expected;
+      }
+    });
     Graph<String> g = call(node2).with(g1, input);
 
     thrown.expect(ExecutionException.class);

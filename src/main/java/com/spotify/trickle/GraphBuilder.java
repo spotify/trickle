@@ -4,6 +4,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.List;
@@ -24,13 +25,13 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
   private final ImmutableList<Dep<?>> inputs;
   private final ImmutableList<Graph<?>> predecessors;
 
-  private final Optional<Function<Throwable, R>> fallback;
+  private final Optional<AsyncFunction<Throwable, R>> fallback;
 
   GraphBuilder(String name,
                TrickleNode<R> node,
                ImmutableList<Dep<?>> inputs,
                ImmutableList<Graph<?>> predecessors,
-               Optional<Function<Throwable, R>> fallback) {
+               Optional<AsyncFunction<Throwable, R>> fallback) {
     this.name = checkNotNull(name, "name");
     this.node = checkNotNull(node, "node");
     this.inputs = checkNotNull(inputs, "inputs");
@@ -40,7 +41,7 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
 
   GraphBuilder(Func<R> func) {
     this("unnamed", TrickleNode.create(checkNotNull(func, "func")), ImmutableList.<Dep<?>>of(),
-         ImmutableList.<Graph<?>>of(), Optional.<Function<Throwable, R>>absent());
+         ImmutableList.<Graph<?>>of(), Optional.<AsyncFunction<Throwable, R>>absent());
   }
 
   private GraphBuilder<R> withName(String name) {
@@ -55,7 +56,7 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
     return new GraphBuilder<R>(name, node, inputs, with(predecessors, newPredecessors), fallback);
   }
 
-  private GraphBuilder<R> withFallback(Function<Throwable, R> fallback) {
+  private GraphBuilder<R> withFallback(AsyncFunction<Throwable, R> fallback) {
     return new GraphBuilder<R>(name, node, inputs, predecessors, of(fallback));
   }
 
@@ -94,7 +95,7 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
   }
 
   @Override
-  public ConfigurableGraph<R> fallback(Function<Throwable, R> handler) {
+  public ConfigurableGraph<R> fallback(AsyncFunction<Throwable, R> handler) {
     return withFallback(handler);
   }
 
@@ -145,7 +146,7 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
     return predecessors;
   }
 
-  Optional<Function<Throwable, R>> getFallback() {
+  Optional<AsyncFunction<Throwable, R>> getFallback() {
     return fallback;
   }
 

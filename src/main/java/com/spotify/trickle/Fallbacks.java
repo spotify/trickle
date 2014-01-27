@@ -1,8 +1,11 @@
 package com.spotify.trickle;
 
-import com.google.common.base.Function;
+import com.google.common.util.concurrent.AsyncFunction;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import javax.annotation.Nullable;
+
+import static com.google.common.util.concurrent.Futures.immediateFuture;
 
 /**
  * Contains utility methods for dealing with fallbacks.
@@ -12,12 +15,12 @@ public final class Fallbacks {
     // prevent instantiation
   }
 
-  public static <T> Function<Throwable, T> always(@Nullable final T value) {
-    return new Function<Throwable, T>() {
+  public static <T> AsyncFunction<Throwable, T> always(@Nullable final T value) {
+    return new AsyncFunction<Throwable, T>() {
       @Nullable
       @Override
-      public T apply(@Nullable Throwable input) {
-        return value;
+      public ListenableFuture<T> apply(@Nullable Throwable input) {
+        return immediateFuture(value);
       }
     };
   }
