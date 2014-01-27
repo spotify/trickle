@@ -38,8 +38,8 @@ public class TrickleToDotTest {
       }
     };
 
-    Name<String> first = Name.named("first input", String.class);
-    Name<String> second = Name.named("second input", String.class);
+    Name<String> first = Name.named("first input");
+    Name<String> second = Name.named("second input");
 
     Graph<String> g0 = call(node0).named("node 0");
     Graph<String> g1 = call(node1).with(g0, first).named("node 1");

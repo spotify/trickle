@@ -21,8 +21,8 @@ import static com.spotify.trickle.Trickle.call;
  */
 public class Examples {
 
-  public static final Name<String> NAME = Name.named("name", String.class);
-  public static final Name<String> GREETING = Name.named("greeting", String.class);
+  public static final Name<String> NAME = Name.named("name");
+  public static final Name<String> GREETING = Name.named("greeting");
 
   public static void helloWorld() throws Exception {
     Func1<String, String> transformName = new Func1<String, String>() {

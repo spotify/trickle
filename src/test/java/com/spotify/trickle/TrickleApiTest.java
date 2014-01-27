@@ -24,7 +24,7 @@ public class TrickleApiTest {
       }
     };
 
-    Name<String> input = Name.named("somethingWeirdd", String.class);
+    Name<String> input = Name.named("somethingWeirdd");
 
     Graph<String> g = call(node1).with(input);
 
@@ -44,7 +44,7 @@ public class TrickleApiTest {
       }
     };
 
-    Name<String> input = Name.named("mein Name", String.class);
+    Name<String> input = Name.named("mein Name");
 
     Graph<String> g = call(node1).with(input);
 
@@ -64,7 +64,7 @@ public class TrickleApiTest {
       }
     };
 
-    Name<String> input = Name.named("mein Name", String.class);
+    Name<String> input = Name.named("mein Name");
 
     Graph<String> g1 = call(node1).with(input).bind(input, "erich");
     Graph<String> g2 = call(node1).with(g1);
@@ -91,8 +91,8 @@ public class TrickleApiTest {
       }
     };
 
-    Name<String> input = Name.named("mitt namn", String.class);
-    Name<String> input2 = Name.named("nåt", String.class);
+    Name<String> input = Name.named("mitt namn");
+    Name<String> input2 = Name.named("nåt");
 
     Graph<String> g1 = call(node1).with(input).bind(input, "erik").bind(input2, "hej");
     Graph<String> g2 = call(node1).with(input).bind(input, "folke").bind(input2, "hopp");

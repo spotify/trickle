@@ -86,7 +86,7 @@ public class TrickleTest {
       }
     };
 
-    Name<String> inputName = Name.named("theInnnput", String.class);
+    Name<String> inputName = Name.named("theInnnput");
     Graph<String> graph = call(node).with(inputName);
 
     ListenableFuture<String> future = graph.bind(inputName, "petter").run();
@@ -117,7 +117,7 @@ public class TrickleTest {
       }
     };
 
-    Name<String> inputName = Name.named("theInnnput", String.class);
+    Name<String> inputName = Name.named("theInnnput");
     Graph<String> g1 = call(greet).with(inputName).named("111");
     Graph<String> g2 = call(noop).with(g1).named("222");
     Graph<Integer> g3 = call(node2).with(g2, g1).named("333");
@@ -151,7 +151,7 @@ public class TrickleTest {
       }
     };
 
-    Name<String> inputName = Name.named("theInnnput", String.class);
+    Name<String> inputName = Name.named("theInnnput");
     Graph<String> g11 = call(greet).with(inputName).named("1111");
     Graph<String> g12 = call(greet).with(inputName).named("1112");
     Graph<String> g2 = call(noop).with(g11).named("222");
@@ -294,7 +294,7 @@ public class TrickleTest {
       }
     };
 
-    Name<String> input = Name.named("in", String.class);
+    Name<String> input = Name.named("in");
 
     Graph<String> g1 = call(node1).with(input);
     Graph<String> g = call(node2).with(g1, input);
@@ -319,8 +319,8 @@ public class TrickleTest {
       }
     };
 
-    Name<String> input = Name.named("in", String.class);
-    Name<String> input1 = Name.named("innn", String.class);
+    Name<String> input = Name.named("in");
+    Name<String> input1 = Name.named("innn");
 
     Graph<String> g1 = call(node1).with(input);
     Graph<String> g = call(node2).with(g1, input, input1);
@@ -349,7 +349,7 @@ public class TrickleTest {
       }
     };
 
-    Name<String> input = Name.named("in", String.class);
+    Name<String> input = Name.named("in");
 
     Graph<String> g1 = call(node1).with(input);
     Graph<String> g = call(node2).with(g1, input);
@@ -377,7 +377,7 @@ public class TrickleTest {
       }
     };
 
-    Name<String> input = Name.named("in", String.class);
+    Name<String> input = Name.named("in");
 
     Graph<String> g1 = call(node1).with(input).fallback(new AsyncFunction<Throwable, String>() {
       @Override
@@ -403,7 +403,7 @@ public class TrickleTest {
         return immediateFuture(arg.length());
       }
     };
-    Name<String> inputName = Name.named("input", String.class);
+    Name<String> inputName = Name.named("input");
 
     Graph<Integer> g = call(node).with(inputName);
 
@@ -422,7 +422,7 @@ public class TrickleTest {
         return immediateFuture(arg.length());
       }
     };
-    Name<String> inputName = Name.named("input", String.class);
+    Name<String> inputName = Name.named("input");
 
     Graph<Integer> g = call(node).with(inputName);
 

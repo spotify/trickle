@@ -12,7 +12,7 @@ import static com.spotify.trickle.Trickle.call;
  * Example from nameless-registry; somewhat out of date.
  */
 public class Heartbeats {
-  public static final Name<Endpoint> ENDPOINT = named("endpoint", Endpoint.class);
+  public static final Name<Endpoint> ENDPOINT = named("endpoint");
 
   final long heartbeatIntervalMillis = 132;
   final Graph<Long> graph;
