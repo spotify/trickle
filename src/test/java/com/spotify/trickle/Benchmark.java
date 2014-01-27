@@ -17,10 +17,11 @@ import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
+import rx.Observable;
+import rx.util.functions.Func1;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static com.google.common.util.concurrent.Futures.immediateFuture;
@@ -46,18 +47,13 @@ public class Benchmark {
   }
 
   private static ListenableFuture<Void> updateSerialCall(ListeningExecutorService executor) {
-//    try {
-//      Thread.sleep(2);
-//    } catch (InterruptedException e) {
-//      throw new RuntimeException(e);
-//    }
     if (useExecutor) {
-    return executor.submit(new Callable<Void>() {
-      @Override
-      public Void call() throws Exception {
-        return null;
-      }
-    });
+      return executor.submit(new Callable<Void>() {
+        @Override
+        public Void call() throws Exception {
+          return null;
+        }
+      });
     }
 
     return immediateFuture(null);
@@ -143,14 +139,14 @@ public class Benchmark {
 
   @GenerateMicroBenchmark
   @BenchmarkMode(Mode.Throughput)
-  public long benchmarkTrickleWithImmediate(TrickleGraph graph) throws ExecutionException, InterruptedException {
+  public long benchmarkImmediateTrickle(TrickleGraph graph) throws ExecutionException, InterruptedException {
     useExecutor = false;
     return runTrickle(graph);
   }
 
   @GenerateMicroBenchmark
   @BenchmarkMode(Mode.Throughput)
-  public long benchmarkTrickleWithExecutor(TrickleGraph graph) throws ExecutionException, InterruptedException {
+  public long benchmarkExecutorTrickle(TrickleGraph graph) throws ExecutionException, InterruptedException {
     useExecutor = true;
     return runTrickle(graph);
   }
@@ -161,14 +157,14 @@ public class Benchmark {
 
   @GenerateMicroBenchmark
   @BenchmarkMode(Mode.Throughput)
-  public long benchmarkGuavaWithImmediate(final TrickleGraph graph) throws ExecutionException, InterruptedException {
+  public long benchmarkImmediateGuava(final TrickleGraph graph) throws ExecutionException, InterruptedException {
     useExecutor = false;
     return runGuava(graph);
   }
 
   @GenerateMicroBenchmark
   @BenchmarkMode(Mode.Throughput)
-  public long benchmarkGuavaWithExecutor(final TrickleGraph graph) throws ExecutionException, InterruptedException {
+  public long benchmarkExecutorGuava(final TrickleGraph graph) throws ExecutionException, InterruptedException {
     useExecutor = true;
     return runGuava(graph);
   }
@@ -200,11 +196,43 @@ public class Benchmark {
     return result.get();
   }
 
-//  @GenerateMicroBenchmark
-//  @BenchmarkMode(Mode.All)
-//  public void benchmarkRx() {
-//
-//  }
+  @GenerateMicroBenchmark
+  @BenchmarkMode(Mode.Throughput)
+  public long benchmarkImmediateRx(final TrickleGraph graph) {
+    useExecutor = false;
+    return runRx(graph);
+  }
+
+  @GenerateMicroBenchmark
+  @BenchmarkMode(Mode.Throughput)
+  public long benchmarkExecutorRx(final TrickleGraph graph) {
+    useExecutor = true;
+    return runRx(graph);
+  }
+
+  private long runRx(final TrickleGraph graph) {
+    final String hey = String.valueOf(System.currentTimeMillis());
+
+    return Observable
+        .from(fetchEndpoint(hey, graph.executor))
+        .flatMap(new Func1<Integer, Observable<? extends Boolean>>() {
+          @Override
+          public Observable<? extends Boolean> call(Integer integer) {
+            return Observable.from(putHeartbeat(hey, graph.executor));
+          }
+        }).flatMap(new Func1<Boolean, Observable<?>>() {
+          @Override
+          public Observable<?> call(Boolean aBoolean) {
+            return Observable.from(updateSerialCall(graph.executor));
+          }
+        }).flatMap(new Func1<Object, Observable<? extends Long>>() {
+          @Override
+          public Observable<? extends Long> call(Object o) {
+            return Observable.from(heartbeatIntervalMillis(graph.executor));
+          }
+        }).toBlockingObservable().single();
+  }
+
 
   public static void main(String[] args) throws RunnerException {
     Options opt = new OptionsBuilder()
@@ -212,7 +240,7 @@ public class Benchmark {
         .warmupIterations(3)
         .measurementIterations(5)
         .forks(1)
-        .addProfiler(ProfilerType.STACK)
+//        .addProfiler(ProfilerType.STACK)
 //        .addProfiler(ProfilerType.HS_RT)
         .build();
 
