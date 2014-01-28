@@ -5,7 +5,14 @@ A simple library for composing asynchronous code. The main reason for it to exis
 easier to create graphs of interconnected asynchronous calls, pushing the 'worrying about
 concurrency' aspects into the framework rather than mixing it in with the business logic.
 
-## Getting Started
+# When should I use it?
+
+- When you are combining more than 2 asynchronous calls together, and you think the code is
+hard to read.
+- When you want to deal with when code does something in isolation from what it does.
+- Blah, this may not be so great?
+
+# Getting Started
 
 Include the latest version of Trickle into your project:
 
@@ -68,7 +75,7 @@ See [Examples.java](src/examples/java/com/spotify/trickle/example/Examples.java)
 and see the wiki for more in-depth descriptions of the library.
 
 
-## Notes about maturity
+# Notes about maturity
 
 We're using Trickle internally at Spotify in core, production-critical services that would break 
 Spotify completely if they failed. This means we have a fairly high degree of confidence that it
