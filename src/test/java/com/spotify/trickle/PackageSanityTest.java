@@ -50,13 +50,6 @@ public class PackageSanityTest extends AbstractPackageSanityTests {
     setDefault(Graph.class, graphBuilder);
     setDefault(GraphBuilder.class, graphBuilder);
 
-    ignoreClasses(new Predicate<Class<?>>() {
-      @Override
-      public boolean apply(@Nullable Class<?> input) {
-        return Benchmark.class.equals(input);
-      }
-    });
-
     super.setUp();
   }
 }
