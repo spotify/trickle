@@ -72,5 +72,5 @@ and see the wiki for more in-depth descriptions of the library.
 
 We're using Trickle internally at Spotify in core, production-critical services that would break 
 Spotify completely if they failed. This means we have a fairly high degree of confidence that it
-works. It is, however, an immature library and you shouldn't be surprised if there are API changes
+works. It is, however, an young library and you shouldn't be surprised if there are API changes
 in the next few months.
