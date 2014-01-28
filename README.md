@@ -68,4 +68,9 @@ See [Examples.java](src/examples/java/com/spotify/trickle/example/Examples.java)
 and see the wiki for more in-depth descriptions of the library.
 
 
+## Notes about maturity
 
+We're using Trickle internally at Spotify in core, production-critical services that would break 
+Spotify completely if they failed. This means we have a fairly high degree of confidence that it
+works. It is, however, an immature library and you shouldn't be surprised if there are API changes
+in the next few months.
