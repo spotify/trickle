@@ -64,7 +64,8 @@ At some later stage, call the graph for some specific keyword and artist name:
   }
 ```
 
-See [Examples.java](src/examples/java/com/spotify/trickle/example/Examples.java) for more examples.
+See [Examples.java](src/examples/java/com/spotify/trickle/example/Examples.java) for more examples
+and see [the wiki](/step/trickle/wiki) for more in-depth descriptions of the library.
 
 
 
