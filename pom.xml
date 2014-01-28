@@ -17,7 +17,7 @@
   </properties>
 
   <scm>
-    <developerConnection>scm:git:ssh://git@ghe.spotify.net/step/trickle</developerConnection>
+    <developerConnection>scm:git:ssh://git@github.com:spotify/trickle.git</developerConnection>
     <tag>HEAD</tag>
   </scm>
 
