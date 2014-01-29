@@ -1,22 +1,27 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-
   <groupId>com.spotify</groupId>
   <artifactId>trickle</artifactId>
   <version>0.5-SNAPSHOT</version>
   <packaging>jar</packaging>
-
   <name>trickle</name>
-  <url>http://maven.apache.org</url>
+  <url>http://github.com/spotify/trickle</url>
+
+  <parent>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>7</version>
+  </parent>
 
   <properties>
     <guava.version>15.0</guava.version>
 
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-
   </properties>
 
   <scm>
+    <url>git@github.com:spotify/trickle.git</url>
+    <connection>scm:git:ssh://git@github.com:spotify/trickle.git</connection>
     <developerConnection>scm:git:ssh://git@github.com:spotify/trickle.git</developerConnection>
     <tag>HEAD</tag>
   </scm>
@@ -32,7 +37,6 @@
       <artifactId>jsr305</artifactId>
       <version>2.0.1</version>
     </dependency>
-
 
     <dependency>
       <groupId>junit</groupId>
@@ -107,4 +111,60 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>release-sign-artifacts</id>
+      <activation>
+        <property>
+          <name>performRelease</name>
+          <value>true</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-release-plugin</artifactId>
+            <configuration>
+              <mavenExecutorId>forked-path</mavenExecutorId>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>1.4</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
+  <developers>
+    <developer>
+      <id>petter</id>
+      <email>petter@spotify.com</email>
+      <name>Petter Måhlén</name>
+    </developer>
+    <developer>
+      <id>rouz</id>
+      <email>rouz@spotify.com</email>
+      <name>Rouzbeh Delavari</name>
+    </developer>
+  </developers>
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
 </project>
