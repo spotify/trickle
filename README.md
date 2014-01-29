@@ -27,8 +27,8 @@ Include the latest version of Trickle into your project:
 Name the parameters to your call graph:
 
 ```java
-  public static final Name<String> KEYWORD = new Name("keyword", String.class);
-  public static final Name<String> ARTIST = new Name("artist", String.class);
+  public static final Name<String> KEYWORD = new Name("keyword");
+  public static final Name<String> ARTIST = new Name("artist");
 ```
 
 Define the code to be executed in the nodes of your graph:
