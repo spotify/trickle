@@ -10,7 +10,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.spotify.trickle.Func2;
 import com.spotify.trickle.Func3;
 import com.spotify.trickle.Graph;
-import com.spotify.trickle.Name;
+import com.spotify.trickle.Input;
 
 import java.util.List;
 
@@ -20,9 +20,9 @@ import static com.spotify.trickle.Trickle.call;
  * Example from SearchView (BFS) - probably quite out of date.
  */
 public class SearchView {
-  private static final Name<RequestContext> CONTEXT = Name.named("context");
-  private static final Name<Message> REQUEST = Name.named("request");
-  private static final Name<String> QUERY = Name.named("query");
+  private static final Input<RequestContext> CONTEXT = Input.named("context");
+  private static final Input<Message> REQUEST = Input.named("request");
+  private static final Input<String> QUERY = Input.named("query");
 
   private final Graph<AllData> graph;
 

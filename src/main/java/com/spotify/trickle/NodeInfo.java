@@ -19,7 +19,7 @@ package com.spotify.trickle;
 import java.util.List;
 
 /**
- * Interface defining the debug information that is available about a Trickle node or input.
+ * Interface defining the debug information that is available about a Trickle node.
  */
 public interface NodeInfo {
   /**
@@ -45,7 +45,7 @@ public interface NodeInfo {
   /**
    * Returns the node type:
    * <ul>
-   *   <li>PARAMETER = this is a parameter to the graph as a whole.</li>
+   *   <li>INPUT = this is a parameter to the graph as a whole.</li>
    *   <li>NODE = this is a node in the graph</li>
    * </ul>
    * @return the node type
@@ -53,7 +53,7 @@ public interface NodeInfo {
   Type type();
 
   public static enum Type {
-    PARAMETER,
+    INPUT,
     NODE
   }
 }

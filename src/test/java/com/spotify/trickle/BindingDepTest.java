@@ -25,14 +25,14 @@ public class BindingDepTest {
     // this is important for understanding how nodes relate to each other when inspecting a call
     // graph - if the same input name is used in more than one place, different BindingDep instances
     // will be created, but they should be considered equal since they refer to the same input.
-    Name<String> name2 = Name.named("ho");
+    Input<String> input2 = Input.named("ho");
 
-    BindingDep<String> dep1 = new BindingDep<String>(Name.<String>named("hi"));
-    BindingDep<String> dep2 = new BindingDep<String>(Name.<String>named("hi"));
+    BindingDep<String> dep1 = new BindingDep<String>(Input.<String>named("hi"));
+    BindingDep<String> dep2 = new BindingDep<String>(Input.<String>named("hi"));
 
     new EqualsTester()
         .addEqualityGroup(dep1.getNodeInfo(), dep2.getNodeInfo())
-        .addEqualityGroup(new BindingDep<String>(name2).getNodeInfo())
+        .addEqualityGroup(new BindingDep<String>(input2).getNodeInfo())
         .testEquals();
   }
 }

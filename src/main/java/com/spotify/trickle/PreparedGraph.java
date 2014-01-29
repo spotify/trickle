@@ -48,25 +48,25 @@ import static com.google.common.util.concurrent.MoreExecutors.sameThreadExecutor
 final class PreparedGraph<R> extends Graph<R> {
 
   private final GraphBuilder<R> graph;
-  private final ImmutableMap<Name<?>, Object> inputBindings;
+  private final ImmutableMap<Input<?>, Object> inputBindings;
 
-  private PreparedGraph(GraphBuilder<R> graph, ImmutableMap<Name<?>, Object> inputBindings) {
+  private PreparedGraph(GraphBuilder<R> graph, ImmutableMap<Input<?>, Object> inputBindings) {
     this.graph = checkNotNull(graph, "graph");
     this.inputBindings = checkNotNull(inputBindings, "inputBindings");
   }
 
   PreparedGraph(GraphBuilder<R> graph) {
-    this(graph, ImmutableMap.<Name<?>, Object>of());
+    this(graph, ImmutableMap.<Input<?>, Object>of());
   }
 
   @Override
-  public <P> Graph<R> bind(Name<P> name, P value) {
-    return addToInputs(name, value);
+  public <P> Graph<R> bind(Input<P> input, P value) {
+    return addToInputs(input, value);
   }
 
   @Override
-  public <P> Graph<R> bind(Name<P> name, ListenableFuture<P> inputFuture) {
-    return addToInputs(name, inputFuture);
+  public <P> Graph<R> bind(Input<P> input, ListenableFuture<P> inputFuture) {
+    return addToInputs(input, inputFuture);
   }
 
   @Override
@@ -142,14 +142,14 @@ final class PreparedGraph<R> extends Graph<R> {
         executor);
   }
 
-  private PreparedGraph<R> addToInputs(Name<?> name, Object value) {
-    checkState(!inputBindings.containsKey(name), "Duplicate binding for name: " + name);
+  private PreparedGraph<R> addToInputs(Input<?> input, Object value) {
+    checkState(!inputBindings.containsKey(input), "Duplicate binding for input: " + input);
 
     return new PreparedGraph<R>(
         graph,
-        ImmutableMap.<Name<?>, Object>builder()
+        ImmutableMap.<Input<?>, Object>builder()
           .putAll(inputBindings)
-          .put(name, value)
+          .put(input, value)
           .build());
   }
 

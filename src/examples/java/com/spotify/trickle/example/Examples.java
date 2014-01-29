@@ -5,7 +5,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.spotify.trickle.Func0;
 import com.spotify.trickle.Func1;
 import com.spotify.trickle.Graph;
-import com.spotify.trickle.Name;
+import com.spotify.trickle.Input;
 import com.spotify.trickle.Func2;
 
 import java.util.concurrent.Executor;
@@ -21,8 +21,8 @@ import static com.spotify.trickle.Trickle.call;
  */
 public class Examples {
 
-  public static final Name<String> NAME = Name.named("name");
-  public static final Name<String> GREETING = Name.named("greeting");
+  public static final Input<String> NAME = Input.named("name");
+  public static final Input<String> GREETING = Input.named("greeting");
 
   public static void helloWorld() throws Exception {
     Func1<String, String> transformName = new Func1<String, String>() {

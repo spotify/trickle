@@ -23,27 +23,27 @@ import javax.annotation.Nullable;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * Defines a named value of some specific class. Before a graph can be executed, all used names
- * must be bound to concrete values ({@link Graph#bind(Name, Object)}) or future values
- * ({@link Graph#bind(Name, com.google.common.util.concurrent.ListenableFuture)}).
+ * Defines a graph input of some specific class. Before a graph can be executed, all inputs
+ * must be bound to concrete values ({@link Graph#bind(Input, Object)}) or future values
+ * ({@link Graph#bind(Input, com.google.common.util.concurrent.ListenableFuture)}).
  *
- * @param <T> the type of values with this name
+ * @param <T> the type this input can take
  */
-public final class Name<T> implements Parameter<T> {
+public final class Input<T> implements Parameter<T> {
   private final String name;
 
-  Name(String name) {
+  Input(String name) {
     this.name = checkNotNull(name);
   }
 
   /**
-   * Factory method for a name.
+   * Factory method for an input.
    *
-   * @param name String identifier for the name. Must be unique within a single {@link Graph}
-   * @return a Name instance
+   * @param name String identifier for the input. Must be unique within a single {@link Graph}
+   * @return a Input instance
    */
-  public static <U> Name<U> named(String name) {
-    return new Name<U>(name);
+  public static <U> Input<U> named(String name) {
+    return new Input<U>(name);
   }
 
   @Override
@@ -59,13 +59,13 @@ public final class Name<T> implements Parameter<T> {
     if (obj == null || getClass() != obj.getClass()) {
       return false;
     }
-    final Name other = (Name) obj;
+    final Input other = (Input) obj;
     return Objects.equal(this.name, other.name);
   }
 
   @Override
   public String toString() {
-    return "Name{" + getName() + '}';
+    return "Input{" + getName() + '}';
   }
 
   public String getName() {

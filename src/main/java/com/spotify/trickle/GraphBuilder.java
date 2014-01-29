@@ -56,7 +56,7 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
   }
 
   GraphBuilder(Func<R> func) {
-    this("unnamed", TrickleNode.create(checkNotNull(func, "func")), ImmutableList.<Dep<?>>of(),
+    this("unnamed", TrickleNode.create(func), ImmutableList.<Dep<?>>of(),
          ImmutableList.<Graph<?>>of(), Optional.<AsyncFunction<Throwable, R>>absent());
   }
 
@@ -89,8 +89,8 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
     ImmutableList.Builder<Dep<?>> result = ImmutableList.builder();
 
     for (Object input : inputs) {
-      if (input instanceof Name) {
-        result.add(new BindingDep<Object>((Name<Object>) input));
+      if (input instanceof Input) {
+        result.add(new BindingDep<Object>((Input<Object>) input));
       } else if (input instanceof Graph) {
         result.add(new GraphDep<Object>((Graph<Object>) input));
       } else {
@@ -126,13 +126,13 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
   }
 
   @Override
-  public <P> Graph<R> bind(Name<P> name, P value) {
-    return new PreparedGraph<R>(this).bind(name, value);
+  public <P> Graph<R> bind(Input<P> input, P value) {
+    return new PreparedGraph<R>(this).bind(input, value);
   }
 
   @Override
-  public <P> Graph<R> bind(Name<P> name, ListenableFuture<P> inputFuture) {
-    return new PreparedGraph<R>(this).bind(name, inputFuture);
+  public <P> Graph<R> bind(Input<P> input, ListenableFuture<P> inputFuture) {
+    return new PreparedGraph<R>(this).bind(input, inputFuture);
   }
 
   @Override

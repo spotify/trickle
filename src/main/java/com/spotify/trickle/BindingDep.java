@@ -26,21 +26,21 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 
 /**
- * Defines a dependency on a value bound to a specific name.
+ * Defines a dependency on a value bound to a specific input.
  */
 class BindingDep<T> implements Dep<T> {
-  private final Name<T> name;
+  private final Input<T> input;
 
-  public BindingDep(Name<T> name) {
-    this.name = checkNotNull(name, "name");
+  public BindingDep(Input<T> input) {
+    this.input = checkNotNull(input, "input");
   }
 
   @Override
   public ListenableFuture<T> getFuture(final TraverseState state) {
-    final T bindingValue = state.getBinding(name);
+    final T bindingValue = state.getBinding(input);
 
     checkArgument(bindingValue != null,
-                  "Name not bound to a value for name %s", name);
+                  "Input not bound to a value for input %s", input);
 
     if (bindingValue instanceof ListenableFuture) {
       // this cast is guaranteed by the API to be safe.
@@ -60,7 +60,7 @@ class BindingDep<T> implements Dep<T> {
   private class ParameterNodeInfo implements NodeInfo {
     @Override
     public String name() {
-      return name.getName();
+      return input.getName();
     }
 
     @Override
@@ -75,16 +75,16 @@ class BindingDep<T> implements Dep<T> {
 
     @Override
     public Type type() {
-      return Type.PARAMETER;
+      return Type.INPUT;
     }
 
     @Override
     public int hashCode() {
-      return name.hashCode();
+      return input.hashCode();
     }
 
-    private Name<?> getName() {
-      return name;
+    private Input<?> getName() {
+      return input;
     }
 
     @Override
@@ -93,11 +93,11 @@ class BindingDep<T> implements Dep<T> {
         return false;
       }
 
-      // ignoring the type parameter of the name here.
+      // ignoring the type parameter of the input here.
       //noinspection unchecked
       ParameterNodeInfo other = (ParameterNodeInfo) obj;
 
-      return other.getName().equals(name);
+      return other.getName().equals(input);
     }
   }
 }

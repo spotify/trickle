@@ -5,14 +5,14 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.spotify.trickle.*;
 
-import static com.spotify.trickle.Name.named;
+import static com.spotify.trickle.Input.named;
 import static com.spotify.trickle.Trickle.call;
 
 /**
  * Example from nameless-registry; somewhat out of date.
  */
 public class Heartbeats {
-  public static final Name<Endpoint> ENDPOINT = named("endpoint");
+  public static final Input<Endpoint> ENDPOINT = named("endpoint");
 
   final long heartbeatIntervalMillis = 132;
   final Graph<Long> graph;

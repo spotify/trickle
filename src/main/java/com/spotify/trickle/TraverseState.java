@@ -28,21 +28,21 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Maps.newHashMap;
 
 class TraverseState {
-  private final Map<Name<?>, Object> bindings;
+  private final Map<Input<?>, Object> bindings;
   private final Map<Graph<?>, ListenableFuture<?>> visited = newHashMap();
   private final Executor executor;
 
-  TraverseState(Map<Name<?>, Object> bindings, Executor executor) {
+  TraverseState(Map<Input<?>, Object> bindings, Executor executor) {
     this.bindings = checkNotNull(bindings, "bindings");
     this.executor = checkNotNull(executor, "executor");
   }
 
-  <T> T getBinding(Name<T> name) {
-    checkNotNull(name, "name");
+  <T> T getBinding(Input<T> input) {
+    checkNotNull(input, "input");
 
     // this cast is fine because the API enforces it
     //noinspection unchecked
-    return (T) bindings.get(name);
+    return (T) bindings.get(input);
   }
 
   <T> ListenableFuture<T> futureForGraph(Graph<T> graph) {
@@ -83,13 +83,13 @@ class TraverseState {
     return executor;
   }
 
-  void addBindings(Map<Name<?>, Object> newBindings) {
-    Sets.SetView<Name<?>> intersection = Sets.intersection(bindings.keySet(), newBindings.keySet());
-    checkState(intersection.isEmpty(), "Duplicate binding for names: %s", intersection);
+  void addBindings(Map<Input<?>, Object> newBindings) {
+    Sets.SetView<Input<?>> intersection = Sets.intersection(bindings.keySet(), newBindings.keySet());
+    checkState(intersection.isEmpty(), "Duplicate binding for inputs: %s", intersection);
     bindings.putAll(newBindings);
   }
 
   static TraverseState empty(Executor executor) {
-    return new TraverseState(Maps.<Name<?>, Object>newHashMap(), executor);
+    return new TraverseState(Maps.<Input<?>, Object>newHashMap(), executor);
   }
 }

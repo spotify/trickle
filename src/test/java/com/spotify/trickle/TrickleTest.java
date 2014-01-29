@@ -102,10 +102,10 @@ public class TrickleTest {
       }
     };
 
-    Name<String> inputName = Name.named("theInnnput");
-    Graph<String> graph = call(node).with(inputName);
+    Input<String> input = Input.named("theInnnput");
+    Graph<String> graph = call(node).with(input);
 
-    ListenableFuture<String> future = graph.bind(inputName, "petter").run();
+    ListenableFuture<String> future = graph.bind(input, "petter").run();
     assertThat(future.get(), equalTo("hello petter!"));
   }
 
@@ -133,12 +133,12 @@ public class TrickleTest {
       }
     };
 
-    Name<String> inputName = Name.named("theInnnput");
-    Graph<String> g1 = call(greet).with(inputName).named("111");
+    Input<String> input = Input.named("theInnnput");
+    Graph<String> g1 = call(greet).with(input).named("111");
     Graph<String> g2 = call(noop).with(g1).named("222");
     Graph<Integer> g3 = call(node2).with(g2, g1).named("333");
 
-    ListenableFuture<Integer> future = g3.bind(inputName, "rouz").run();
+    ListenableFuture<Integer> future = g3.bind(input, "rouz").run();
     assertThat(future.get(), equalTo(22));
     assertThat(counter.get(), equalTo(1));
   }
@@ -167,14 +167,14 @@ public class TrickleTest {
       }
     };
 
-    Name<String> inputName = Name.named("theInnnput");
-    Graph<String> g11 = call(greet).with(inputName).named("1111");
-    Graph<String> g12 = call(greet).with(inputName).named("1112");
+    Input<String> input = Input.named("theInnnput");
+    Graph<String> g11 = call(greet).with(input).named("1111");
+    Graph<String> g12 = call(greet).with(input).named("1112");
     Graph<String> g2 = call(noop).with(g11).named("222");
     Graph<String> g3 = call(node2).with(g2, g11).named("222");
     Graph<String> g4 = call(node2).with(g3, g12).named("333");
 
-    ListenableFuture<String> future = g4.bind(inputName, "rouz").run();
+    ListenableFuture<String> future = g4.bind(input, "rouz").run();
     assertThat(future.get(), equalTo("hello rouz!hello rouz!hello rouz!"));
     assertThat(counter.get(), equalTo(2));
   }
@@ -310,7 +310,7 @@ public class TrickleTest {
       }
     };
 
-    Name<String> input = Name.named("in");
+    Input<String> input = Input.named("in");
 
     Graph<String> g1 = call(node1).with(input);
     Graph<String> g = call(node2).with(g1, input);
@@ -335,8 +335,8 @@ public class TrickleTest {
       }
     };
 
-    Name<String> input = Name.named("in");
-    Name<String> input1 = Name.named("innn");
+    Input<String> input = Input.named("in");
+    Input<String> input1 = Input.named("innn");
 
     Graph<String> g1 = call(node1).with(input);
     Graph<String> g = call(node2).with(g1, input, input1);
@@ -365,7 +365,7 @@ public class TrickleTest {
       }
     };
 
-    Name<String> input = Name.named("in");
+    Input<String> input = Input.named("in");
 
     Graph<String> g1 = call(node1).with(input);
     Graph<String> g = call(node2).with(g1, input);
@@ -393,7 +393,7 @@ public class TrickleTest {
       }
     };
 
-    Name<String> input = Name.named("in");
+    Input<String> input = Input.named("in");
 
     Graph<String> g1 = call(node1).with(input).fallback(new AsyncFunction<Throwable, String>() {
       @Override
@@ -419,13 +419,13 @@ public class TrickleTest {
         return immediateFuture(arg.length());
       }
     };
-    Name<String> inputName = Name.named("input");
+    Input<String> input = Input.named("input");
 
-    Graph<Integer> g = call(node).with(inputName);
+    Graph<Integer> g = call(node).with(input);
 
     inputFuture.set("hello");
 
-    assertThat(g.bind(inputName, inputFuture).run().get(), equalTo(5));
+    assertThat(g.bind(input, inputFuture).run().get(), equalTo(5));
   }
 
   @Test
@@ -438,11 +438,11 @@ public class TrickleTest {
         return immediateFuture(arg.length());
       }
     };
-    Name<String> inputName = Name.named("input");
+    Input<String> input = Input.named("input");
 
-    Graph<Integer> g = call(node).with(inputName);
+    Graph<Integer> g = call(node).with(input);
 
-    ListenableFuture<Integer> future = g.bind(inputName, inputFuture).run();
+    ListenableFuture<Integer> future = g.bind(input, inputFuture).run();
 
     assertThat(future.isDone(), is(false));
 

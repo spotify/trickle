@@ -28,6 +28,7 @@ import static com.spotify.trickle.Trickle.call;
  * Integration-level Trickle tests.
  */
 public class TrickleApiTest {
+  public static final String DUPLICATE_BINDING_FOR_INPUT = "Duplicate binding for input";
   @Rule
   public ExpectedException thrown = ExpectedException.none();
 
@@ -40,12 +41,12 @@ public class TrickleApiTest {
       }
     };
 
-    Name<String> input = Name.named("somethingWeirdd");
+    Input<String> input = Input.named("somethingWeirdd");
 
     Graph<String> g = call(node1).with(input);
 
     thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("Name not bound to a value");
+    thrown.expectMessage("Input not bound to a value");
     thrown.expectMessage("somethingWeirdd");
 
     g.run();
@@ -60,12 +61,12 @@ public class TrickleApiTest {
       }
     };
 
-    Name<String> input = Name.named("mein Name");
+    Input<String> input = Input.named("mein Name");
 
     Graph<String> g = call(node1).with(input);
 
     thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("Duplicate binding for name");
+    thrown.expectMessage(DUPLICATE_BINDING_FOR_INPUT);
     thrown.expectMessage("mein Name");
 
     g.bind(input, "erich").bind(input, "volker");
@@ -80,13 +81,13 @@ public class TrickleApiTest {
       }
     };
 
-    Name<String> input = Name.named("mein Name");
+    Input<String> input = Input.named("mein Name");
 
     Graph<String> g1 = call(node1).with(input).bind(input, "erich");
     Graph<String> g2 = call(node1).with(g1);
 
     thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("Duplicate binding for name");
+    thrown.expectMessage(DUPLICATE_BINDING_FOR_INPUT);
     thrown.expectMessage("mein Name");
 
     g2.bind(input, "volker").run();
@@ -107,14 +108,14 @@ public class TrickleApiTest {
       }
     };
 
-    Name<String> input = Name.named("mitt namn");
-    Name<String> input2 = Name.named("nåt");
+    Input<String> input = Input.named("mitt namn");
+    Input<String> input2 = Input.named("nåt");
 
     Graph<String> g1 = call(node1).with(input).bind(input, "erik").bind(input2, "hej");
     Graph<String> g2 = call(node1).with(input).bind(input, "folke").bind(input2, "hopp");
 
     thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("Duplicate binding for name");
+    thrown.expectMessage(DUPLICATE_BINDING_FOR_INPUT);
     thrown.expectMessage("mitt namn");
     thrown.expectMessage("nåt");
 
