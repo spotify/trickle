@@ -14,6 +14,13 @@ hard to read.
 
 # Getting Started
 
+Trickle isn't yet deployed to Maven Central, so you'll have to do the following for now:
+
+1. Clone the repository
+2. ```git checkout v0.4``` - checkout the latest stable Trickle version
+3. ```mvn install```
+4. Possibly, deploy the artifact into your own Maven repository.
+
 Include the latest version of Trickle into your project:
 
 ```
