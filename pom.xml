@@ -21,8 +21,8 @@
 
   <scm>
     <url>git@github.com:spotify/trickle.git</url>
-    <connection>scm:git:ssh://git@github.com:spotify/trickle.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com:spotify/trickle.git</developerConnection>
+    <connection>scm:git:git@github.com:spotify/trickle.git</connection>
+    <developerConnection>scm:git:git@github.com:spotify/trickle.git</developerConnection>
     <tag>HEAD</tag>
   </scm>
 
