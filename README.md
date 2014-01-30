@@ -58,10 +58,14 @@ Define the code to be executed in the nodes of your graph:
 Wire up your call graph:
 
 ```java
-  Graph<List<Track>> tracks = Trickle.call(findTracks).with(KEYWORD);
+  Graph<List<Track>> tracks = Trickle.call(findTracks).with(KEYWORD).fallback(emptyList());
   Graph<Artist> artist = Trickle.call(findArtist).with(ARTIST);
   this.output = Trickle.call(combine).with(artist, tracks);
 ```
+
+Note that the ```findTracks``` node has been given a fallback, so an empty list of tracks will 
+be used if the call to find tracks throws an exception. This way, you can get graceful degradation
+in case of partial failure.
 
 At some later stage, call the graph for some specific keyword and artist name:
 
