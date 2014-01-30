@@ -14,28 +14,21 @@ hard to read.
 
 # Getting Started
 
-Trickle isn't yet deployed to Maven Central, so you'll have to do the following for now:
-
-1. Clone the repository
-2. ```git checkout v0.4``` - checkout the latest stable Trickle version
-3. ```mvn install```
-4. Possibly, deploy the artifact into your own Maven repository.
-
 Include the latest version of Trickle into your project:
 
 ```
     <dependency>
       <groupId>com.spotify</groupId>
       <artifactId>trickle</artifactId>
-      <version>0.4</version>
+      <version>0.5</version>
     </dependency>
 ```
 
-Name the parameters to your call graph:
+Define the input parameters to your call graph:
 
 ```java
-  public static final Name<String> KEYWORD = new Name("keyword");
-  public static final Name<String> ARTIST = new Name("artist");
+  public static final Input<String> KEYWORD = new Input("keyword");
+  public static final Input<String> ARTIST = new Input("artist");
 ```
 
 Define the code to be executed in the nodes of your graph:
