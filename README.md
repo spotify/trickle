@@ -9,7 +9,7 @@ concurrency' aspects into the framework rather than mixing it in with the busine
 
 - When you are combining more than 2 asynchronous calls together, and you think the code is
 hard to read.
-- When you want to deal with when code does something in isolation from what it does.
+- When you want to separate concurrency management aspects (when code does something) from business logic (what it does).
 - When you want to use something smaller and easier to learn than frameworks like Akka and RxJava.
 
 # Getting Started
