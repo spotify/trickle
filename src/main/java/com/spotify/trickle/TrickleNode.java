@@ -44,6 +44,12 @@ abstract class TrickleNode<N> {
     if (func instanceof Func3) {
       return new TrickleNode3<Object, Object, Object, V>((Func3<Object, Object, Object, V>) func);
     }
+    if (func instanceof Func4) {
+      return new TrickleNode4<Object, Object, Object, Object, V>((Func4<Object, Object, Object, Object, V>) func);
+    }
+    if (func instanceof Func5) {
+      return new TrickleNode5<Object, Object, Object, Object, Object, V>((Func5<Object, Object, Object, Object, Object, V>) func);
+    }
 
     throw new IllegalArgumentException("unsupported func subclass: " + func.getClass());
   }
@@ -105,6 +111,36 @@ abstract class TrickleNode<N> {
       // this cast is safe, as guaranteed by the API for creating nodes
       //noinspection unchecked
       return delegate.run((A) values.get(0), (B) values.get(1), (C) values.get(2));
+    }
+  }
+
+  private static class TrickleNode4<A, B, C, D, N> extends TrickleNode<N> {
+    private final Func4<A, B, C, D, N> delegate;
+
+    public TrickleNode4(Func4<A, B, C, D, N> node) {
+      delegate = node;
+    }
+
+    @Override
+    public ListenableFuture<N> run(List<Object> values) {
+      // this cast is safe, as guaranteed by the API for creating nodes
+      //noinspection unchecked
+      return delegate.run((A) values.get(0), (B) values.get(1), (C) values.get(2), (D) values.get(3));
+    }
+  }
+
+  private static class TrickleNode5<A, B, C, D, E, N> extends TrickleNode<N> {
+    private final Func5<A, B, C, D, E, N> delegate;
+
+    public TrickleNode5(Func5<A, B, C, D, E, N> node) {
+      delegate = node;
+    }
+
+    @Override
+    public ListenableFuture<N> run(List<Object> values) {
+      // this cast is safe, as guaranteed by the API for creating nodes
+      //noinspection unchecked
+      return delegate.run((A) values.get(0), (B) values.get(1), (C) values.get(2), (D) values.get(3), (E) values.get(4));
     }
   }
 }

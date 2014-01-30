@@ -17,39 +17,98 @@
 package com.spotify.trickle;
 
 /**
- * TODO: document! This class documentation should have some examples, rationale, etc.
+ * Static methods for constructing Trickle graphs. See the documentation at
+ * <a href="https://github.com/spotify/trickle/wiki">the Trickle wiki</a> for more information.
  */
 public final class Trickle {
   private Trickle() {
     // prevent instantiation
   }
 
-  public static <R> ConfigurableGraph<R> call(Func0<R> node) {
-    return new GraphBuilder<R>(node);
+  /**
+   * Creates a graph consisting of a single node executing the supplied function.
+   */
+  public static <R> ConfigurableGraph<R> call(Func0<R> func) {
+    return new GraphBuilder<R>(func);
   }
 
-  public static <A, R> NeedsParameters1<A, R> call(Func1<A, R> node) {
-    return new GraphBuilder.GraphBuilder1<A, R>(node);
+  /**
+   * Initiates construction of a new sink node with a single parameter dependency, running the
+   * supplied function.
+   */
+  public static <A, R> NeedsParameters1<A, R> call(Func1<A, R> func) {
+    return new GraphBuilder.GraphBuilder1<A, R>(func);
   }
 
-  public static <A, B, R> NeedsParameters2<A, B, R> call(Func2<A, B, R> node) {
-    return new GraphBuilder.GraphBuilder2<A, B, R>(node);
+  /**
+   * Initiates construction of a new sink node with two parameter dependencies, running the
+   * supplied function.
+   */
+  public static <A, B, R> NeedsParameters2<A, B, R> call(Func2<A, B, R> func) {
+    return new GraphBuilder.GraphBuilder2<A, B, R>(func);
   }
 
-  public static <A, B, C, R> NeedsParameters3<A, B, C, R> call(Func3<A, B, C, R> node) {
-    return new GraphBuilder.GraphBuilder3<A, B, C, R>(node);
+  /**
+   * Initiates construction of a new sink node with three parameter dependencies, running the
+   * supplied function.
+   */
+  public static <A, B, C, R> NeedsParameters3<A, B, C, R> call(Func3<A, B, C, R> func) {
+    return new GraphBuilder.GraphBuilder3<A, B, C, R>(func);
+  }
+
+  /**
+   * Initiates construction of a new sink node with four parameter dependencies, running the
+   * supplied function.
+   */
+  public static <A, B, C, D, R> NeedsParameters4<A, B, C, D, R> call(Func4<A, B, C, D, R> func) {
+    return new GraphBuilder.GraphBuilder4<A, B, C, D, R>(func);
+  }
+
+  /**
+   * Initiates construction of a new sink node with five parameter dependencies, running the
+   * supplied function.
+   */
+  public static <A, B, C, D, E, R> NeedsParameters5<A, B, C, D, E, R> call(Func5<A, B, C, D, E, R> func) {
+    return new GraphBuilder.GraphBuilder5<A, B, C, D, E, R>(func);
   }
 
   public interface NeedsParameters1<A, R> {
+    /**
+     * Indicate where to find values for the parameters required to invoke the function in this
+     * node.
+     */
     ConfigurableGraph<R> with(Parameter<A> arg1);
   }
 
   public interface NeedsParameters2<A, B, R> {
+    /**
+     * Indicate where to find values for the parameters required to invoke the function in this
+     * node.
+     */
     ConfigurableGraph<R> with(Parameter<A> arg1, Parameter<B> arg2);
   }
 
   public interface NeedsParameters3<A, B, C, R> {
+    /**
+     * Indicate where to find values for the parameters required to invoke the function in this
+     * node.
+     */
     ConfigurableGraph<R> with(Parameter<A> arg1, Parameter<B> arg2, Parameter<C> arg3);
   }
 
+  public interface NeedsParameters4<A, B, C, D, R> {
+    /**
+     * Indicate where to find values for the parameters required to invoke the function in this
+     * node.
+     */
+    ConfigurableGraph<R> with(Parameter<A> arg1, Parameter<B> arg2, Parameter<C> arg3, Parameter<D> arg4);
+  }
+
+  public interface NeedsParameters5<A, B, C, D, E, R> {
+    /**
+     * Indicate where to find values for the parameters required to invoke the function in this
+     * node.
+     */
+    ConfigurableGraph<R> with(Parameter<A> arg1, Parameter<B> arg2, Parameter<C> arg3, Parameter<D> arg4, Parameter<E> arg5);
+  }
 }

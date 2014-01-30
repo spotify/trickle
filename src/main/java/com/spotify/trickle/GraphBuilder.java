@@ -194,7 +194,7 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
   static final class GraphBuilder1<A, R> extends GraphBuilder<R>
       implements Trickle.NeedsParameters1<A, R> {
 
-    GraphBuilder1(Func<R> func) {
+    GraphBuilder1(Func1<A, R> func) {
       super(func);
     }
 
@@ -210,7 +210,7 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
   static final class GraphBuilder2<A, B, R> extends GraphBuilder<R>
       implements Trickle.NeedsParameters2<A, B, R> {
 
-    GraphBuilder2(Func<R> func) {
+    GraphBuilder2(Func2<A, B, R> func) {
       super(func);
     }
 
@@ -223,13 +223,39 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
   static final class GraphBuilder3<A, B, C, R> extends GraphBuilder<R>
       implements Trickle.NeedsParameters3<A, B, C, R> {
 
-    GraphBuilder3(Func<R> func) {
+    GraphBuilder3(Func3<A, B, C, R> func) {
       super(func);
     }
 
     @Override
     public ConfigurableGraph<R> with(Parameter<A> arg1, Parameter<B> arg2, Parameter<C> arg3) {
       return super.with(arg1, arg2, arg3);
+    }
+  }
+
+  static final class GraphBuilder4<A, B, C, D, R> extends GraphBuilder<R>
+      implements Trickle.NeedsParameters4<A, B, C, D, R> {
+
+    GraphBuilder4(Func4<A, B, C, D, R> func) {
+      super(func);
+    }
+
+    @Override
+    public ConfigurableGraph<R> with(Parameter<A> arg1, Parameter<B> arg2, Parameter<C> arg3, Parameter<D> arg4) {
+      return super.with(arg1, arg2, arg3, arg4);
+    }
+  }
+
+  static final class GraphBuilder5<A, B, C, D, E, R> extends GraphBuilder<R>
+      implements Trickle.NeedsParameters5<A, B, C, D, E, R> {
+
+    GraphBuilder5(Func5<A, B, C, D, E, R> func) {
+      super(func);
+    }
+
+    @Override
+    public ConfigurableGraph<R> with(Parameter<A> arg1, Parameter<B> arg2, Parameter<C> arg3, Parameter<D> arg4, Parameter<E> arg5) {
+      return super.with(arg1, arg2, arg3, arg4, arg5);
     }
   }
 }

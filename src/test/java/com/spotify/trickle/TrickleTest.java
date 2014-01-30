@@ -350,6 +350,70 @@ public class TrickleTest {
   }
 
   @Test
+  public void shouldHandleFourInputParameters() throws Exception {
+    Func1<String, String> node1 = new Func1<String, String>() {
+      @Override
+      public ListenableFuture<String> run(String arg) {
+        return immediateFuture(arg + ", 1");
+      }
+    };
+    Func4<String, String, String, String, String> node2 = new Func4<String, String, String, String, String>() {
+      @Override
+      public ListenableFuture<String> run(String arg1, String arg2, String arg3, String arg4) {
+        return immediateFuture(arg1 + ", " + arg2 + ", " + arg3 + ", " + arg4 + ", 2");
+      }
+    };
+
+    Input<String> input = Input.named("in");
+    Input<String> input1 = Input.named("innn");
+    Input<String> input2 = Input.named("and in again");
+
+    Graph<String> g1 = call(node1).with(input);
+    Graph<String> g = call(node2).with(g1, input, input1, input2);
+
+    String result = g
+        .bind(input, "hey")
+        .bind(input1, "ho")
+        .bind(input2, "hum")
+        .run().get();
+
+    assertThat(result, equalTo("hey, 1, hey, ho, hum, 2"));
+  }
+
+  @Test
+  public void shouldHandleFiveInputParameters() throws Exception {
+    Func1<String, String> node1 = new Func1<String, String>() {
+      @Override
+      public ListenableFuture<String> run(String arg) {
+        return immediateFuture(arg + ", 1");
+      }
+    };
+    Func5<String, String, String, String, String, String> node2 = new Func5<String, String, String, String, String, String>() {
+      @Override
+      public ListenableFuture<String> run(String arg1, String arg2, String arg3, String arg4, String arg5) {
+        return immediateFuture(arg1 + ", " + arg2 + ", " + arg3 + ", " + arg4 + ", " + arg5 + ", 2");
+      }
+    };
+
+    Input<String> input = Input.named("in");
+    Input<String> input1 = Input.named("innn");
+    Input<String> input2 = Input.named("and in");
+    Input<String> input3 = Input.named("one more");
+
+    Graph<String> g1 = call(node1).with(input);
+    Graph<String> g = call(node2).with(g1, input, input1, input2, input3);
+
+    String result = g
+        .bind(input, "hey")
+        .bind(input1, "ho")
+        .bind(input2, "hum")
+        .bind(input3, "häpp")
+        .run().get();
+
+    assertThat(result, equalTo("hey, 1, hey, ho, hum, häpp, 2"));
+  }
+
+  @Test
   public void shouldPropagateExceptionsToResultFuture() throws Exception {
     final RuntimeException expected = new RuntimeException("expected");
     Func1<String, String> node1 = new Func1<String, String>() {
