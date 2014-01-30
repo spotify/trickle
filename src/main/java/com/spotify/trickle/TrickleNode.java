@@ -123,9 +123,11 @@ abstract class TrickleNode<N> {
 
     @Override
     public ListenableFuture<N> run(List<Object> values) {
+      //CHECKSTYLE:OFF - we don't care that these are magic numbers
       // this cast is safe, as guaranteed by the API for creating nodes
       //noinspection unchecked
       return delegate.run((A) values.get(0), (B) values.get(1), (C) values.get(2), (D) values.get(3));
+      //CHECKSTYLE:ON
     }
   }
 
@@ -138,9 +140,11 @@ abstract class TrickleNode<N> {
 
     @Override
     public ListenableFuture<N> run(List<Object> values) {
+      //CHECKSTYLE:OFF - we don't care that these are magic numbers
       // this cast is safe, as guaranteed by the API for creating nodes
       //noinspection unchecked
       return delegate.run((A) values.get(0), (B) values.get(1), (C) values.get(2), (D) values.get(3), (E) values.get(4));
+      //CHECKSTYLE:ON
     }
   }
 }
