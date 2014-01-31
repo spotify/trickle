@@ -1,7 +1,7 @@
 trickle
 =======
 
-A simple library for composing asynchronous code. The main reason for it to exist is to make it
+A small library for composing asynchronous code. The main reason for it to exist is to make it
 easier to create graphs of interconnected asynchronous calls, pushing the 'worrying about
 concurrency' aspects into the framework rather than mixing it in with the business logic.
 
@@ -27,8 +27,8 @@ Include the latest version of Trickle into your project:
 Define the input parameters to your call graph:
 
 ```java
-  public static final Input<String> KEYWORD = new Input("keyword");
-  public static final Input<String> ARTIST = new Input("artist");
+  public static final Input<String> KEYWORD = Input.named("keyword");
+  public static final Input<String> ARTIST = Input.named("artist");
 ```
 
 Define the code to be executed in the nodes of your graph:
