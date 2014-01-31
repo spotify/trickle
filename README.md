@@ -16,51 +16,50 @@ hard to read.
 
 Include the latest version of Trickle into your project:
 
-```
-    <dependency>
-      <groupId>com.spotify</groupId>
-      <artifactId>trickle</artifactId>
-      <version>0.5</version>
-    </dependency>
+```xml
+<dependency>
+  <groupId>com.spotify</groupId>
+  <artifactId>trickle</artifactId>
+  <version>0.5</version>
+</dependency>
 ```
 
 Define the input parameters to your call graph:
 
 ```java
-  public static final Input<String> KEYWORD = Input.named("keyword");
-  public static final Input<String> ARTIST = Input.named("artist");
+public static final Input<String> KEYWORD = Input.named("keyword");
+public static final Input<String> ARTIST = Input.named("artist");
 ```
 
 Define the code to be executed in the nodes of your graph:
 
 ```java
-
-  Func1<String, List<Track>> findTracks = new Func1<String, List<Track>>() {
-      @Override
-      public ListenableFuture<List<Track>> run(String keyword) {
-        return search.findTracks(keyword);
-      }
-  };
-  Func1<String, Artist> findArtist = new Func1<String, Artist>() {
-      @Override
-      public ListenableFuture<Artist> run(String artistName) {
-        return metadata.lookupArtist(artistName);
-      }
-  };
-  Func2<Artist, List<Track>, MyOutput> combine = new Func2<Artist, List<Track>, MyOutput>() {
-      @Override
-      public ListenableFuture<MyOutput> run(Artist artist, List<Track> tracks) {
-        return Futures.immediateFuture(new MyOutput(artist, tracks));
-      }
-  };
+Func1<String, List<Track>> findTracks = new Func1<String, List<Track>>() {
+  @Override
+  public ListenableFuture<List<Track>> run(String keyword) {
+    return search.findTracks(keyword);
+  }
+};
+Func1<String, Artist> findArtist = new Func1<String, Artist>() {
+  @Override
+  public ListenableFuture<Artist> run(String artistName) {
+    return metadata.lookupArtist(artistName);
+  }
+};
+Func2<Artist, List<Track>, MyOutput> combine = new Func2<Artist, List<Track>, MyOutput>() {
+  @Override
+  public ListenableFuture<MyOutput> run(Artist artist, List<Track> tracks) {
+    return Futures.immediateFuture(new MyOutput(artist, tracks));
+  }
+};
 ```
 
 Wire up your call graph:
 
 ```java
-  Graph<List<Track>> tracks = Trickle.call(findTracks).with(KEYWORD).fallback(emptyList());
-  Graph<Artist> artist = Trickle.call(findArtist).with(ARTIST);
-  this.output = Trickle.call(combine).with(artist, tracks);
+Graph<List<Track>> tracks = Trickle.call(findTracks).with(KEYWORD).fallback(emptyList());
+Graph<Artist> artist = Trickle.call(findArtist).with(ARTIST);
+this.output = Trickle.call(combine).with(artist, tracks);
 ```
 
 Note that the ```findTracks``` node has been given a fallback, so an empty list of tracks will 
@@ -70,12 +69,12 @@ in case of partial failure.
 At some later stage, call the graph for some specific keyword and artist name:
 
 ```java
-  public ListenableFuture<MyOutput> doTheThing(String keyword, String artistName) {
-    return this.output.bind(KEYWORD, keyword).bind(ARTIST, artistName).run();
-  }
+public ListenableFuture<MyOutput> doTheThing(String keyword, String artistName) {
+  return this.output.bind(KEYWORD, keyword).bind(ARTIST, artistName).run();
+}
 ```
 
-See [Examples.java](src/examples/java/com/spotify/trickle/example/Examples.java) for more examples
+See [`Examples.java`](src/examples/java/com/spotify/trickle/example/Examples.java) for more examples
 and see the wiki for more in-depth descriptions of the library.
 
 
