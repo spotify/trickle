@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.spotify</groupId>
   <artifactId>trickle</artifactId>
-  <version>0.6.0</version>
+  <version>0.6.1-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>trickle</name>
   <url>http://github.com/spotify/trickle</url>
@@ -23,7 +23,7 @@
     <url>git@github.com:spotify/trickle.git</url>
     <connection>scm:git:git@github.com:spotify/trickle.git</connection>
     <developerConnection>scm:git:git@github.com:spotify/trickle.git</developerConnection>
-    <tag>v0.6.0</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <dependencies>
