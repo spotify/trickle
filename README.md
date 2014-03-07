@@ -20,7 +20,7 @@ Include the latest version of Trickle into your project:
 <dependency>
   <groupId>com.spotify</groupId>
   <artifactId>trickle</artifactId>
-  <version>0.5</version>
+  <version>0.6.0</version>
 </dependency>
 ```
 
