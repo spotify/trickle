@@ -14,17 +14,11 @@
  * under the License.
  */
 
+/**
+ *
+ *
+ */
+@ParametersAreNonnullByDefault
 package com.spotify.trickle;
 
-import com.google.common.util.concurrent.ListenableFuture;
-
-import javax.annotation.Nullable;
-
-/**
- * Code that has a inputs of type A and B, and returns a value of type R. Side-effects such as
- * writing to a database are permitted, but authors are encouraged to keep implementations free
- * of side-effects if at all possible.
- */
-public interface Func2<A, B, R> extends Func<R> {
-  ListenableFuture<R> run(@Nullable A arg1, @Nullable B arg2);
-}
+import javax.annotation.ParametersAreNonnullByDefault;

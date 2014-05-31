@@ -76,6 +76,19 @@ public abstract class Graph<T> implements Parameter<T>, NodeInfo {
    */
   abstract ListenableFuture<T> run(TraverseState state);
 
+  /**
+   * Turns debug information on or off depending on the value of the <code>debug</code> parameter.
+   * The default is on (true). When debug information is on, information about intermediate states -
+   * results and parameter values - for each node invocation in each graph invocation will be
+   * collected and reported in case of an exception that isn't caught by a
+   * {@link ConfigurableGraph#fallback(com.google.common.util.concurrent.AsyncFunction)}
+   *
+   * @param debug pass in <code>true</code> to turn on debug information, <code>false</code> to turn
+   *              off.
+   * @return a Graph instance with the specified debug setting
+   */
+  public abstract Graph<T> debug(boolean debug);
+
   // prevent construction from outside of package
   Graph() {}
 }

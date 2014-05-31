@@ -16,25 +16,44 @@
 
 package com.spotify.trickle;
 
+import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
+import javax.annotation.Nullable;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.Lists.newLinkedList;
 import static com.google.common.collect.Maps.newHashMap;
 
+/**
+ * Defines how to traverse a {@link Graph}, ensuring that nodes are only invoked once. May
+ * optionally collect debug information about each node invocation, simplifying troubleshooting.
+ *
+ * Implementation note: all state-changing methods - those updating the {@link #visited} and
+ * {@link #callInformation} fields as well as any call to {@link #addBindings(java.util.Map)} - are
+ * run from the same thread, when graph execution is started. This class is NOT threadsafe if that
+ * should change.
+ */
 class TraverseState {
   private final Map<Input<?>, Object> bindings;
-  private final Map<Graph<?>, ListenableFuture<?>> visited = newHashMap();
   private final Executor executor;
+  private final boolean collectCallInformation;
+  private final Map<Graph<?>, ListenableFuture<?>> visited = newHashMap();
+  private final List<FutureCallInformation> callInformation = newLinkedList();
 
-  TraverseState(Map<Input<?>, Object> bindings, Executor executor) {
+  TraverseState(Map<Input<?>, Object> bindings, Executor executor, boolean collectCallInformation) {
     this.bindings = checkNotNull(bindings, "bindings");
     this.executor = checkNotNull(executor, "executor");
+    this.collectCallInformation = collectCallInformation;
   }
 
   <T> T getBinding(Input<T> input) {
@@ -83,13 +102,51 @@ class TraverseState {
     return executor;
   }
 
+  public List<FutureCallInformation> getCallInformation() {
+    return ImmutableList.copyOf(callInformation);
+  }
+
   void addBindings(Map<Input<?>, Object> newBindings) {
     Sets.SetView<Input<?>> intersection = Sets.intersection(bindings.keySet(), newBindings.keySet());
     checkState(intersection.isEmpty(), "Duplicate binding for inputs: %s", intersection);
     bindings.putAll(newBindings);
   }
 
-  static TraverseState empty(Executor executor) {
-    return new TraverseState(Maps.<Input<?>, Object>newHashMap(), executor);
+  void record(NodeInfo node, List<Dep<?>> deps, List<ListenableFuture<?>> parameterValues) {
+    checkNotNull(node, "node");
+    checkNotNull(deps, "deps");
+    checkNotNull(parameterValues, "parameterValues");
+
+    if (!collectCallInformation) {
+      return;
+    }
+
+    List<NodeInfo> parameters = Lists.transform(deps, new Function<Dep<?>, NodeInfo>() {
+      @Override
+      public NodeInfo apply(@Nullable Dep<?> input) {
+        assert input != null;
+
+        return input.getNodeInfo();
+      }
+    });
+
+    callInformation.add(new FutureCallInformation(node, parameters, parameterValues));
+  }
+
+  static TraverseState empty(Executor executor, boolean collectCallInformation) {
+    return new TraverseState(Maps.<Input<?>, Object>newHashMap(), executor, collectCallInformation);
+  }
+
+  static class FutureCallInformation {
+    final NodeInfo node;
+    final List<NodeInfo> parameters;
+    final List<ListenableFuture<?>> parameterFutures;
+
+    FutureCallInformation(NodeInfo node, List<NodeInfo> parameters,
+                          List<ListenableFuture<?>> parameterFutures) {
+      this.node = checkNotNull(node, "node");
+      this.parameters = checkNotNull(parameters, "parameters");
+      this.parameterFutures = checkNotNull(parameterFutures, "parameterFutures");
+    }
   }
 }

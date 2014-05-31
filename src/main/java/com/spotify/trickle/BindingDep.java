@@ -99,5 +99,10 @@ class BindingDep<T> implements Dep<T> {
 
       return other.getName().equals(input);
     }
+
+    @Override
+    public String toString() {
+      return input.toString();
+    }
   }
 }

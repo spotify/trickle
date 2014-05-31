@@ -16,30 +16,44 @@
 
 package com.spotify.trickle;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
+
+import org.hamcrest.CoreMatchers;
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
+import org.hamcrest.TypeSafeMatcher;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.annotation.Nullable;
+
+import static com.google.common.collect.Collections2.filter;
 import static com.google.common.util.concurrent.Futures.immediateFailedFuture;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static com.spotify.trickle.Fallbacks.always;
 import static com.spotify.trickle.Trickle.call;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.fail;
 
 /**
  * Integration-level Trickle tests.
@@ -52,6 +66,9 @@ public class TrickleTest {
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
+  private Input<String> debugInfoInput;
+  private Graph<Integer> debugInfoLength;
+  private Graph<String> debugInfoReport;
 
   @Before
   public void setUp() throws Exception {
@@ -64,6 +81,7 @@ public class TrickleTest {
       }
     };
     executorService = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
+    debugInfoInput = Input.named("weirdName");
   }
 
   @After
@@ -434,8 +452,8 @@ public class TrickleTest {
     Graph<String> g1 = call(node1).with(input);
     Graph<String> g = call(node2).with(g1, input);
 
-    thrown.expect(ExecutionException.class);
-    thrown.expectCause(equalTo(expected));
+    thrown.expect(Exception.class);
+    thrown.expectCause(withParent(expected));
 
     g.bind(input, "hey").run().get();
   }
@@ -461,14 +479,14 @@ public class TrickleTest {
 
     Graph<String> g1 = call(node1).with(input).fallback(new AsyncFunction<Throwable, String>() {
       @Override
-      public ListenableFuture<String> apply(Throwable input) throws Exception {
+      public ListenableFuture<String> apply(@Nullable Throwable ignored) throws Exception {
         throw expected;
       }
     });
     Graph<String> g = call(node2).with(g1, input);
 
-    thrown.expect(ExecutionException.class);
-    thrown.expectCause(equalTo(expected));
+    thrown.expect(Exception.class);
+    thrown.expectCause(withParent(expected));
 
     g.bind(input, "hey").run().get();
   }
@@ -513,5 +531,197 @@ public class TrickleTest {
     inputFuture.set("hey there");
 
     assertThat(future.get(), equalTo(9));
+  }
+
+  @Test
+  public void shouldReportDebugInfoOnFailure() throws Exception {
+    RuntimeException expected = new RuntimeException("expected");
+    Graph<String> g = call(failingFunction(expected)).with(setupDebugInfoGraph()).named("failure")
+        .bind(debugInfoInput, "fail me").debug(true);
+
+    thrown.expect(Exception.class);
+    thrown.expectCause(CoreMatchers.<Throwable>instanceOf(GraphExecutionException.class));
+    thrown.expectCause(withParent(expected));
+
+    g.run().get();
+  }
+
+  @Test
+  public void shouldIncludeCalledNodesInDebugInfo() throws Exception {
+    RuntimeException expected = new RuntimeException("expected");
+    Graph<String> g = call(failingFunction(expected)).with(setupDebugInfoGraph()).named("failure")
+        .bind(debugInfoInput, "fail me").debug(true);
+
+    verifyCallInfosWhenExecuted(g, debugInfoReport);
+  }
+
+  @Test
+  public void shouldUseDebugFlagOfInvokedGraph() throws Exception {
+    RuntimeException expected = new RuntimeException("expected");
+    Graph<String> succeedingGraph = setupDebugInfoGraph().debug(false);
+
+    Graph<String> g = call(failingFunction(expected)).with(succeedingGraph).named("failure")
+        .bind(debugInfoInput, "fail me").debug(true);
+
+    verifyCallInfosWhenExecuted(g, succeedingGraph);
+  }
+
+  @Test
+  public void shouldNotIncludeDebugInfoTwice() throws Exception {
+    Throwable expected = new RuntimeException("expected");
+    Graph<String> g = call(failingFunction(expected)).with(setupDebugInfoGraph()).named("failure")
+        .bind(debugInfoInput, "fail me").debug(true);
+    Graph<Integer> g1 = call(new Func1<String, Integer>() {
+      @Override
+      public ListenableFuture<Integer> run(String arg) {
+        return immediateFuture(arg.length());
+      }
+    }).with(g);
+
+    try {
+      g1.run().get();
+      fail("expected an exception");
+    }
+    catch (ExecutionException e) {
+      assertThat(e.getCause(), is(instanceOf(GraphExecutionException.class)));
+      assertThat(e.getCause().getCause(), equalTo(expected));
+    }
+  }
+
+  @Test
+  public void shouldNotReportDebugInfoIfOff() throws Exception {
+    RuntimeException expected = new RuntimeException("expected");
+    Graph<String> g = call(failingFunction(expected)).with(setupDebugInfoGraph()).named("failure")
+        .bind(debugInfoInput, "fail me").debug(false);
+
+    thrown.expect(Exception.class);
+    thrown.expectCause(not(CoreMatchers.<Throwable>instanceOf(GraphExecutionException.class)));
+    thrown.expectCause(withParent(expected));
+
+    g.run().get();
+  }
+
+  @Test
+  public void shouldSupportTurningOffDebugInfoBeforeBinding() throws Exception {
+    RuntimeException expected = new RuntimeException("expected");
+    Graph<String> g = call(failingFunction(expected)).with(setupDebugInfoGraph()).named("failure")
+        .debug(false)
+        .bind(debugInfoInput, "fail me");
+
+    thrown.expect(Exception.class);
+    thrown.expectCause(not(CoreMatchers.<Throwable>instanceOf(GraphExecutionException.class)));
+    thrown.expectCause(withParent(expected));
+
+    g.run().get();
+  }
+
+  @Test
+  public void shouldHaveDebugInfoOnByDefault() throws Exception {
+    RuntimeException expected = new RuntimeException("expected");
+    Graph<String> g = call(failingFunction(expected)).with(setupDebugInfoGraph()).named("failure")
+        .bind(debugInfoInput, "fail me");
+
+    thrown.expect(Exception.class);
+    thrown.expectCause(CoreMatchers.<Throwable>instanceOf(GraphExecutionException.class));
+    thrown.expectCause(withParent(expected));
+
+    g.run().get();
+  }
+
+  private Graph<String> setupDebugInfoGraph() {
+    Func1<String, Integer> func1 = new Func1<String, Integer>() {
+      @Override
+      public ListenableFuture<Integer> run(String arg) {
+        return immediateFuture(arg.length());
+      }
+    };
+    Func2<String, Integer, String> func2 = new Func2<String, Integer, String>() {
+      @Override
+      public ListenableFuture<String> run(String name, Integer length) {
+        return immediateFuture(String.format("Name %s is %d chars long", name, length));
+      }
+    };
+
+    debugInfoLength = call(func1).with(debugInfoInput).named("length calculation");
+    debugInfoReport = call(func2).with(debugInfoInput, debugInfoLength).named("report name and length");
+
+    return debugInfoReport;
+  }
+
+  private Func1<String, String> failingFunction(final Throwable expected) {
+    return new Func1<String, String>() {
+      @Override
+      public ListenableFuture<String> run(String arg) {
+        return immediateFailedFuture(expected);
+      }
+    };
+  }
+
+  private Matcher<? extends Throwable> withParent(final Throwable expected) {
+    return new TypeSafeMatcher<Throwable>() {
+      @Override
+      protected boolean matchesSafely(Throwable item) {
+        for (Throwable cause = item ; cause != null ; cause = cause.getCause()) {
+          if (cause.equals(expected)) {
+            return true;
+          }
+        }
+
+        return false;
+      }
+
+      @Override
+      public void describeTo(Description description) {
+        description.appendText("with parent cause " + expected);
+      }
+    };
+  }
+
+  private void verifyCallInfosWhenExecuted(Graph<String> g, Graph<String> failureNodeInput) throws InterruptedException {
+    try {
+      g.run().get();
+      fail("expected an exception");
+    }
+    catch (ExecutionException e) {
+      GraphExecutionException graphExecutionException = (GraphExecutionException) e.getCause();
+
+      List<CallInfo> calls = graphExecutionException.getCalls();
+
+      for (CallInfo call : calls) {
+        System.out
+            .println("Called '" + call.getNodeInfo() + "' with: " + call.getParameterValues());
+      }
+
+      ParameterValue<String> inputParameterValue = new ParameterValue<String>(
+          new BindingDep<String>(debugInfoInput).getNodeInfo(), "fail me");
+      ImmutableList<ParameterValue<?>> lengthParams =
+          ImmutableList.<ParameterValue<?>>of(inputParameterValue);
+      ImmutableList<ParameterValue<?>> reportParams =
+          ImmutableList.<ParameterValue<?>>of(inputParameterValue,
+                                              new ParameterValue<Integer>(debugInfoLength, 7));
+      ImmutableList<ParameterValue<?>> failureParams =
+          ImmutableList.<ParameterValue<?>>of(new ParameterValue<String>(failureNodeInput, "Name fail me is 7 chars long"));
+
+      assertThat(filter(calls, new CallInfoMatcher(debugInfoLength, lengthParams)).isEmpty(), is(false));
+      assertThat(filter(calls, new CallInfoMatcher(debugInfoReport, reportParams)).isEmpty(), is(false));
+      assertThat(filter(calls, new CallInfoMatcher(g, failureParams)).isEmpty(), is(false));
+    }
+  }
+
+  private class CallInfoMatcher implements Predicate<CallInfo> {
+
+    private final Graph<?> nodeInfo;
+    private final ImmutableList<ParameterValue<?>> parameters;
+
+    public CallInfoMatcher(Graph<?> nodeInfo, ImmutableList<ParameterValue<?>> parameters) {
+      this.nodeInfo = nodeInfo;
+      this.parameters = parameters;
+    }
+
+    @Override
+    public boolean apply(CallInfo input) {
+      return input.getNodeInfo().name().equals(nodeInfo.name()) &&
+          input.getParameterValues().equals(parameters);
+    }
   }
 }

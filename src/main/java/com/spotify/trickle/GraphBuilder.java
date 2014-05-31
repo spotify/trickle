@@ -26,6 +26,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.util.List;
 import java.util.concurrent.Executor;
 
+import javax.annotation.Nullable;
+
 import static com.google.common.base.Optional.of;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.ImmutableList.copyOf;
@@ -43,37 +45,46 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
 
   private final Optional<AsyncFunction<Throwable, R>> fallback;
 
+  private final boolean debug;
+
   GraphBuilder(String name,
                TrickleNode<R> node,
                ImmutableList<Dep<?>> inputs,
                ImmutableList<Graph<?>> predecessors,
-               Optional<AsyncFunction<Throwable, R>> fallback) {
+               Optional<AsyncFunction<Throwable, R>> fallback,
+               boolean debug) {
     this.name = checkNotNull(name, "name");
     this.node = checkNotNull(node, "node");
     this.inputs = checkNotNull(inputs, "inputs");
     this.predecessors = checkNotNull(predecessors, "predecessors");
     this.fallback = checkNotNull(fallback, "fallback");
+    this.debug = debug;
   }
 
   GraphBuilder(Func<R> func) {
     this("unnamed", TrickleNode.create(func), ImmutableList.<Dep<?>>of(),
-         ImmutableList.<Graph<?>>of(), Optional.<AsyncFunction<Throwable, R>>absent());
+         ImmutableList.<Graph<?>>of(), Optional.<AsyncFunction<Throwable, R>>absent(), true);
   }
 
   private GraphBuilder<R> withName(String name) {
-    return new GraphBuilder<R>(name, node, inputs, predecessors, fallback);
+    return new GraphBuilder<R>(name, node, inputs, predecessors, fallback, debug);
   }
 
   private GraphBuilder<R> withInputs(ImmutableList<Dep<?>> newInputs) {
-    return new GraphBuilder<R>(name, node, with(inputs, newInputs), predecessors, fallback);
+    return new GraphBuilder<R>(name, node, with(inputs, newInputs), predecessors, fallback, debug);
   }
 
   private GraphBuilder<R> withPredecessors(ImmutableList<Graph<?>> newPredecessors) {
-    return new GraphBuilder<R>(name, node, inputs, with(predecessors, newPredecessors), fallback);
+    return new GraphBuilder<R>(name, node, inputs, with(predecessors, newPredecessors), fallback,
+                               debug);
   }
 
   private GraphBuilder<R> withFallback(AsyncFunction<Throwable, R> fallback) {
-    return new GraphBuilder<R>(name, node, inputs, predecessors, of(fallback));
+    return new GraphBuilder<R>(name, node, inputs, predecessors, of(fallback), debug);
+  }
+
+  private GraphBuilder<R> withDebug(boolean debug) {
+    return new GraphBuilder<R>(name, node, inputs, predecessors, fallback, debug);
   }
 
   static <E> ImmutableList<E> with(ImmutableList<E> list, List<E> elements) {
@@ -126,28 +137,33 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
   }
 
   @Override
+  public Graph<R> debug(boolean debug) {
+    return withDebug(debug);
+  }
+
+  @Override
   public <P> Graph<R> bind(Input<P> input, P value) {
-    return new PreparedGraph<R>(this).bind(input, value);
+    return new PreparedGraph<R>(this, debug).bind(input, value);
   }
 
   @Override
   public <P> Graph<R> bind(Input<P> input, ListenableFuture<P> inputFuture) {
-    return new PreparedGraph<R>(this).bind(input, inputFuture);
+    return new PreparedGraph<R>(this, debug).bind(input, inputFuture);
   }
 
   @Override
   public ListenableFuture<R> run() {
-    return new PreparedGraph<R>(this).run();
+    return new PreparedGraph<R>(this, debug).run();
   }
 
   @Override
   public ListenableFuture<R> run(Executor executor) {
-    return new PreparedGraph<R>(this).run(executor);
+    return new PreparedGraph<R>(this, debug).run(executor);
   }
 
   @Override
   ListenableFuture<R> run(TraverseState state) {
-    return new PreparedGraph<R>(this).run(state);
+    return new PreparedGraph<R>(this, debug).run(state);
   }
 
   TrickleNode<R> getNode() {
@@ -175,7 +191,9 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
   public List<? extends NodeInfo> arguments() {
     return Lists.transform(inputs, new Function<Dep<?>, NodeInfo>() {
       @Override
-      public NodeInfo apply(Dep<?> input) {
+      public NodeInfo apply(@Nullable Dep<?> input) {
+        assert input != null;
+
         return input.getNodeInfo();
       }
     });

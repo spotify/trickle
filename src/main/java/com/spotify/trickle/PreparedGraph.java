@@ -17,6 +17,7 @@
 package com.spotify.trickle;
 
 import com.google.common.base.Function;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -24,14 +25,17 @@ import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.FutureFallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.Uninterruptibles;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.builder;
+import static com.google.common.collect.Lists.newLinkedList;
 import static com.google.common.util.concurrent.Futures.allAsList;
 import static com.google.common.util.concurrent.Futures.immediateFailedFuture;
 import static com.google.common.util.concurrent.MoreExecutors.sameThreadExecutor;
@@ -49,14 +53,17 @@ final class PreparedGraph<R> extends Graph<R> {
 
   private final GraphBuilder<R> graph;
   private final ImmutableMap<Input<?>, Object> inputBindings;
+  private final boolean debug;
 
-  private PreparedGraph(GraphBuilder<R> graph, ImmutableMap<Input<?>, Object> inputBindings) {
+  private PreparedGraph(GraphBuilder<R> graph, ImmutableMap<Input<?>, Object> inputBindings,
+                        boolean debug) {
     this.graph = checkNotNull(graph, "graph");
     this.inputBindings = checkNotNull(inputBindings, "inputBindings");
+    this.debug = debug;
   }
 
-  PreparedGraph(GraphBuilder<R> graph) {
-    this(graph, ImmutableMap.<Input<?>, Object>of());
+  PreparedGraph(GraphBuilder<R> graph, boolean debug) {
+    this(graph, ImmutableMap.<Input<?>, Object>of(), debug);
   }
 
   @Override
@@ -70,13 +77,18 @@ final class PreparedGraph<R> extends Graph<R> {
   }
 
   @Override
+  public Graph<R> debug(boolean debug) {
+    return new PreparedGraph<R>(graph, inputBindings, debug);
+  }
+
+  @Override
   public ListenableFuture<R> run() {
     return run(sameThreadExecutor());
   }
 
   @Override
   public ListenableFuture<R> run(Executor executor) {
-    return run(TraverseState.empty(executor));
+    return run(TraverseState.empty(executor, debug));
   }
 
   @Override
@@ -96,6 +108,8 @@ final class PreparedGraph<R> extends Graph<R> {
 
     final ImmutableList<ListenableFuture<?>> futures = futuresListBuilder.build();
 
+    state.record(this, graph.getInputs(), futures);
+
     // future for signaling propagation - needs to include predecessors, too
     List<ListenableFuture<?>> mustHappenBefore = Lists.newArrayList(futures);
     for (Graph<?> predecessor : graph.getPredecessors()) {
@@ -114,13 +128,44 @@ final class PreparedGraph<R> extends Graph<R> {
           try {
             return graph.getFallback().get().apply(t);
           } catch (Exception e) {
-            return immediateFailedFuture(e);
+            return wrapException(e, state);
           }
         }
 
-        return immediateFailedFuture(t);
+        return wrapException(t, state);
       }
     });
+  }
+
+  private ListenableFuture<R> wrapException(Throwable t, TraverseState state) {
+    return immediateFailedFuture(debug ? new GraphExecutionException(t, callInfos(state)) : t);
+  }
+
+  private List<CallInfo> callInfos(TraverseState state) {
+    ImmutableList.Builder<CallInfo> builder = builder();
+
+    for (TraverseState.FutureCallInformation futureCallInformation : state.getCallInformation()) {
+      List<ParameterValue<?>>
+          parameterValues =
+          asParameterValues(futureCallInformation.parameters,
+                            futureCallInformation.parameterFutures);
+
+      builder.add(new CallInfo(futureCallInformation.node, parameterValues));
+    }
+
+    return builder.build();
+  }
+
+  private List<ParameterValue<?>> asParameterValues(List<NodeInfo> parameters,
+                                                    List<ListenableFuture<?>> parameterFutures) {
+    List<ParameterValue<?>> result = newLinkedList();
+
+    for (int i = 0 ; i < parameters.size() ; i++) {
+      result.add(new ParameterValue<Object>(parameters.get(i),
+                                            inputValueFromFuture(parameterFutures.get(i))));
+    }
+
+    return result;
   }
 
   private ListenableFuture<R> nodeFuture(final ImmutableList<ListenableFuture<?>> values,
@@ -131,15 +176,28 @@ final class PreparedGraph<R> extends Graph<R> {
         new AsyncFunction<List<Object>, R>() {
           @Override
           public ListenableFuture<R> apply(List<Object> input) {
-            return graph.getNode().run(Lists.transform(values, new Function<ListenableFuture<?>, Object>() {
-              @Override
-              public Object apply(ListenableFuture<?> input) {
-                return Futures.getUnchecked(input);
-              }
-            }));
+            // the input future is not going to be null unless there's a Trickle bug, so we should
+            // be fine with an NPE in that case
+            //noinspection NullableProblems
+            return graph.getNode().run(
+                Lists.transform(values, new Function<ListenableFuture<?>, Object>() {
+                  @Override
+                  public Object apply(ListenableFuture<?> input) {
+                    return inputValueFromFuture(input);
+                  }
+                }));
           }
         },
         executor);
+  }
+
+  private Object inputValueFromFuture(ListenableFuture<?> input) {
+    try {
+      return Uninterruptibles.getUninterruptibly(input);
+    } catch (ExecutionException e) {
+      Throwables.propagateIfInstanceOf(e.getCause(), GraphExecutionException.class);
+      throw Throwables.propagate(e);
+    }
   }
 
   private PreparedGraph<R> addToInputs(Input<?> input, Object value) {
@@ -150,7 +208,7 @@ final class PreparedGraph<R> extends Graph<R> {
         ImmutableMap.<Input<?>, Object>builder()
           .putAll(inputBindings)
           .put(input, value)
-          .build());
+          .build(), debug);
   }
 
   @Override
@@ -171,5 +229,10 @@ final class PreparedGraph<R> extends Graph<R> {
   @Override
   public Type type() {
     return graph.type();
+  }
+
+  @Override
+  public String toString() {
+    return graph.name();
   }
 }
