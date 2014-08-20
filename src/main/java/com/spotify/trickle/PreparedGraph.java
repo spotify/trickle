@@ -137,6 +137,13 @@ final class PreparedGraph<R> extends Graph<R> {
     });
   }
 
+  // TODO: this code is broken if not all graphs have been completed, as it'll wait uninterruptibly.
+  // A better way would be:
+  // - break this stuff out into a separate class/es (NoopExceptionWrapper/GraphExecutionExceptionWrapper)
+  // - make the GEEWrapper able to check if a call has been made or not; this could be as simple as checking
+  //   that all predecessor futures are completed, which should be basically equivalent.
+  // - report the current call separately from others
+  // - change callInformation to 'issuedCalls' or something similar that is more descriptive
   private ListenableFuture<R> wrapException(Throwable t, TraverseState state) {
     return immediateFailedFuture(debug ? new GraphExecutionException(t, callInfos(state)) : t);
   }

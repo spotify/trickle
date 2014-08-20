@@ -34,6 +34,10 @@ public class ParameterValue<T> {
     this.value = value;
   }
 
+  public NodeInfo getParameter() {
+    return parameter;
+  }
+
   public T getValue() {
     return value;
   }

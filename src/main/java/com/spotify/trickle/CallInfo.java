@@ -77,9 +77,22 @@ public class CallInfo {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
-        .add("nodeInfo", nodeInfo)
-        .add("parameterValues", parameterValues)
-        .toString();
+    StringBuilder builder = new StringBuilder("call ");
+    builder.append(nodeInfo);
+    builder.append("(");
+
+    boolean first = true;
+    for (ParameterValue<?> parameterValue : parameterValues) {
+      if (!first) {
+        builder.append(", ");
+      }
+      first = false;
+      builder.append(parameterValue.getParameter());
+      builder.append("=");
+      builder.append(parameterValue.getValue());
+    }
+    builder.append(")");
+
+    return builder.toString();
   }
 }

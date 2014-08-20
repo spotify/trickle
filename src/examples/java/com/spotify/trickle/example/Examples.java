@@ -2,16 +2,22 @@ package com.spotify.trickle.example;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
+import com.spotify.trickle.CallInfo;
 import com.spotify.trickle.Func0;
 import com.spotify.trickle.Func1;
 import com.spotify.trickle.Graph;
+import com.spotify.trickle.GraphExecutionException;
 import com.spotify.trickle.Input;
 import com.spotify.trickle.Func2;
 
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import javax.annotation.Nullable;
+
+import static com.google.common.util.concurrent.Futures.immediateFailedFuture;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static com.spotify.trickle.Fallbacks.always;
 import static com.spotify.trickle.Trickle.call;
@@ -47,7 +53,7 @@ public class Examples {
 
     Graph<String> g1 = call(transformName).with(NAME).named("nameTransformer");
     Graph<String> g2 = call(transformGreeting).with(GREETING);
-    Graph<String> g3 = call(combine).with(g1, g2).named("combiner");
+    Graph<String> g3 = call(combine).with(g2, g1).named("combiner");
 
     String s = g3
         .bind(NAME, "world")
@@ -161,6 +167,39 @@ public class Examples {
   }
 
 
+  public static class TroubleShooting {
+    private final Graph<Integer> graph;
+
+    public TroubleShooting() {
+      Func1<String, String> step1 = new Func1<String, String>() {
+        @Override
+        public ListenableFuture<String> run(@Nullable String arg) {
+          return immediateFuture("arg was: " + arg);
+        }
+      };
+      Func1<String, String> step2 = new Func1<String, String>() {
+        @Override
+        public ListenableFuture<String> run(@Nullable String arg) {
+          return immediateFailedFuture(new NullPointerException("expected failure"));
+        }
+      };
+      Func2<String, String, Integer> step3 = new Func2<String, String, Integer>() {
+        @Override
+        public ListenableFuture<Integer> run(String arg1, String arg2) {
+          return immediateFuture(arg1.length() + arg2.length());
+        }
+      };
+
+      Graph<String> g1 = call(step1).with(NAME).named("step 1");
+      Graph<String> g2 = call(step2).with(NAME).named("step 2");
+      graph = call(step3).with(g1, g2);
+    }
+
+    public ListenableFuture<Integer> calculate(String input) {
+      return graph.bind(NAME, input).run();
+    }
+  }
+
   public static void main(String[] args) throws Exception {
     System.out.println("Hello world:\n-------");
     helloWorld();
@@ -176,5 +215,22 @@ public class Examples {
     System.out.println(fallbackAndExecutor.greet("igor").get());
 
     executor.shutdown();
+
+    TroubleShooting troubleShooting = new TroubleShooting();
+    System.out.println("\nTroubleshooting:\n-------");
+
+    try {
+      troubleShooting.calculate("hey").get();
+    }
+    catch (ExecutionException ee) {
+      GraphExecutionException e = (GraphExecutionException) ee.getCause();
+      System.out.println("Stack trace: ");
+      e.printStackTrace(System.out);
+      System.out.println("Information about calls:");
+      for (CallInfo callInfo : e.getCalls()) {
+        System.out.println("  " + callInfo);
+      }
+
+    }
   }
 }
