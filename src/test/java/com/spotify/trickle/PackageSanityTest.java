@@ -18,8 +18,11 @@ package com.spotify.trickle;
 
 import com.google.common.testing.AbstractPackageSanityTests;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
+
 import org.junit.Before;
 
+import java.util.Collections;
 import java.util.List;
 
 public class PackageSanityTest extends AbstractPackageSanityTests {
@@ -45,8 +48,17 @@ public class PackageSanityTest extends AbstractPackageSanityTests {
       }
     });
     final GraphBuilder<?> graphBuilder = new GraphBuilder<Object>(node0);
+    final NodeInfo nodeInfo = new GraphExceptionWrapperTest.TestNodeInfo("hi",
+                                                                         Collections.<NodeInfo>emptyList());
+    final NodeInfo nodeInfo2 = new GraphExceptionWrapperTest.TestNodeInfo("hey",
+                                                                         Collections.<NodeInfo>emptyList());
+
     setDefault(Graph.class, graphBuilder);
     setDefault(GraphBuilder.class, graphBuilder);
+    setDefault(TraverseState.class, TraverseState.empty(MoreExecutors.sameThreadExecutor(), false));
+    setDefault(TraverseState.FutureCallInformation.class, TraverseState.NO_INFO);
+    setDefault(CallInfo.class, new CallInfo(graphBuilder, Collections.<ParameterValue<?>>emptyList()));
+    setDistinctValues(ParameterValue.class, new ParameterValue<Object>(nodeInfo, null), new ParameterValue<Object>(nodeInfo2, null));
 
     super.setUp();
   }

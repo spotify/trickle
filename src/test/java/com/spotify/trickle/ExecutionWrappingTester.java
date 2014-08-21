@@ -34,7 +34,7 @@ import static com.spotify.trickle.Trickle.call;
 /**
  * TODO: document!
  */
-public class ExecutionWrappingTest {
+public class ExecutionWrappingTester {
 
   private final Random rnd =  new SecureRandom();
   private final Input<String> input = Input.named("hi");
@@ -44,9 +44,9 @@ public class ExecutionWrappingTest {
   @Test
   public void shouldWorkWellForSequence() throws Exception {
 
-    Graph<String> step1 = call(singleInput()).with(input).named("step1");
-    Graph<String> step2 = call(singleInput()).with(step1).named("step2");
-    Graph<String> step3 = call(singleInput()).with(step2).named("step3");
+    Graph<String> step1 = call(singleInput("step1")).with(input).named("step1");
+    Graph<String> step2 = call(singleInput("step2")).with(step1).named("step2");
+    Graph<String> step3 = call(singleInput("step3")).with(step2).named("step3");
 
     step3.bind(input, "hey").run().get();
   }
@@ -54,72 +54,77 @@ public class ExecutionWrappingTest {
   @Test
   public void shouldWorkWellForFanOutFanIn() throws Exception {
 
-    //       input
-    //        step1
-    //   step2a     step2b
-    //   step3a     step3b
-    //        step4
+    //             input
+    //              step1
+    //      step2a           step2b
+    //  step3aa step3ab   step3ba step3bb
+    //      step4a           step4b
+    //              step5
 
-    Graph<String> step1 = call(singleInput()).with(input).named("step1");
-    Graph<String> step2a = call(singleInput()).with(step1).named("step2a");
-    Graph<String> step2b = call(singleInput()).with(step1).named("step2b");
-    Graph<String> step3a = call(singleInput()).with(step2a).named("step3a");
-    Graph<String> step3b = call(singleInput()).with(step2b).named("step3b");
-    Graph<String> step4 = call(twoInputs()).with(step3a, step3b).named("step4");
+    Graph<String> step1 = call(singleInput("step1")).with(input).named("step1");
+    Graph<String> step2a = call(singleInput("step2a")).with(step1).named("step2a");
+    Graph<String> step2b = call(singleInput("step2b")).with(step1).named("step2b");
+    Graph<String> step3aa = call(singleInput("step3aa")).with(step2a).named("step3aa");
+    Graph<String> step3ab = call(singleInput("step3ab")).with(step2a).named("step3ab");
+    Graph<String> step3ba = call(singleInput("step3ba")).with(step2b).named("step3ba");
+    Graph<String> step3bb = call(singleInput("step3bb")).with(step2b).named("step3bb");
+    Graph<String> step4a = call(twoInputs("step4a")).with(step3aa, step3ab).named("step4a");
+    Graph<String> step4b = call(twoInputs("step4b")).with(step3ba, step3bb).named("step4b");
+    Graph<String> step5 = call(twoInputs("step5")).with(step4a, step4b).named("step5");
 
-    step4.bind(input, "hey").run().get();
+    step5.bind(input, "hey").run().get();
   }
 
-  private Func1<String, String> singleInput() {
+  private Func1<String, String> singleInput(final String name) {
     return new Func1<String, String>() {
       @Override
       public ListenableFuture<String> run(@Nullable final String arg) {
         return executorService.submit(new Callable<String>() {
           @Override
           public String call() throws Exception {
-            System.out.println("call " + arg);
+            System.out.println("call " + name + "(" + arg + ")");
             try {
               Thread.sleep(rnd.nextInt(40));
-              System.out.println("slept " + arg);
+              System.out.println("slept " + name);
 
-              if (rnd.nextInt(100) < 40) {
-                System.out.println("failed " + arg);
-                throw new RuntimeException("failed!");
+              if (rnd.nextInt(100) < 30) {
+                System.out.println("failed " + name);
+                throw new RuntimeException(name + " failed!");
               }
             } catch (InterruptedException e) {
               throw new RuntimeException("interrupted", e);
             }
 
-            System.out.println("done " + arg);
-            return arg + " - ok";
+            System.out.println("done " + name);
+            return name;
           }
         });
       }
     };
   }
 
-  private Func2<String, String, String> twoInputs() {
+  private Func2<String, String, String> twoInputs(final String name) {
     return new Func2<String, String, String>() {
       @Override
       public ListenableFuture<String> run(@Nullable final String arg1, @Nullable final String arg2) {
         return executorService.submit(new Callable<String>() {
           @Override
           public String call() throws Exception {
-            System.out.println("call " + arg1 + ", " + arg2);
+            System.out.println("call " + name + "(" + arg1 + ", " + arg2 + ")");
             try {
               Thread.sleep(rnd.nextInt(40));
-              System.out.println("slept " + arg1 + ", " + arg2);
+              System.out.println("slept " + name);
 
               if (rnd.nextInt(100) < 40) {
-                System.out.println("failed " + arg1 + ", " + arg2);
-                throw new RuntimeException("failed!");
+                System.out.println("failed " + name);
+                throw new RuntimeException(name + " failed!");
               }
             } catch (InterruptedException e) {
               throw new RuntimeException("interrupted", e);
             }
 
-            System.out.println("done " + arg1 + ", " + arg2);
-            return arg1 + ", " + arg2 + " - ok";
+            System.out.println("done " + name);
+            return name;
           }
         });
       }

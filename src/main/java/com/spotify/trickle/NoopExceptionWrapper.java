@@ -16,26 +16,21 @@
 
 package com.spotify.trickle;
 
-import com.google.common.collect.ImmutableList;
-
-import java.util.List;
-
-import javax.annotation.Nullable;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * Exception type used to wrap any exception that happens when a graph is executed in debug mode.
- * The {@link #getCalls()} method can be used to retrieve information about which calls had been
- * made leading up to the exception.
+ * TODO: document!
  */
-public class GraphExecutionException extends RuntimeException {
-  private final List<CallInfo> calls;
+public class NoopExceptionWrapper implements ExceptionWrapper {
 
-  public GraphExecutionException(@Nullable Throwable cause, CallInfo currentCall, List<CallInfo> calls) {
-    super(currentCall.toString(), cause);
-    this.calls = ImmutableList.copyOf(calls);
-  }
+  @Override
+  public Throwable wrapException(Throwable t,
+                                 TraverseState.FutureCallInformation currentCall,
+                                 TraverseState traverseState) {
+    checkNotNull(t);
+    checkNotNull(currentCall);
+    checkNotNull(traverseState);
 
-  public List<CallInfo> getCalls() {
-    return calls;
+    return t;
   }
 }

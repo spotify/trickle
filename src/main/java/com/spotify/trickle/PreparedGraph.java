@@ -35,7 +35,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.builder;
-import static com.google.common.collect.Lists.newLinkedList;
 import static com.google.common.util.concurrent.Futures.allAsList;
 import static com.google.common.util.concurrent.Futures.immediateFailedFuture;
 import static com.google.common.util.concurrent.MoreExecutors.sameThreadExecutor;
@@ -108,7 +107,7 @@ final class PreparedGraph<R> extends Graph<R> {
 
     final ImmutableList<ListenableFuture<?>> futures = futuresListBuilder.build();
 
-    state.record(this, graph.getInputs(), futures);
+    final TraverseState.FutureCallInformation currentCall = state.record(this, futures);
 
     // future for signaling propagation - needs to include predecessors, too
     List<ListenableFuture<?>> mustHappenBefore = Lists.newArrayList(futures);
@@ -128,11 +127,11 @@ final class PreparedGraph<R> extends Graph<R> {
           try {
             return graph.getFallback().get().apply(t);
           } catch (Exception e) {
-            return wrapException(e, state);
+            return wrapException(e, currentCall, state);
           }
         }
 
-        return wrapException(t, state);
+        return wrapException(t, currentCall, state);
       }
     });
   }
@@ -144,35 +143,13 @@ final class PreparedGraph<R> extends Graph<R> {
   //   that all predecessor futures are completed, which should be basically equivalent.
   // - report the current call separately from others
   // - change callInformation to 'issuedCalls' or something similar that is more descriptive
-  private ListenableFuture<R> wrapException(Throwable t, TraverseState state) {
-    return immediateFailedFuture(debug ? new GraphExecutionException(t, callInfos(state)) : t);
-  }
+  private ListenableFuture<R> wrapException(Throwable t,
+                                            TraverseState.FutureCallInformation currentCall,
+                                            TraverseState state) {
+    // TODO: consider newing this up somewhere else or creating some utility method for this
+    ExceptionWrapper wrapper = debug ? new GraphExceptionWrapper() : new NoopExceptionWrapper();
 
-  private List<CallInfo> callInfos(TraverseState state) {
-    ImmutableList.Builder<CallInfo> builder = builder();
-
-    for (TraverseState.FutureCallInformation futureCallInformation : state.getCallInformation()) {
-      List<ParameterValue<?>>
-          parameterValues =
-          asParameterValues(futureCallInformation.parameters,
-                            futureCallInformation.parameterFutures);
-
-      builder.add(new CallInfo(futureCallInformation.node, parameterValues));
-    }
-
-    return builder.build();
-  }
-
-  private List<ParameterValue<?>> asParameterValues(List<NodeInfo> parameters,
-                                                    List<ListenableFuture<?>> parameterFutures) {
-    List<ParameterValue<?>> result = newLinkedList();
-
-    for (int i = 0 ; i < parameters.size() ; i++) {
-      result.add(new ParameterValue<Object>(parameters.get(i),
-                                            inputValueFromFuture(parameterFutures.get(i))));
-    }
-
-    return result;
+    return immediateFailedFuture(wrapper.wrapException(t, currentCall, state));
   }
 
   private ListenableFuture<R> nodeFuture(final ImmutableList<ListenableFuture<?>> values,
