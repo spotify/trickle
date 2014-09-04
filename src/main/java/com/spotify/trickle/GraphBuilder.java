@@ -63,7 +63,7 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
 
   GraphBuilder(Func<R> func) {
     this("unnamed", TrickleNode.create(func), ImmutableList.<Dep<?>>of(),
-         ImmutableList.<Graph<?>>of(), Optional.<AsyncFunction<Throwable, R>>absent(), true);
+         ImmutableList.<Graph<?>>of(), Optional.<AsyncFunction<Throwable, R>>absent(), false);
   }
 
   private GraphBuilder<R> withName(String name) {

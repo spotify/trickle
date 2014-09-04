@@ -16,21 +16,41 @@
 
 package com.spotify.trickle;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import java.util.List;
 
-/**
- * TODO: document!
- */
-public class NoopExceptionWrapper implements ExceptionWrapper {
+import static java.util.Collections.emptyList;
+
+class FakeNodeInfo implements NodeInfo {
+  private final String name;
+  private final List<? extends NodeInfo> arguments;
+
+  FakeNodeInfo(String name, List<? extends NodeInfo> arguments) {
+    this.name = name;
+    this.arguments = arguments;
+  }
 
   @Override
-  public Throwable wrapException(Throwable t,
-                                 TraverseState.FutureCallInformation currentCall,
-                                 TraverseState traverseState) {
-    checkNotNull(t);
-    checkNotNull(currentCall);
-    checkNotNull(traverseState);
+  public String name() {
+    return name;
+  }
 
-    return t;
+  @Override
+  public List<? extends NodeInfo> arguments() {
+    return arguments;
+  }
+
+  @Override
+  public Iterable<? extends NodeInfo> predecessors() {
+    return emptyList();
+  }
+
+  @Override
+  public Type type() {
+    return Type.NODE;
+  }
+
+  @Override
+  public String toString() {
+    return name;
   }
 }

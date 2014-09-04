@@ -147,7 +147,7 @@ final class PreparedGraph<R> extends Graph<R> {
                                             TraverseState.FutureCallInformation currentCall,
                                             TraverseState state) {
     // TODO: consider newing this up somewhere else or creating some utility method for this
-    ExceptionWrapper wrapper = debug ? new GraphExceptionWrapper() : new NoopExceptionWrapper();
+    ExceptionWrapper wrapper = new GraphExceptionWrapper();
 
     return immediateFailedFuture(wrapper.wrapException(t, currentCall, state));
   }

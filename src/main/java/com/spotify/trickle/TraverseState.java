@@ -21,7 +21,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListenableFuture;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
@@ -113,11 +112,12 @@ class TraverseState {
     checkNotNull(node, "node");
     checkNotNull(parameterValues, "parameterValues");
 
+    FutureCallInformation futureCallInformation = new FutureCallInformation(node, parameterValues);
+
     if (!collectCallInformation) {
-      return NO_INFO;
+      return futureCallInformation;
     }
 
-    FutureCallInformation futureCallInformation = new FutureCallInformation(node, parameterValues);
     calls.add(futureCallInformation);
 
     return futureCallInformation;
@@ -126,31 +126,6 @@ class TraverseState {
   static TraverseState empty(Executor executor, boolean collectCallInformation) {
     return new TraverseState(Maps.<Input<?>, Object>newHashMap(), executor, collectCallInformation);
   }
-
-  static final FutureCallInformation NO_INFO = new FutureCallInformation(
-      new NodeInfo() {
-        @Override
-        public String name() {
-          throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public List<? extends NodeInfo> arguments() {
-          throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Iterable<? extends NodeInfo> predecessors() {
-          throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Type type() {
-          throw new UnsupportedOperationException();
-        }
-      },
-      Collections.<ListenableFuture<?>>emptyList()
-  );
 
   static class FutureCallInformation {
     final NodeInfo node;

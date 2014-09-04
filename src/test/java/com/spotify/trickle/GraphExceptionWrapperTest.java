@@ -64,11 +64,11 @@ public class GraphExceptionWrapperTest {
     traverseState = new TraverseState(emptyMap, MoreExecutors.sameThreadExecutor(), true);
 
     List<? extends NodeInfo> currentNodeParameters = ImmutableList.of(
-        new TestNodeInfo("arg1", Collections .<NodeInfo>emptyList()),
-        new TestNodeInfo("argument 2", Collections .<NodeInfo>emptyList())
+        new FakeNodeInfo("arg1", Collections .<NodeInfo>emptyList()),
+        new FakeNodeInfo("argument 2", Collections .<NodeInfo>emptyList())
         );
 
-    currentNodeInfo = new TestNodeInfo("the node", currentNodeParameters);
+    currentNodeInfo = new FakeNodeInfo("the node", currentNodeParameters);
     currentNodeValues = ImmutableList.<ListenableFuture<?>>of(
         immediateFuture("value 1"),
         immediateFuture("andra värdet")
@@ -108,11 +108,11 @@ public class GraphExceptionWrapperTest {
 
   @Test
   public void shouldIncludeCompletedCallsInInfo() throws Exception {
-    TestNodeInfo node1 = new TestNodeInfo("completed 1", NO_ARGS);
-    TestNodeInfo node2 = new TestNodeInfo("completed 2",
+    FakeNodeInfo node1 = new FakeNodeInfo("completed 1", NO_ARGS);
+    FakeNodeInfo node2 = new FakeNodeInfo("completed 2",
                                          ImmutableList.<NodeInfo>of(
-                                             new TestNodeInfo("param 1", NO_ARGS),
-                                             new TestNodeInfo("param 2", NO_ARGS)
+                                             new FakeNodeInfo("param 1", NO_ARGS),
+                                             new FakeNodeInfo("param 2", NO_ARGS)
                                          ));
     traverseState.record(node1, NO_VALUES);
     traverseState.record(node2, asFutures("value 1", "value 2"));
@@ -148,10 +148,10 @@ public class GraphExceptionWrapperTest {
 
   @Test
   public void shouldNotIncludeIncompleteCallsInInfo() throws Exception {
-    TestNodeInfo node1 = new TestNodeInfo("completed 1", NO_ARGS);
-    TestNodeInfo node2 = new TestNodeInfo("incomplete 2",
+    FakeNodeInfo node1 = new FakeNodeInfo("completed 1", NO_ARGS);
+    FakeNodeInfo node2 = new FakeNodeInfo("incomplete 2",
                                           ImmutableList.<NodeInfo>of(
-                                              new TestNodeInfo("param 1", NO_ARGS)
+                                              new FakeNodeInfo("param 1", NO_ARGS)
                                           ));
     SettableFuture<?> future = SettableFuture.create();
 
@@ -175,38 +175,4 @@ public class GraphExceptionWrapperTest {
     assertThat(found2, is(false));
   }
 
-  static class TestNodeInfo implements NodeInfo {
-    private final String name;
-    private final List<? extends NodeInfo> arguments;
-
-    TestNodeInfo(String name, List<? extends NodeInfo> arguments) {
-      this.name = name;
-      this.arguments = arguments;
-    }
-
-    @Override
-    public String name() {
-      return name;
-    }
-
-    @Override
-    public List<? extends NodeInfo> arguments() {
-      return arguments;
-    }
-
-    @Override
-    public Iterable<? extends NodeInfo> predecessors() {
-      return emptyList();
-    }
-
-    @Override
-    public Type type() {
-      return Type.NODE;
-    }
-
-    @Override
-    public String toString() {
-      return name;
-    }
-  }
 }
