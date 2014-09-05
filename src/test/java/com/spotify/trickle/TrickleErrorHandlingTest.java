@@ -66,8 +66,9 @@ public class TrickleErrorHandlingTest {
   @Test
   public void shouldReportFailingNodeWithDebugOff() throws Exception {
     RuntimeException expected = new RuntimeException("expected");
-    Graph<String> g = call(failingFunction(expected)).with(setupDebugInfoGraph()).named("the node that fails")
-        .bind(debugInfoInput, "fail me").debug(false);
+    Graph<String> g =
+        call(failingFunction(expected)).with(setupDebugInfoGraph()).named("the node that fails")
+            .bind(debugInfoInput, "fail me").debug(false);
 
     thrown.expectMessage("the node that fails");
     thrown.expectMessage(INPUT_TO_FAILING_NODE);
@@ -78,8 +79,9 @@ public class TrickleErrorHandlingTest {
   @Test
   public void shouldReportFailingNodeWithDebugOn() throws Exception {
     RuntimeException expected = new RuntimeException("expected");
-    Graph<String> g = call(failingFunction(expected)).with(setupDebugInfoGraph()).named("the node that fails")
-        .bind(debugInfoInput, "fail me").debug(true);
+    Graph<String> g =
+        call(failingFunction(expected)).with(setupDebugInfoGraph()).named("the node that fails")
+            .bind(debugInfoInput, "fail me").debug(true);
 
     thrown.expectMessage("the node that fails");
     thrown.expectMessage(INPUT_TO_FAILING_NODE);
@@ -136,8 +138,8 @@ public class TrickleErrorHandlingTest {
         .bind(debugInfoInput, "fail me").debug(true);
     Graph<Integer> g1 = call(new Func1<String, Integer>() {
       @Override
-      public ListenableFuture<Integer> run(String arg) {
-        return immediateFuture(arg.length());
+      public ListenableFuture<Integer> run(@Nullable String arg) {
+        return immediateFuture(arg == null ? 0 : arg.length());
       }
     }).with(g);
 
@@ -182,13 +184,13 @@ public class TrickleErrorHandlingTest {
   private Graph<String> setupDebugInfoGraph() {
     Func1<String, Integer> func1 = new Func1<String, Integer>() {
       @Override
-      public ListenableFuture<Integer> run(String arg) {
-        return immediateFuture(arg.length());
+      public ListenableFuture<Integer> run(@Nullable String arg) {
+        return immediateFuture(arg == null ? 0 : arg.length());
       }
     };
     Func2<String, Integer, String> func2 = new Func2<String, Integer, String>() {
       @Override
-      public ListenableFuture<String> run(String name, Integer length) {
+      public ListenableFuture<String> run(@Nullable String name, @Nullable Integer length) {
         return immediateFuture(String.format("Name %s is %d chars long", name, length));
       }
     };
@@ -202,7 +204,7 @@ public class TrickleErrorHandlingTest {
   private Func1<String, String> failingFunction(final Throwable expected) {
     return new Func1<String, String>() {
       @Override
-      public ListenableFuture<String> run(String arg) {
+      public ListenableFuture<String> run(@Nullable String arg) {
         return immediateFailedFuture(expected);
       }
     };
@@ -228,7 +230,8 @@ public class TrickleErrorHandlingTest {
     );
   }
 
-  private void verifyCallInfos(Graph<String> g, Set<ComparableCallInfo> expectedCallInfos) throws InterruptedException {
+  private void verifyCallInfos(Graph<String> g, Set<ComparableCallInfo> expectedCallInfos)
+      throws InterruptedException {
     try {
       g.run().get();
       fail("expected an exception");
@@ -301,7 +304,7 @@ public class TrickleErrorHandlingTest {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@Nullable Object obj) {
       if (this == obj) {
         return true;
       }

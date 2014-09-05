@@ -16,7 +16,7 @@
 
 package com.spotify.trickle;
 
-import com.google.common.base.Objects;
+import java.util.Objects;
 
 import javax.annotation.Nullable;
 
@@ -42,40 +42,29 @@ public class ParameterValue<T> {
     return value;
   }
 
-  @SuppressWarnings("RedundantIfStatement")
   @Override
-  public boolean equals(@Nullable Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-
-    ParameterValue that = (ParameterValue) o;
-
-    if (!parameter.equals(that.parameter)) {
-      return false;
-    }
-    if (value != null ? !value.equals(that.value) : that.value != null) {
-      return false;
-    }
-
-    return true;
+  public int hashCode() {
+    return Objects.hash(parameter, value);
   }
 
   @Override
-  public int hashCode() {
-    int result = parameter.hashCode();
-    result = 31 * result + (value != null ? value.hashCode() : 0);
-    return result;
+  public boolean equals(@Nullable Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    final ParameterValue other = (ParameterValue) obj;
+    return Objects.equals(this.parameter, other.parameter) && Objects
+        .equals(this.value, other.value);
   }
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
-        .add("parameter", parameter)
-        .add("value", value)
-        .toString();
+    return "ParameterValue{" +
+           "parameter=" + parameter +
+           ", value=" + value +
+           '}';
   }
 }

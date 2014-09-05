@@ -38,6 +38,7 @@ import static com.google.common.collect.ImmutableList.builder;
 import static com.google.common.util.concurrent.Futures.allAsList;
 import static com.google.common.util.concurrent.Futures.immediateFailedFuture;
 import static com.google.common.util.concurrent.MoreExecutors.sameThreadExecutor;
+import static com.spotify.trickle.GraphExceptionWrapper.wrapException;
 
 /**
  * A decorator class for Graph that holds bound values for input names thus making
@@ -127,26 +128,13 @@ final class PreparedGraph<R> extends Graph<R> {
           try {
             return graph.getFallback().get().apply(t);
           } catch (Exception e) {
-            return wrapException(e, currentCall, state);
+            return immediateFailedFuture(wrapException(e, currentCall, state));
           }
         }
 
-        return wrapException(t, currentCall, state);
+        return immediateFailedFuture(wrapException(t, currentCall, state));
       }
     });
-  }
-
-  // TODO: this code is broken if not all graphs have been completed, as it'll wait uninterruptibly.
-  // A better way would be:
-  // - break this stuff out into a separate class/es (NoopExceptionWrapper/GraphExecutionExceptionWrapper)
-  // - make the GEEWrapper able to check if a call has been made or not; this could be as simple as checking
-  //   that all predecessor futures are completed, which should be basically equivalent.
-  // - report the current call separately from others
-  // - change callInformation to 'issuedCalls' or something similar that is more descriptive
-  private ListenableFuture<R> wrapException(Throwable t,
-                                            TraverseState.FutureCallInformation currentCall,
-                                            TraverseState state) {
-    return immediateFailedFuture(GraphExceptionWrapper.wrapException(t, currentCall, state));
   }
 
   private ListenableFuture<R> nodeFuture(final ImmutableList<ListenableFuture<?>> values,

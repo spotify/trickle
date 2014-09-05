@@ -130,18 +130,6 @@ public class GraphExceptionWrapperTest {
 
     assertThat(found1, is(true));
     assertThat(found2, is(true));
-
-    // TODO: verify individual calls?
-  }
-
-  private List<ListenableFuture<?>> asFutures(String... values) {
-    return Lists.transform(Arrays.asList(values), new Function<String, ListenableFuture<?>>() {
-      @Nullable
-      @Override
-      public ListenableFuture<?> apply(@Nullable String input) {
-        return immediateFuture(input);
-      }
-    });
   }
 
   @Test
@@ -173,4 +161,14 @@ public class GraphExceptionWrapperTest {
     assertThat(found2, is(false));
   }
 
+
+  private List<ListenableFuture<?>> asFutures(String... values) {
+    return Lists.transform(Arrays.asList(values), new Function<String, ListenableFuture<?>>() {
+      @Nullable
+      @Override
+      public ListenableFuture<?> apply(@Nullable String input) {
+        return immediateFuture(input);
+      }
+    });
+  }
 }

@@ -56,9 +56,9 @@ final class GraphExceptionWrapper {
   }
 
   private static CallInfo asCallInfo(TraverseState.FutureCallInformation futureCallInformation) {
-    return new CallInfo(futureCallInformation.node,
-                        asParameterValues(futureCallInformation.node.arguments(),
-                                          futureCallInformation.parameterFutures));
+    return new CallInfo(futureCallInformation.getNode(),
+                        asParameterValues(futureCallInformation.getNode().arguments(),
+                                          futureCallInformation.getParameterFutures()));
   }
 
   private static List<ParameterValue<?>> asParameterValues(List<? extends NodeInfo> parameters,

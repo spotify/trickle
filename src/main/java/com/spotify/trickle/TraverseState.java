@@ -128,8 +128,8 @@ class TraverseState {
   }
 
   static class FutureCallInformation {
-    final NodeInfo node;
-    final List<ListenableFuture<?>> parameterFutures;
+    private final NodeInfo node;
+    private final List<ListenableFuture<?>> parameterFutures;
 
     FutureCallInformation(NodeInfo node, List<ListenableFuture<?>> parameterFutures) {
       this.node = checkNotNull(node, "node");
@@ -144,6 +144,14 @@ class TraverseState {
       }
 
       return true;
+    }
+
+    public NodeInfo getNode() {
+      return node;
+    }
+
+    public List<ListenableFuture<?>> getParameterFutures() {
+      return parameterFutures;
     }
   }
 }
