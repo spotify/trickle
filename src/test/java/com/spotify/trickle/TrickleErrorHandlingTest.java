@@ -21,8 +21,11 @@ import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 
+import org.hamcrest.CoreMatchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -179,6 +182,30 @@ public class TrickleErrorHandlingTest {
         .bind(debugInfoInput, "fail me");
 
     verifyCallInfos(g, ImmutableSet.<ComparableCallInfo>of());
+  }
+
+  @Test
+  public void shouldNotBlockOnUnterminatedInputFuture() throws Exception {
+    Input<String> nonTerminating = Input.named("nonTerminating");
+    Input<String> failing = Input.named("failing");
+
+    RuntimeException expected = new RuntimeException("expected");
+
+    SettableFuture<String> nonFuture = SettableFuture.create();
+    ListenableFuture<String> failFuture = immediateFailedFuture(expected);
+
+    Func2<String, String, String> func = new Func2<String, String, String>() {
+      @Override
+      public ListenableFuture<String> run(@Nullable String arg1, @Nullable String arg2) {
+        return immediateFuture(arg1 + arg2);
+      }
+    };
+
+    Graph<String> g = call(func).with(nonTerminating, failing);
+
+    thrown.expect(hasAncestor(expected));
+
+    g.bind(failing, failFuture).bind(nonTerminating, nonFuture).run().get();
   }
 
   private Graph<String> setupDebugInfoGraph() {

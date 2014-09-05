@@ -24,7 +24,9 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -33,8 +35,10 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import static com.google.common.util.concurrent.Futures.immediateFailedFuture;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static com.spotify.trickle.GraphExceptionWrapper.wrapException;
+import static com.spotify.trickle.Util.hasAncestor;
 import static java.util.Collections.emptyList;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -53,6 +57,9 @@ public class GraphExceptionWrapperTest {
 
   NodeInfo currentNodeInfo;
   List<ListenableFuture<?>> currentNodeValues;
+
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
   @Before
   public void setUp() throws Exception {
@@ -161,6 +168,54 @@ public class GraphExceptionWrapperTest {
     assertThat(found2, is(false));
   }
 
+  @Test
+  public void shouldReportIncompleteInputs() throws Exception {
+    ListenableFuture<Object> element = SettableFuture.create();
+    List<ListenableFuture<?>> parameterValues = ImmutableList.of(
+        immediateFuture("hi"),
+        element
+    );
+
+    currentCall = new TraverseState.FutureCallInformation(currentNodeInfo, parameterValues);
+
+    String message = wrapException(t, currentCall, traverseState).getMessage();
+
+    assertThat(message, containsString("NOT TERMINATED FUTURE"));
+  }
+
+  @Test
+  public void shouldThrowForFailedInputs() throws Exception {
+    RuntimeException inputException = new RuntimeException("failing input");
+    List<ListenableFuture<?>> parameterValues = ImmutableList.of(
+        immediateFailedFuture(inputException),
+        immediateFuture("hi")
+    );
+
+    currentCall = new TraverseState.FutureCallInformation(currentNodeInfo, parameterValues);
+
+    thrown.expect(hasAncestor(inputException));
+
+    wrapException(t, currentCall, traverseState).getMessage();
+ }
+
+  @Test
+  public void shouldRetainGraphExecutionExceptions() throws Exception {
+    CallInfo currentCallInfo = new CallInfo(currentNodeInfo, ImmutableList.<ParameterValue<?>>of());
+    List<CallInfo> previousCalls = ImmutableList.of();
+
+    Exception inputException = new GraphExecutionException(null, currentCallInfo, previousCalls);
+
+    List<ListenableFuture<?>> parameterValues = ImmutableList.of(
+        immediateFailedFuture(inputException),
+        immediateFuture("hi")
+    );
+
+    currentCall = new TraverseState.FutureCallInformation(currentNodeInfo, parameterValues);
+
+    thrown.expect(is(inputException));
+
+    wrapException(t, currentCall, traverseState).getMessage();
+ }
 
   private List<ListenableFuture<?>> asFutures(String... values) {
     return Lists.transform(Arrays.asList(values), new Function<String, ListenableFuture<?>>() {

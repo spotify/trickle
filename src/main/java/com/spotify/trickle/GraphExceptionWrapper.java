@@ -18,11 +18,11 @@ package com.spotify.trickle;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.Uninterruptibles;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 import static com.google.common.collect.ImmutableList.builder;
 import static com.google.common.collect.Lists.newLinkedList;
@@ -74,11 +74,16 @@ final class GraphExceptionWrapper {
   }
 
   private static Object inputValueFromFuture(ListenableFuture<?> input) {
-    try {
-      return Uninterruptibles.getUninterruptibly(input);
-    } catch (ExecutionException e) {
-      Throwables.propagateIfInstanceOf(e.getCause(), GraphExecutionException.class);
-      throw Throwables.propagate(e);
+    if (input.isDone()) {
+      try {
+        return Futures.getUnchecked(input);
+      } catch (UncheckedExecutionException e) {
+        Throwables.propagateIfInstanceOf(e.getCause(), GraphExecutionException.class);
+        throw e;
+      }
+    }
+    else {
+      return "NOT TERMINATED FUTURE";
     }
   }
 }
