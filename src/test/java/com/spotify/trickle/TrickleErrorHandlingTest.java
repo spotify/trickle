@@ -18,7 +18,6 @@ package com.spotify.trickle;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -35,6 +34,7 @@ import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nullable;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.util.concurrent.Futures.immediateFailedFuture;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static com.spotify.trickle.Trickle.call;
@@ -42,7 +42,6 @@ import static com.spotify.trickle.Util.hasAncestor;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
@@ -116,7 +115,7 @@ public class TrickleErrorHandlingTest {
     Graph<String> g = call(failingFunction(expected)).with(setupDebugInfoGraph()).named("failure")
         .bind(debugInfoInput, "fail me").debug(true);
 
-    verifyCallInfosWhenExecuted(g, debugInfoReport);
+    verifyCallInfos(g, expectedCallInfos(g, debugInfoReport));
   }
 
   @Test
@@ -127,7 +126,7 @@ public class TrickleErrorHandlingTest {
     Graph<String> g = call(failingFunction(expected)).with(succeedingGraph).named("failure")
         .bind(debugInfoInput, "fail me").debug(true);
 
-    verifyCallInfosWhenExecuted(g, succeedingGraph);
+    verifyCallInfos(g, expectedCallInfos(g, succeedingGraph));
   }
 
   @Test
@@ -158,8 +157,7 @@ public class TrickleErrorHandlingTest {
     Graph<String> g = call(failingFunction(expected)).with(setupDebugInfoGraph()).named("failure")
         .bind(debugInfoInput, "fail me").debug(false);
 
-
-    verifyNoCallInfosWhenExecuted(g);
+    verifyCallInfos(g, ImmutableSet.<ComparableCallInfo>of());
   }
 
   @Test
@@ -169,7 +167,7 @@ public class TrickleErrorHandlingTest {
         .debug(false)
         .bind(debugInfoInput, "fail me");
 
-    verifyNoCallInfosWhenExecuted(g);
+    verifyCallInfos(g, ImmutableSet.<ComparableCallInfo>of());
   }
 
   @Test
@@ -178,7 +176,7 @@ public class TrickleErrorHandlingTest {
     Graph<String> g = call(failingFunction(expected)).with(setupDebugInfoGraph()).named("failure")
         .bind(debugInfoInput, "fail me");
 
-    verifyNoCallInfosWhenExecuted(g);
+    verifyCallInfos(g, ImmutableSet.<ComparableCallInfo>of());
   }
 
   private Graph<String> setupDebugInfoGraph() {
@@ -210,36 +208,24 @@ public class TrickleErrorHandlingTest {
     };
   }
 
-  private void verifyCallInfosWhenExecuted(Graph<String> g, Graph<String> failureNodeInput) throws InterruptedException {
-    Set<ComparableCallInfo> expectedCallInfos = ImmutableSet.of(
-        new ComparableCallInfo(debugInfoLength.name(), ImmutableList.of(debugInfoInput.getName()),
-                               ImmutableList.of("fail me")
+  private Set<ComparableCallInfo> expectedCallInfos(Graph<String> g,
+                                                    Graph<String> failureNodeInput) {
+    return ImmutableSet.of(
+        new ComparableCallInfo(debugInfoLength.name(),
+                               newArrayList(debugInfoInput.getName()),
+                               newArrayList("fail me")
         ),
 
-        new ComparableCallInfo(debugInfoReport.name(), ImmutableList.of(debugInfoInput.getName(), debugInfoLength.name()),
-                               ImmutableList.of("fail me", "7")
+        new ComparableCallInfo(debugInfoReport.name(),
+                               newArrayList(debugInfoInput.getName(), debugInfoLength.name()),
+                               newArrayList("fail me", "7")
         ),
 
-        new ComparableCallInfo(g.name(), ImmutableList.of(failureNodeInput.name()),
-                               ImmutableList.of("Name fail me is 7 chars long")
+        new ComparableCallInfo(g.name(),
+                               newArrayList(failureNodeInput.name()),
+                               newArrayList("Name fail me is 7 chars long")
         )
-        );
-
-    //      ParameterValue<String> inputParameterValue = new ParameterValue<String>(
-//          new BindingDep<String>(debugInfoInput).getNodeInfo(), "fail me");
-//      ImmutableList<ParameterValue<?>> lengthParams =
-//          ImmutableList.<ParameterValue<?>>of(inputParameterValue);
-//      ImmutableList<ParameterValue<?>> reportParams =
-//          ImmutableList.<ParameterValue<?>>of(inputParameterValue,
-//                                              new ParameterValue<Integer>(debugInfoLength, 7));
-//      ImmutableList<ParameterValue<?>> failureParams =
-//          ImmutableList.<ParameterValue<?>>of(new ParameterValue<String>(failureNodeInput, "Name fail me is 7 chars long"));
-//
-//      assertThat(filter(calls, new CallInfoMatcher(debugInfoLength, lengthParams)).isEmpty(), is(false));
-//      assertThat(filter(calls, new CallInfoMatcher(debugInfoReport, reportParams)).isEmpty(), is(false));
-//      assertThat(filter(calls, new CallInfoMatcher(g, failureParams)).isEmpty(), is(false));
-
-    verifyCallInfos(g, expectedCallInfos);
+    );
   }
 
   private void verifyCallInfos(Graph<String> g, Set<ComparableCallInfo> expectedCallInfos) throws InterruptedException {
@@ -296,11 +282,6 @@ public class TrickleErrorHandlingTest {
   }
 
 
-  private void verifyNoCallInfosWhenExecuted(Graph<String> g)
-      throws InterruptedException, ExecutionException {
-
-    verifyCallInfos(g, ImmutableSet.<ComparableCallInfo>of());
-  }
 
   private static class ComparableCallInfo {
     final String nodeName;

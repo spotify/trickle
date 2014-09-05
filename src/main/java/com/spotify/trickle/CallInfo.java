@@ -16,10 +16,10 @@
 
 package com.spotify.trickle;
 
-import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 
 import java.util.List;
+import java.util.Objects;
 
 import javax.annotation.Nullable;
 
@@ -46,33 +46,22 @@ public class CallInfo {
     return parameterValues;
   }
 
-  @SuppressWarnings("RedundantIfStatement")
   @Override
-  public boolean equals(@Nullable Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-
-    CallInfo callInfo = (CallInfo) o;
-
-    if (!nodeInfo.equals(callInfo.nodeInfo)) {
-      return false;
-    }
-    if (!parameterValues.equals(callInfo.parameterValues)) {
-      return false;
-    }
-
-    return true;
+  public int hashCode() {
+    return Objects.hash(nodeInfo, parameterValues);
   }
 
   @Override
-  public int hashCode() {
-    int result = nodeInfo.hashCode();
-    result = 31 * result + parameterValues.hashCode();
-    return result;
+  public boolean equals(@Nullable Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    final CallInfo other = (CallInfo) obj;
+    return Objects.equals(this.nodeInfo, other.nodeInfo) && Objects
+        .equals(this.parameterValues, other.parameterValues);
   }
 
   @Override

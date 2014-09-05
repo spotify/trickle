@@ -28,18 +28,22 @@ import static com.google.common.collect.ImmutableList.builder;
 import static com.google.common.collect.Lists.newLinkedList;
 
 /**
- * TODO: document!
+ * Wraps exceptions that happen during graph execution, providing information meant to aid
+ * troubleshooting.
  */
-public class GraphExceptionWrapper implements ExceptionWrapper {
+final class GraphExceptionWrapper {
 
-  @Override
-  public Throwable wrapException(Throwable t,
-                                 TraverseState.FutureCallInformation currentCall,
-                                 TraverseState traverseState) {
+  private GraphExceptionWrapper() {
+    // prevent instantiation
+  }
+
+  public static Throwable wrapException(Throwable t,
+                                        TraverseState.FutureCallInformation currentCall,
+                                        TraverseState traverseState) {
     return new GraphExecutionException(t, asCallInfo(currentCall), callInfos(traverseState));
   }
 
-  private List<CallInfo> callInfos(TraverseState state) {
+  private static List<CallInfo> callInfos(TraverseState state) {
     ImmutableList.Builder<CallInfo> builder = builder();
 
     for (TraverseState.FutureCallInformation futureCallInformation : state.getCalls()) {
@@ -51,17 +55,14 @@ public class GraphExceptionWrapper implements ExceptionWrapper {
     return builder.build();
   }
 
-  private CallInfo asCallInfo(TraverseState.FutureCallInformation futureCallInformation) {
-    List<ParameterValue<?>>
-        parameterValues =
-        asParameterValues(futureCallInformation.node.arguments(),
-                          futureCallInformation.parameterFutures);
-
-    return new CallInfo(futureCallInformation.node, parameterValues);
+  private static CallInfo asCallInfo(TraverseState.FutureCallInformation futureCallInformation) {
+    return new CallInfo(futureCallInformation.node,
+                        asParameterValues(futureCallInformation.node.arguments(),
+                                          futureCallInformation.parameterFutures));
   }
 
-  private List<ParameterValue<?>> asParameterValues(List<? extends NodeInfo> parameters,
-                                                    List<ListenableFuture<?>> parameterFutures) {
+  private static List<ParameterValue<?>> asParameterValues(List<? extends NodeInfo> parameters,
+                                                           List<ListenableFuture<?>> parameterFutures) {
     List<ParameterValue<?>> result = newLinkedList();
 
     for (int i = 0 ; i < parameters.size() ; i++) {
@@ -72,7 +73,7 @@ public class GraphExceptionWrapper implements ExceptionWrapper {
     return result;
   }
 
-  private Object inputValueFromFuture(ListenableFuture<?> input) {
+  private static Object inputValueFromFuture(ListenableFuture<?> input) {
     try {
       return Uninterruptibles.getUninterruptibly(input);
     } catch (ExecutionException e) {

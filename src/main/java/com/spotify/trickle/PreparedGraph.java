@@ -146,10 +146,7 @@ final class PreparedGraph<R> extends Graph<R> {
   private ListenableFuture<R> wrapException(Throwable t,
                                             TraverseState.FutureCallInformation currentCall,
                                             TraverseState state) {
-    // TODO: consider newing this up somewhere else or creating some utility method for this
-    ExceptionWrapper wrapper = new GraphExceptionWrapper();
-
-    return immediateFailedFuture(wrapper.wrapException(t, currentCall, state));
+    return immediateFailedFuture(GraphExceptionWrapper.wrapException(t, currentCall, state));
   }
 
   private ListenableFuture<R> nodeFuture(final ImmutableList<ListenableFuture<?>> values,

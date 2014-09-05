@@ -48,7 +48,7 @@ public class ExecutionWrappingTester {
     Graph<String> step2 = call(singleInput("step2")).with(step1).named("step2");
     Graph<String> step3 = call(singleInput("step3")).with(step2).named("step3");
 
-    step3.bind(input, "hey").run().get();
+    step3.bind(input, "hey").debug(true).run().get();
   }
 
   @Test

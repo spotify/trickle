@@ -34,19 +34,19 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 import static com.google.common.util.concurrent.Futures.immediateFuture;
+import static com.spotify.trickle.GraphExceptionWrapper.wrapException;
 import static java.util.Collections.emptyList;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 
 @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
 public class GraphExceptionWrapperTest {
 
   private static final List<NodeInfo> NO_ARGS = Collections.emptyList();
   private static final List<ListenableFuture<?>> NO_VALUES = emptyList();
-  GraphExceptionWrapper wrapper;
+
   Throwable t;
   TraverseState traverseState;
   TraverseState.FutureCallInformation currentCall;
@@ -56,8 +56,6 @@ public class GraphExceptionWrapperTest {
 
   @Before
   public void setUp() throws Exception {
-    wrapper = new GraphExceptionWrapper();
-
     t = new RuntimeException("the original problem");
 
     Map<Input<?>, Object> emptyMap = Collections.emptyMap();
@@ -66,7 +64,7 @@ public class GraphExceptionWrapperTest {
     List<? extends NodeInfo> currentNodeParameters = ImmutableList.of(
         new FakeNodeInfo("arg1", Collections .<NodeInfo>emptyList()),
         new FakeNodeInfo("argument 2", Collections .<NodeInfo>emptyList())
-        );
+    );
 
     currentNodeInfo = new FakeNodeInfo("the node", currentNodeParameters);
     currentNodeValues = ImmutableList.<ListenableFuture<?>>of(
@@ -78,19 +76,19 @@ public class GraphExceptionWrapperTest {
 
   @Test
   public void shouldHaveOriginalExceptionAsCause() throws Exception {
-    assertThat(wrapper.wrapException(t, currentCall, traverseState).getCause(), equalTo(t));
+    assertThat(wrapException(t, currentCall, traverseState).getCause(), equalTo(t));
   }
 
   @Test
   public void shouldIncludeCurrentNodeInMessage() throws Exception {
-    String message = wrapper.wrapException(t, currentCall, traverseState).getMessage();
+    String message = wrapException(t, currentCall, traverseState).getMessage();
 
     assertThat(message, containsString(currentNodeInfo.name()));
   }
 
   @Test
   public void shouldIncludeCurrentNodeParametersInMessage() throws Exception {
-    String message = wrapper.wrapException(t, currentCall, traverseState).getMessage();
+    String message = wrapException(t, currentCall, traverseState).getMessage();
 
     for (NodeInfo parameter : currentNodeInfo.arguments()) {
       assertThat(message, containsString(parameter.name()));
@@ -99,7 +97,7 @@ public class GraphExceptionWrapperTest {
 
   @Test
   public void shouldIncludeCurrentNodeValuesInMessage() throws Exception {
-    String message = wrapper.wrapException(t, currentCall, traverseState).getMessage();
+    String message = wrapException(t, currentCall, traverseState).getMessage();
 
     for (ListenableFuture<?> value : currentNodeValues) {
       assertThat(message, containsString(value.get().toString()));
@@ -110,15 +108,15 @@ public class GraphExceptionWrapperTest {
   public void shouldIncludeCompletedCallsInInfo() throws Exception {
     FakeNodeInfo node1 = new FakeNodeInfo("completed 1", NO_ARGS);
     FakeNodeInfo node2 = new FakeNodeInfo("completed 2",
-                                         ImmutableList.<NodeInfo>of(
-                                             new FakeNodeInfo("param 1", NO_ARGS),
-                                             new FakeNodeInfo("param 2", NO_ARGS)
-                                         ));
+                                          ImmutableList.<NodeInfo>of(
+                                              new FakeNodeInfo("param 1", NO_ARGS),
+                                              new FakeNodeInfo("param 2", NO_ARGS)
+                                          ));
     traverseState.record(node1, NO_VALUES);
     traverseState.record(node2, asFutures("value 1", "value 2"));
 
     GraphExecutionException e =
-        (GraphExecutionException) wrapper.wrapException(t, currentCall, traverseState);
+        (GraphExecutionException) wrapException(t, currentCall, traverseState);
 
     assertThat(e.getCalls().size(), equalTo(2));
 
@@ -159,7 +157,7 @@ public class GraphExceptionWrapperTest {
     traverseState.record(node2, ImmutableList.<ListenableFuture<?>>of(future));
 
     GraphExecutionException e =
-        (GraphExecutionException) wrapper.wrapException(t, currentCall, traverseState);
+        (GraphExecutionException) wrapException(t, currentCall, traverseState);
 
     assertThat(e.getCalls().size(), equalTo(1));
 
