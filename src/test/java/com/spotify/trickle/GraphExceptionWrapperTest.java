@@ -198,25 +198,6 @@ public class GraphExceptionWrapperTest {
     wrapException(t, currentCall, traverseState).getMessage();
  }
 
-  @Test
-  public void shouldRetainGraphExecutionExceptions() throws Exception {
-    CallInfo currentCallInfo = new CallInfo(currentNodeInfo, ImmutableList.<ParameterValue<?>>of());
-    List<CallInfo> previousCalls = ImmutableList.of();
-
-    Exception inputException = new GraphExecutionException(null, currentCallInfo, previousCalls);
-
-    List<ListenableFuture<?>> parameterValues = ImmutableList.of(
-        immediateFailedFuture(inputException),
-        immediateFuture("hi")
-    );
-
-    currentCall = new TraverseState.FutureCallInformation(currentNodeInfo, parameterValues);
-
-    thrown.expect(is(inputException));
-
-    wrapException(t, currentCall, traverseState).getMessage();
- }
-
   private List<ListenableFuture<?>> asFutures(String... values) {
     return Lists.transform(Arrays.asList(values), new Function<String, ListenableFuture<?>>() {
       @Nullable

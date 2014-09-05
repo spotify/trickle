@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.AsyncFunction;
-import com.google.common.util.concurrent.FutureFallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.Uninterruptibles;
@@ -36,9 +35,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.builder;
 import static com.google.common.util.concurrent.Futures.allAsList;
-import static com.google.common.util.concurrent.Futures.immediateFailedFuture;
 import static com.google.common.util.concurrent.MoreExecutors.sameThreadExecutor;
-import static com.spotify.trickle.GraphExceptionWrapper.wrapException;
 
 /**
  * A decorator class for Graph that holds bound values for input names thus making
@@ -121,20 +118,8 @@ final class PreparedGraph<R> extends Graph<R> {
     checkArgument(graph.getInputs().size() == futures.size(), "sanity check result: insane");
 
     return Futures.withFallback(
-        nodeFuture(futures, allFuture, state.getExecutor()), new FutureFallback<R>() {
-      @Override
-      public ListenableFuture<R> create(Throwable t) {
-        if (graph.getFallback().isPresent()) {
-          try {
-            return graph.getFallback().get().apply(t);
-          } catch (Exception e) {
-            return immediateFailedFuture(wrapException(e, currentCall, state));
-          }
-        }
-
-        return immediateFailedFuture(wrapException(t, currentCall, state));
-      }
-    });
+        nodeFuture(futures, allFuture, state.getExecutor()),
+        new NodeExecutionFallback<R>(graph, currentCall, state));
   }
 
   private ListenableFuture<R> nodeFuture(final ImmutableList<ListenableFuture<?>> values,
@@ -204,4 +189,5 @@ final class PreparedGraph<R> extends Graph<R> {
   public String toString() {
     return graph.name();
   }
+
 }
