@@ -114,11 +114,9 @@ class TraverseState {
 
     FutureCallInformation futureCallInformation = new FutureCallInformation(node, parameterValues);
 
-    if (!collectCallInformation) {
-      return futureCallInformation;
+    if (collectCallInformation) {
+      calls.add(futureCallInformation);
     }
-
-    calls.add(futureCallInformation);
 
     return futureCallInformation;
   }

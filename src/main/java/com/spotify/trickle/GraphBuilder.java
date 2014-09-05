@@ -192,8 +192,9 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
     return Lists.transform(inputs, new Function<Dep<?>, NodeInfo>() {
       @Override
       public NodeInfo apply(@Nullable Dep<?> input) {
-        assert input != null;
-
+        // Function.apply() takes a Nullable input, so the compiler warns about the dereference
+        // below - in fact, it's only applied to an ImmutableList, which doesn't accept nulls.
+        //noinspection ConstantConditions
         return input.getNodeInfo();
       }
     });
