@@ -16,15 +16,26 @@
 
 package com.spotify.trickle;
 
-import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.collect.ImmutableList;
+
+import java.util.List;
 
 import javax.annotation.Nullable;
 
 /**
- * Code that has a inputs of type A and B, and returns a value of type R. Side-effects such as
- * writing to a database are permitted, but authors are encouraged to keep implementations free
- * of side-effects if at all possible.
+ * Exception type used to wrap any exception that happens when a graph is executed in debug mode.
+ * The {@link #getCalls()} method can be used to retrieve information about which calls had been
+ * made leading up to the exception.
  */
-public interface Func2<A, B, R> extends Func<R> {
-  ListenableFuture<R> run(@Nullable A arg1, @Nullable B arg2);
+public class GraphExecutionException extends RuntimeException {
+  private final List<CallInfo> calls;
+
+  public GraphExecutionException(@Nullable Throwable cause, CallInfo currentCall, List<CallInfo> calls) {
+    super(currentCall.toString(), cause);
+    this.calls = ImmutableList.copyOf(calls);
+  }
+
+  public List<CallInfo> getCalls() {
+    return calls;
+  }
 }

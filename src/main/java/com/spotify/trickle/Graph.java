@@ -29,7 +29,7 @@ public abstract class Graph<T> implements Parameter<T>, NodeInfo {
    * Bind an input parameter to a concrete value. This means that this input value will immediately
    * be available for use.
    *
-   * @param input  input to bind
+   * @param input input to bind
    * @param value value to assign to input
    * @param <P>   type of the parameter
    * @return a new graph instance that has the value bound
@@ -40,21 +40,21 @@ public abstract class Graph<T> implements Parameter<T>, NodeInfo {
    * Bind an input parameter to a future value. This means that nodes using this as inputs will not
    * get invoked until the input future has completed.
    *
-   * @param input  input to bind
+   * @param input       input to bind
    * @param inputFuture future for value to use
-   * @param <P>   type of the parameter
+   * @param <P>         type of the parameter
    * @return a new graph instance that has the value bound
    */
   public abstract <P> Graph<T> bind(Input<P> input, ListenableFuture<P> inputFuture);
 
   /**
    * Run the graph, executing all node methods on the thread that completes the underlying future.
-   * This is equivalent to calling {@link #run(java.util.concurrent.Executor)} with
-   * {@link com.google.common.util.concurrent.MoreExecutors#sameThreadExecutor()}.
+   * This is equivalent to calling {@link #run(java.util.concurrent.Executor)} with {@link
+   * com.google.common.util.concurrent.MoreExecutors#sameThreadExecutor()}.
    *
    * @return a future for the value returned by the graph execution
    * @throws IllegalArgumentException if not all {@link Input}s used in node invocations are bound
-   * to values
+   *                                  to values
    */
   public abstract ListenableFuture<T> run();
 
@@ -64,18 +64,32 @@ public abstract class Graph<T> implements Parameter<T>, NodeInfo {
    * @param executor to run callbacks on
    * @return a future for the value returned by the graph execution
    * @throws IllegalArgumentException if not all {@link Input}s used in node invocations are bound
-   * to values
+   *                                  to values
    */
   public abstract ListenableFuture<T> run(Executor executor);
 
   /**
    * Package private method for running the graph from an existing state.
    *
-   * @param state  state to continue running from
+   * @param state state to continue running from
    * @return future for the value returned by the graph execution
    */
   abstract ListenableFuture<T> run(TraverseState state);
 
+  /**
+   * Turns debug information on or off depending on the value of the <code>debug</code> parameter.
+   * The default is off (false). When debug information is on, information about intermediate states
+   * - results and parameter values - for each node invocation in each graph invocation will be
+   * collected and reported in case of an exception that isn't caught by a {@link
+   * ConfigurableGraph#fallback(com.google.common.util.concurrent.AsyncFunction)}
+   *
+   * @param debug pass in <code>true</code> to turn on debug information, <code>false</code> to turn
+   *              off.
+   * @return a Graph instance with the specified debug setting
+   */
+  public abstract Graph<T> debug(boolean debug);
+
   // prevent construction from outside of package
-  Graph() {}
+  Graph() {
+  }
 }

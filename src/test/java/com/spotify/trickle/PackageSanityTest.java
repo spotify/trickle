@@ -16,13 +16,43 @@
 
 package com.spotify.trickle;
 
+import com.google.common.base.Predicates;
 import com.google.common.testing.AbstractPackageSanityTests;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
+
 import org.junit.Before;
 
+import java.util.Collections;
 import java.util.List;
 
 public class PackageSanityTest extends AbstractPackageSanityTests {
+
+  static final TraverseState.FutureCallInformation
+      NO_INFO = new TraverseState.FutureCallInformation(
+      new NodeInfo() {
+        @Override
+        public String name() {
+          throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public List<? extends NodeInfo> arguments() {
+          throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Iterable<? extends NodeInfo> predecessors() {
+          throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Type type() {
+          throw new UnsupportedOperationException();
+        }
+      },
+      Collections.<ListenableFuture<?>>emptyList()
+  );
 
   @Before
   @Override
@@ -45,8 +75,22 @@ public class PackageSanityTest extends AbstractPackageSanityTests {
       }
     });
     final GraphBuilder<?> graphBuilder = new GraphBuilder<Object>(node0);
+    final NodeInfo nodeInfo = new FakeNodeInfo("hi", Collections.<NodeInfo>emptyList());
+    final NodeInfo nodeInfo2 = new FakeNodeInfo("hey", Collections.<NodeInfo>emptyList());
+
     setDefault(Graph.class, graphBuilder);
     setDefault(GraphBuilder.class, graphBuilder);
+    setDefault(TraverseState.class, TraverseState.empty(MoreExecutors.sameThreadExecutor(), false));
+    setDefault(TraverseState.FutureCallInformation.class, NO_INFO);
+    setDefault(CallInfo.class,
+               new CallInfo(graphBuilder, Collections.<ParameterValue<?>>emptyList()));
+    setDistinctValues(ParameterValue.class,
+                      new ParameterValue<Object>(nodeInfo, null),
+                      new ParameterValue<Object>(nodeInfo2, null));
+
+    // test classes we don't need to worry about
+    ignoreClasses(Predicates.<Class<?>>equalTo(Util.class));
+    ignoreClasses(Predicates.<Class<?>>equalTo(FakeNodeInfo.class));
 
     super.setUp();
   }

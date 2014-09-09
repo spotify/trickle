@@ -21,6 +21,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -29,14 +30,16 @@ import org.junit.rules.ExpectedException;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.annotation.Nullable;
 
 import static com.google.common.util.concurrent.Futures.immediateFailedFuture;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static com.spotify.trickle.Fallbacks.always;
 import static com.spotify.trickle.Trickle.call;
+import static com.spotify.trickle.Util.hasAncestor;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -434,8 +437,8 @@ public class TrickleTest {
     Graph<String> g1 = call(node1).with(input);
     Graph<String> g = call(node2).with(g1, input);
 
-    thrown.expect(ExecutionException.class);
-    thrown.expectCause(equalTo(expected));
+    thrown.expect(Exception.class);
+    thrown.expectCause(hasAncestor(expected));
 
     g.bind(input, "hey").run().get();
   }
@@ -461,14 +464,14 @@ public class TrickleTest {
 
     Graph<String> g1 = call(node1).with(input).fallback(new AsyncFunction<Throwable, String>() {
       @Override
-      public ListenableFuture<String> apply(Throwable input) throws Exception {
+      public ListenableFuture<String> apply(@Nullable Throwable ignored) throws Exception {
         throw expected;
       }
     });
     Graph<String> g = call(node2).with(g1, input);
 
-    thrown.expect(ExecutionException.class);
-    thrown.expectCause(equalTo(expected));
+    thrown.expect(Exception.class);
+    thrown.expectCause(hasAncestor(expected));
 
     g.bind(input, "hey").run().get();
   }
@@ -514,4 +517,6 @@ public class TrickleTest {
 
     assertThat(future.get(), equalTo(9));
   }
+
+
 }
