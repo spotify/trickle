@@ -42,18 +42,22 @@ class NodeExecutionFallback<R> implements FutureFallback<R> {
 
   @Override
   public ListenableFuture<R> create(Throwable t) {
-    if (t instanceof GraphExecutionException) {
-      return immediateFailedFuture(t);
-    }
-
     if (graph.getFallback().isPresent()) {
       try {
         return graph.getFallback().get().apply(t);
       } catch (Exception e) {
-        return immediateFailedFuture(wrapException(e, currentCall, state));
+        return immediateFailedFuture(wrapIfNeeded(e));
       }
     }
 
-    return immediateFailedFuture(wrapException(t, currentCall, state));
+    return immediateFailedFuture(wrapIfNeeded(t));
+  }
+
+  private Throwable wrapIfNeeded(Throwable t) {
+    if (t instanceof GraphExecutionException) {
+      return t;
+    }
+
+    return wrapException(t, currentCall, state);
   }
 }

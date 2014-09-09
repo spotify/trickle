@@ -33,20 +33,24 @@ import java.util.concurrent.ExecutionException;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static com.spotify.trickle.Util.hasAncestor;
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class NodeExecutionFallbackTest {
+
+  static final ImmutableList<ParameterValue<?>> NO_PARAMS = ImmutableList.of();
+  static final ImmutableList<CallInfo> NO_CALLS = ImmutableList.of();
+
   NodeExecutionFallback<String> fallback;
   GraphBuilder<String> graphBuilder;
   TraverseState traverseState;
   TraverseState.FutureCallInformation currentCall;
 
   NodeInfo currentNodeInfo;
+  CallInfo currentCallInfo;
 
   @Before
   public void setUp() throws Exception {
@@ -64,21 +68,21 @@ public class NodeExecutionFallbackTest {
     List<ListenableFuture<?>> currentNodeValues = ImmutableList.of();
 
     currentCall = new TraverseState.FutureCallInformation(currentNodeInfo, currentNodeValues);
+    currentCallInfo = new CallInfo(currentNodeInfo, NO_PARAMS);
 
     fallback = new NodeExecutionFallback<String>(graphBuilder, currentCall, traverseState);
   }
 
   @Test
   public void shouldNotWrapGraphExecutionException() throws Exception {
-    Throwable expected = new GraphExecutionException(null, new CallInfo(currentNodeInfo, ImmutableList.<ParameterValue<?>>of()), ImmutableList.<CallInfo>of());
+    Throwable expected = new GraphExecutionException(null, currentCallInfo, NO_CALLS);
 
     ListenableFuture<String> future = fallback.create(expected);
 
     try {
       future.get();
       fail("expected an exception");
-    }
-    catch (ExecutionException e) {
+    } catch (ExecutionException e) {
       assertThat(e.getCause(), equalTo(expected));
     }
   }
@@ -92,10 +96,27 @@ public class NodeExecutionFallbackTest {
     try {
       future.get();
       fail("expected an exception");
-    }
-    catch (ExecutionException e) {
+    } catch (ExecutionException e) {
       assertThat(e.getCause(), not(equalTo(expected)));
       assertThat(e, hasAncestor(expected));
     }
+  }
+
+  @Test
+  public void shouldApplyFallbackToAnyException() throws Exception {
+    AsyncFunction<Throwable, String> function = new AsyncFunction<Throwable, String>() {
+      @Override
+      public ListenableFuture<String> apply(Throwable input) throws Exception {
+        return immediateFuture("all is well, nothing to see here");
+      }
+    };
+
+    when(graphBuilder.getFallback()).thenReturn(Optional.of(function));
+
+    Throwable expected = new GraphExecutionException(null, currentCallInfo, NO_CALLS);
+
+    ListenableFuture<String> future = fallback.create(expected);
+
+    assertThat(future.get(), equalTo("all is well, nothing to see here"));
   }
 }
