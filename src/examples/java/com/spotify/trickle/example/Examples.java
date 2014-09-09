@@ -27,7 +27,7 @@ import static com.spotify.trickle.Trickle.call;
  */
 public class Examples {
 
-  public static final Input<String> NAME = Input.named("name");
+  public static final Input<String> NAME = Input.named("person name");
   public static final Input<String> GREETING = Input.named("greeting");
 
   public static void helloWorld() throws Exception {
@@ -196,7 +196,7 @@ public class Examples {
     }
 
     public ListenableFuture<Integer> calculate(String input) {
-      return graph.bind(NAME, input).run();
+      return graph.bind(NAME, input).debug(true).run();
     }
   }
 
@@ -220,7 +220,7 @@ public class Examples {
     System.out.println("\nTroubleshooting:\n-------");
 
     try {
-      troubleShooting.calculate("hey").get();
+      troubleShooting.calculate("anders").get();
     }
     catch (ExecutionException ee) {
       GraphExecutionException e = (GraphExecutionException) ee.getCause();
