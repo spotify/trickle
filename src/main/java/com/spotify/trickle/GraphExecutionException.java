@@ -31,7 +31,9 @@ public class GraphExecutionException extends RuntimeException {
   private final List<CallInfo> calls;
 
   public GraphExecutionException(@Nullable Throwable cause, CallInfo currentCall, List<CallInfo> calls) {
-    super(currentCall.toString(), cause);
+    super(currentCall.toString() + (cause == null ? "" : " failed with message " + cause.getMessage()),
+          cause);
+
     this.calls = ImmutableList.copyOf(calls);
   }
 
