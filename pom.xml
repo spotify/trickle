@@ -6,6 +6,7 @@
   <packaging>jar</packaging>
   <name>trickle</name>
   <url>http://github.com/spotify/trickle</url>
+  <description>A small library for composing asynchronous Java code.</description>
 
   <properties>
     <guava.version>17.0</guava.version>
