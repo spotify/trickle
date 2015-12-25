@@ -16,6 +16,8 @@
 
 package com.spotify.trickle;
 
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -28,11 +30,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import static com.google.common.util.concurrent.Futures.immediateFailedFuture;
@@ -414,6 +418,50 @@ public class TrickleTest {
         .run().get();
 
     assertThat(result, equalTo("hey, 1, hey, ho, hum, häpp, 2"));
+  }
+
+  @Test
+  public void shouldHandleListOfParameters() throws Exception {
+    Func1<String, String> node1 = new Func1<String, String>() {
+      @Override
+      public ListenableFuture<String> run(String arg) {
+        return immediateFuture(arg + ", 1");
+      }
+    };
+    ListFunc<String, String> node2 = new ListFunc<String, String>() {
+      @Override
+      public ListenableFuture<String> run(@Nonnull List<? extends String> arg) {
+        return immediateFuture(Joiner.on(", ").join(arg) + ", 2");
+      }
+    };
+
+    Input<String> input = Input.named("in");
+    Input<String> input1 = Input.named("innn");
+    Input<String> input2 = Input.named("and in");
+    Input<String> input3 = Input.named("one more");
+    Input<String> input4 = Input.named("and another");
+
+    Graph<String> g1 = call(node1).with(input);
+
+    List<Parameter<String>> args = new ImmutableList.Builder<Parameter<String>>()
+        .add(g1)
+        .add(input)
+        .add(input1)
+        .add(input2)
+        .add(input3)
+        .add(input4)
+        .build();
+    Graph<String> g = call(node2).with(args);
+
+    String result = g
+        .bind(input, "hey")
+        .bind(input1, "ho")
+        .bind(input2, "hum")
+        .bind(input3, "häpp")
+        .bind(input4, "Luis")
+        .run().get();
+
+    assertThat(result, equalTo("hey, 1, hey, ho, hum, häpp, Luis, 2"));
   }
 
   @Test

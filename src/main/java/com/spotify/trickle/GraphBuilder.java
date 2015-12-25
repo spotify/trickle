@@ -277,4 +277,17 @@ class GraphBuilder<R> extends ConfigurableGraph<R> {
       return super.with(arg1, arg2, arg3, arg4, arg5);
     }
   }
+
+  static final class ListGraphBuilder<A, R> extends GraphBuilder<R>
+      implements Trickle.NeedsParameterList<A, R> {
+
+    ListGraphBuilder(ListFunc<A, R> func) {
+      super(func);
+    }
+
+    @Override
+    public ConfigurableGraph<R> with(List<? extends Parameter<A>> args) {
+      return super.with(args.toArray(new Parameter[args.size()]));
+    }
+  }
 }
