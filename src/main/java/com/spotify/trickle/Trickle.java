@@ -75,7 +75,7 @@ public final class Trickle {
   }
 
   /**
-   * Initiates construction of a new sink node with five parameter dependencies, running the
+   * Initiates construction of a new sink node with a list of dependencies, running the
    * supplied function.
    */
   public static <A, R> NeedsParameterList<A, R> call(ListFunc<A, R> func) {
