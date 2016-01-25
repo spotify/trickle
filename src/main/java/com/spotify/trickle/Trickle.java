@@ -16,6 +16,8 @@
 
 package com.spotify.trickle;
 
+import java.util.List;
+
 /**
  * Static methods for constructing Trickle graphs. See the documentation at
  * <a href="https://github.com/spotify/trickle/wiki">the Trickle wiki</a> for more information.
@@ -72,6 +74,14 @@ public final class Trickle {
     return new GraphBuilder.GraphBuilder5<A, B, C, D, E, R>(func);
   }
 
+  /**
+   * Initiates construction of a new sink node with five parameter dependencies, running the
+   * supplied function.
+   */
+  public static <A, R> NeedsParameterList<A, R> call(ListFunc<A, R> func) {
+    return new GraphBuilder.ListGraphBuilder<A, R>(func);
+  }
+
   public interface NeedsParameters1<A, R> {
     /**
      * Indicate where to find values for the parameters required to invoke the function in this
@@ -110,5 +120,9 @@ public final class Trickle {
      * node.
      */
     ConfigurableGraph<R> with(Parameter<A> arg1, Parameter<B> arg2, Parameter<C> arg3, Parameter<D> arg4, Parameter<E> arg5);
+  }
+
+  public interface NeedsParameterList<A, R> {
+      ConfigurableGraph<R> with(List<? extends Parameter<A>> args);
   }
 }
