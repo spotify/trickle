@@ -1,3 +1,6 @@
+[![Maven Central](https://img.shields.io/maven-central/v/com.spotify/trickle.svg)](https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.spotify%22%20trickle*)
+[![License](https://img.shields.io/github/license/spotify/trickle.svg)](LICENSE.txt)
+
 trickle
 =======
 
@@ -84,3 +87,8 @@ We're using Trickle internally at Spotify in core, production-critical services 
 Spotify completely if they failed. This means we have a fairly high degree of confidence that it
 works. It is, however, a young library and you shouldn't be surprised if there are API changes
 in the next few months.
+
+# Code of conduct
+This project adheres to the [Open Code of Conduct][code-of-conduct]. By participating, you are expected to honor this code.
+
+[code-of-conduct]: https://github.com/spotify/code-of-conduct/blob/master/code-of-conduct.md
