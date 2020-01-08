@@ -8,12 +8,17 @@ A small library for composing asynchronous code. The main reason for it to exist
 easier to create graphs of interconnected asynchronous calls, pushing the 'worrying about
 concurrency' aspects into the framework rather than mixing it in with the business logic.
 
+NOTE: this project is no longer supported. Feel free to fork it if you like it. Internally, we've 
+switched to using CompletionStage/CompletableFuture instead.
+
 # When should I use it?
 
-- When you are combining more than 2 asynchronous calls together, and you think the code is
-hard to read.
-- When you want to separate concurrency management aspects (when code does something) from business logic (what it does).
-- When you want to use something smaller and easier to learn than frameworks like Akka and RxJava.
+
+- ~~When you are combining more than 2 asynchronous calls together, and you think the code is hard to read.~~
+- ~~When you want to separate concurrency management aspects (when code does something) from business logic (what it does).~~
+- ~~When you want to use something smaller and easier to learn than frameworks like Akka and RxJava.~~
+
+Probably none of the above, see note at top.
 
 # Getting Started
 
